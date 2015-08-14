@@ -55,6 +55,7 @@ class OrderExtend:
         """
         Find initial ordering with graph degeneracy algorithm
         Reference: https://en.wikipedia.org/wiki/Degeneracy_(graph_theory)
+        Repositioning algorithm describe in section 4.2 of the original paper should be added
         """
 
         pi = list()
@@ -64,7 +65,7 @@ class OrderExtend:
         max_degree = 0
 
         #compute degree of x and y
-        for xi in xrange(self.nx):
+        for xi in range(self.nx):
             node = Node(x_dim, xi, np.count_nonzero(self.sigma[xi, :]))
             self.node_dict[(x_dim, xi)] = node
 
@@ -72,7 +73,7 @@ class OrderExtend:
             if node.degree > max_degree:
                 max_degree = node.degree
 
-        for yi in xrange(self.ny):
+        for yi in range(self.ny):
             node = Node(y_dim, yi, np.count_nonzero(self.sigma[:, yi]))
             self.node_dict[(y_dim, yi)] = node
 
@@ -82,7 +83,7 @@ class OrderExtend:
 
         inserted = 0
         while inserted < self.nx+self.ny:
-            for di in xrange(max_degree):
+            for di in range(max_degree):
                 if len(counter[di]) > 0:
                     node = counter[di].pop(0)
                     pi.append(node)
@@ -152,7 +153,7 @@ class OrderExtend:
         query the value of T[x_idx,y_idx] to oracle
         """
         if self.budget > 0 and self.sigma[x_idx, y_idx] == 0:
-            print '\tNew Query on (%d,%d)' % (x_idx, y_idx)
+            print('\tNew Query on (%d,%d)' % (x_idx, y_idx))
             self.sigma[x_idx, y_idx] = 1
             self.T_sigma[x_idx, y_idx] = self.T[x_idx, y_idx]
             self.queried.append((x_idx,y_idx))
@@ -174,7 +175,7 @@ class OrderExtend:
         pi = self.find_ordering()
         self.construct_init_matrix(pi)
 
-        print 'Init Relative Error: %.3f' % self.compute_reconstruction_error()
+        print('Init Relative Error: %.3f' % self.compute_reconstruction_error())
 
         iter = 0
         while self.budget > 0 and len(pi) > 0:
@@ -211,8 +212,8 @@ class OrderExtend:
                 self.y_computed[next_node.idx] = 1
 
             iter += 1
-            print 'Iteration %d, Relative Error: %.3f' % (iter, self.compute_reconstruction_error())
+            print('Iteration %d, Relative Error: %.3f' % (iter, self.compute_reconstruction_error()))
 
-        print 'Total budget used: %d' % self.budget_used
+        print('Total budget used: %d' % self.budget_used)
         return self.reconstruct(), self.x, self.y
 
