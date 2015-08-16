@@ -3,8 +3,12 @@ Implementation of Order&Extend model
 Reference: [Matrix Completion with Queries, Ruchansky et al, KDD 2015]
 """
 import numpy as np
-from collections import defaultdict
 import numpy.linalg as linalg
+from collections import defaultdict
+
+from formatted_logger import formatted_logger
+
+log = formatted_logger('OrderExtend', 'info')
 
 x_dim = 0
 y_dim = 1
@@ -27,12 +31,13 @@ class Node:
 
 class OrderExtend:
     """ model class """
-    def __init__(self, T, sigma, r):
+    def __init__(self, T, sigma, r, theta=1):
         self.T = T  # original (true) matrix
         self.sigma = sigma
         self.T_sigma = self.T * self.sigma # observed (+queried) matrix
         self.nx, self.ny = self.T.shape
         self.nr = r
+        self.theta = theta
 
         self.queried = list()
 
@@ -45,17 +50,68 @@ class OrderExtend:
         self.x_computed = np.zeros(self.nx)
         self.y_computed = np.zeros(self.ny)
 
-    def check_local_condition(self):
-        return
+    def compute_lcn(self,A,t):
+        """
+        compute local condition number
+        a linear system assumed to be unstable if a local condition number of the system, Ay=t, is greater than threahold theta
+        """
+        y = linalg.solve(A, t)
+        lcn = linalg.norm(linalg.inv(A), ord=2)*linalg.norm(t, ord=2)/linalg.norm(y, ord=2)
+        return lcn
 
-    def stabilize(self):
-        return
+    def compute_lcn_extend(self, A, t, C=None, alpha=None, ix=None, iy=None):
+        """
+        compute local condition number with extended vector
+        """
+        if self.sigma[ix,iy] == 1:
+            tau = self.T_sigma[ix,iy]
+        else:
+            #tau1 = np.random.choice(self.T_sigma[ix,self.sigma[ix,:]==1])
+            #tau2 = np.random.choice(self.T_sigma[self.sigma[:,iy]==1,iy])
+            #tau = np.random.choice([tau1,tau2])
+            tau = np.random.choice(self.T_sigma[self.sigma==1])
+        D = C - np.dot(np.dot(np.dot(C, alpha.T), alpha), C)/(1.+ np.dot(np.dot(alpha, C), alpha.T))
+        A_tilda = np.concatenate((A, alpha[:,np.newaxis].T), axis=0)
+        t_tilda = np.zeros(self.nr+1)
+        t_tilda[:self.nr] = t
+        t_tilda[self.nr] = tau
+        y_tilda = np.dot(np.dot(D, A_tilda.T), t_tilda)
+        lcn = linalg.norm(np.dot(D, A_tilda.T), ord=2)*linalg.norm(t_tilda, ord=2)/linalg.norm(y_tilda, ord=2)
+        return lcn, tau
+
+    def stabilize(self, A, t, node, selected):
+        C = linalg.inv(np.dot(A.T, A))
+
+        best_idx = 0
+        c_min = self.theta+1
+
+        if node.dim == x_dim:
+            for candidate in np.setdiff1d(np.nonzero(self.y_computed)[0], selected):
+                (c, _tau) = self.compute_lcn_extend(A, t, C, self.y[candidate,:], node.idx, candidate)
+                if c < c_min:
+                    a_star = self.y[candidate,:]
+                    c_min = c 
+                    tau = _tau
+        else:
+            for candidate in np.setdiff1d(np.nonzero(self.x_computed)[0], selected):
+                (c, _tau) = self.compute_lcn_extend(A, t, C, self.x[candidate,:], candidate, node.idx)
+                if c < c_min:
+                    a_star = self.x[candidate,:]
+                    c_min = c
+                    tau = _tau
+
+        if c_min < self.theta:
+            log.debug('c_min : %f' % c_min)
+            return (a_star, tau)
+
+        return None
         
     def find_ordering(self):
         """
         Find initial ordering with graph degeneracy algorithm
         Reference: https://en.wikipedia.org/wiki/Degeneracy_(graph_theory)
         Repositioning algorithm describe in section 4.2 of the original paper should be added
+        (But the description is not clear enough to implement)
         """
 
         pi = list()
@@ -141,7 +197,7 @@ class OrderExtend:
                     self.query(xi, yi)
 
         U, s, V = linalg.svd(self.T_sigma[np.ix_(x_list, y_list)], full_matrices = True)
-
+        
         self.x[x_list,:] = np.dot(U, np.diag(s))
         self.y[y_list,:] = V.T
 
@@ -153,7 +209,7 @@ class OrderExtend:
         query the value of T[x_idx,y_idx] to oracle
         """
         if self.budget > 0 and self.sigma[x_idx, y_idx] == 0:
-            print('\tNew Query on (%d,%d)' % (x_idx, y_idx))
+            log.debug('\tNew Query on (%d,%d)' % (x_idx, y_idx))
             self.sigma[x_idx, y_idx] = 1
             self.T_sigma[x_idx, y_idx] = self.T[x_idx, y_idx]
             self.queried.append((x_idx,y_idx))
@@ -169,17 +225,24 @@ class OrderExtend:
 
     def compute_reconstruction_error(self):
         """ compute relative error between the true and reconstructed matrix """
-        return np.sum(np.sqrt((self.T - self.reconstruct())**2)) / np.sum(np.sqrt(self.T**2))
+        return linalg.norm(self.T - self.reconstruct()) / linalg.norm(self.T)
 
-    def fit(self):
+    def init(self):
         pi = self.find_ordering()
         self.construct_init_matrix(pi)
+        return pi
 
-        print('Init Relative Error: %.3f' % self.compute_reconstruction_error())
+    def fit(self, pi, max_iter=-1):
+        log.debug('Init Relative Error: %.3f' % self.compute_reconstruction_error())
+
+        if max_iter < 0:
+            max_iter = self.budget*2
 
         iter = 0
-        while self.budget > 0 and len(pi) > 0:
+        while self.budget > 0 and len(pi) > 0 and iter < max_iter:
+            solve_system = True
             next_node = pi.pop(0)
+
             if next_node.dim == x_dim:
                 while np.sum(self.sigma[next_node.idx, :] * self.y_computed) < self.nr - 0.1:
                     candidate_idx = np.nonzero((self.y_computed - self.sigma[next_node.idx, :])==1)[0]
@@ -192,9 +255,27 @@ class OrderExtend:
                             max_degree_idx = _idx
 
                     self.query(next_node.idx, max_degree_idx)
+
                 y_list = np.nonzero(self.sigma[next_node.idx, :] * self.y_computed)[0][:self.nr]
-                self.x[next_node.idx, :] = linalg.lstsq(self.y[y_list, :], self.T_sigma[next_node.idx, y_list])[0]
-                self.x_computed[next_node.idx] = 1
+
+                A = self.y[y_list, :]
+                t = self.T_sigma[next_node.idx, y_list]
+
+                if self.compute_lcn(self.y[y_list, :], self.T_sigma[next_node.idx, y_list]) > self.theta:
+                    rval = self.stabilize(self.y[y_list, :], self.T_sigma[next_node.idx, y_list], next_node, y_list)
+                    if rval == None:
+                        solve_system = False
+                        pi.append(next_node)
+                    else:
+                        A = np.concatenate((A, rval[0][:,np.newaxis].T), axis=0)
+                        t = np.zeros(self.nr+1)
+                        t[:self.nr] = self.T_sigma[next_node.idx, y_list]
+                        t[self.nr] = rval[1]
+
+                if solve_system:
+                    log.debug('x solved, idx: %d'%(next_node.idx))
+                    self.x[next_node.idx, :] = linalg.lstsq(A, t)[0]
+                    self.x_computed[next_node.idx] = 1
             else:
                 while np.sum(self.sigma[:, next_node.idx] * self.x_computed) < self.nr - 0.1:
                     candidate_idx = np.nonzero((self.x_computed - self.sigma[:, next_node.idx])==1)[0]
@@ -207,13 +288,54 @@ class OrderExtend:
                             max_degree_idx = _idx
 
                     self.query(max_degree_idx, next_node.idx)
+
                 x_list = np.nonzero(self.sigma[:, next_node.idx] * self.x_computed)[0][:self.nr]
-                self.y[next_node.idx, :] = linalg.lstsq(self.x[x_list, :], self.T_sigma[x_list, next_node.idx])[0]
-                self.y_computed[next_node.idx] = 1
+
+                A = self.x[x_list, :]
+                t = self.T_sigma[x_list, next_node.idx]
+
+                if self.compute_lcn(self.x[x_list, :], self.T_sigma[x_list, next_node.idx]) > self.theta:
+                    rval = self.stabilize(self.x[x_list, :], self.T_sigma[x_list, next_node.idx], next_node, x_list)
+                    if rval == None:
+                        solve_system = False
+                        pi.append(next_node)
+                    else:
+                        A = np.concatenate((A, rval[0][:,np.newaxis].T), axis=0)
+                        t = np.zeros(self.nr+1)
+                        t[:self.nr] = self.T_sigma[x_list, next_node.idx]
+                        t[self.nr] = rval[1]
+
+                if solve_system:
+                    log.debug('y solved, idx: %d'%(next_node.idx))
+                    self.y[next_node.idx, :] = linalg.lstsq(A, t)[0]
+                    self.y_computed[next_node.idx] = 1
 
             iter += 1
-            print('Iteration %d, Relative Error: %.3f' % (iter, self.compute_reconstruction_error()))
+            log.debug('Iteration %d, Relative Error: %.3f' % (iter, self.compute_reconstruction_error()))
 
-        print('Total budget used: %d' % self.budget_used)
+        log.info('Total budget used: %d' % self.budget_used)
+        log.info('Final relative error: %.3f' % self.compute_reconstruction_error())
+        log.info('Solved dim: %d' % (np.sum(self.y_computed)+np.sum(self.x_computed)))
         return self.reconstruct(), self.x, self.y
 
+
+def test():
+    nx = 10  # size of x-dim
+    ny = 5   # size of y-dim
+    r = 2     # original rank
+    p = 0.2   # mean proportion of observed items in matrix
+    r_predicted = 2  # rank used for approx.
+    theta = 1
+
+    x = np.random.random((nx, r))
+    y = np.random.random((ny, r))
+    t = np.dot(x, y.T)  # true matrix
+
+    sigma = np.random.binomial(1, p, size=(nx,ny))   # mask of observed items in matrix t
+
+    model = OrderExtend(t, sigma, r_predicted, theta)
+    order = model.init()
+    model.fit(order)
+
+if __name__ == '__main__':
+    test()

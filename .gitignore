@@ -55,3 +55,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# manually added for log and notebook temporary files
+.ipynb_checkpoints/
+logs/
