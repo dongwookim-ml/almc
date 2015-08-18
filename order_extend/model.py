@@ -91,27 +91,28 @@ class OrderExtend:
 
         best_idx = 0
         c_min = self.theta+1
+        a_idx = -1
 
         if node.dim == x_dim:
             for candidate in np.setdiff1d(np.nonzero(self.y_computed)[0], selected):
                 (c, _tau) = self.compute_lcn_extend(A, t, C, self.y[candidate,:], node.idx, candidate)
                 if c < c_min:
                     a_star = self.y[candidate,:]
+                    a_idx = candidate
                     c_min = c 
                     tau = _tau
-            #print('x', self.compute_lcn(A,t), c_min, self.theta)
         else:
             for candidate in np.setdiff1d(np.nonzero(self.x_computed)[0], selected):
                 (c, _tau) = self.compute_lcn_extend(A, t, C, self.x[candidate,:], candidate, node.idx)
                 if c < c_min:
                     a_star = self.x[candidate,:]
+                    a_idx = candidate
                     c_min = c
                     tau = _tau
-            #print('y', self.compute_lcn(A,t), c_min, self.theta)
 
         if c_min < self.theta:
             log.debug('c_min : %f' % c_min)
-            return (a_star, tau)
+            return a_star, a_idx
 
         return None
         
@@ -274,11 +275,12 @@ class OrderExtend:
                             pi.append(next_node)
                             solve_system = False
                         else:
+                            self.query(next_node.idx, rval[1])                            
                             A = np.concatenate((A, rval[0][:,np.newaxis].T), axis=0)
                             t = np.zeros(self.nr+1)
                             t[:self.nr] = self.T_sigma[next_node.idx, y_list]
-                            t[self.nr] = rval[1]
-                            solve_system = True                            
+                            t[self.nr] = self.T_sigma[next_node.idx, rval[1]]
+                            solve_system = True
                             # break
                 else:
                     solve_system = False
@@ -321,11 +323,12 @@ class OrderExtend:
                             pi.append(next_node)
                             solve_system = False
                         else:
+                            self.query(rval[1], next_node.idx)
                             A = np.concatenate((A, rval[0][:,np.newaxis].T), axis=0)
                             t = np.zeros(self.nr+1)
                             t[:self.nr] = self.T_sigma[x_list, next_node.idx]
-                            t[self.nr] = rval[1]
-                            solve_system = True                            
+                            t[self.nr] = self.T_sigma[rval[1], next_node.idx]
+                            solve_system = True                                  
                             # break
                 else:
                     solve_system = False                            
@@ -350,8 +353,8 @@ def test():
     r = 2     # original rank
     p = 0.3   # mean proportion of observed items in matrix
     r_predicted = 2  # rank used for approx.
-    theta = 1
-    max_iter = 100
+    theta = 2
+    max_iter = 10000
 
     x = np.random.random((nx, r))
     y = np.random.random((ny, r))
