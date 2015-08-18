@@ -32,7 +32,7 @@ class Node:
 
 class OrderExtend:
     """ model class """
-    def __init__(self, T, sigma, r, theta=2):
+    def __init__(self, T, sigma, r, theta=1):
         self.T = T  # original (true) matrix
         self.sigma = sigma
         self.T_sigma = self.T * self.sigma # observed (+queried) matrix
@@ -67,10 +67,12 @@ class OrderExtend:
         if self.sigma[ix,iy] == 1:
             tau = self.T_sigma[ix,iy]
         else:
-            #tau1 = np.random.choice(self.T_sigma[ix,self.sigma[ix,:]==1])
-            #tau2 = np.random.choice(self.T_sigma[self.sigma[:,iy]==1,iy])
-            #tau = np.random.choice([tau1,tau2])
-            tau = np.random.choice(self.T_sigma[self.sigma==1])
+            try:
+                tau1 = np.random.choice(self.T_sigma[ix,self.sigma[ix,:]==1])
+                tau2 = np.random.choice(self.T_sigma[self.sigma[:,iy]==1,iy])
+                tau = np.random.choice([tau1,tau2])
+            except:
+                tau = np.random.choice(self.T_sigma[self.sigma==1])
         D = C - np.dot(np.dot(np.dot(C, alpha.T), alpha), C)/(1.+ np.dot(np.dot(alpha, C), alpha.T))
         A_tilda = np.concatenate((A, alpha[:,np.newaxis].T), axis=0)
         t_tilda = np.zeros(self.nr+1)
@@ -78,6 +80,7 @@ class OrderExtend:
         t_tilda[self.nr] = tau
         y_tilda = np.dot(np.dot(D, A_tilda.T), t_tilda)
         lcn = linalg.norm(np.dot(D, A_tilda.T), ord=2)*linalg.norm(t_tilda, ord=2)/linalg.norm(y_tilda, ord=2)
+        
         return lcn, tau
 
     def stabilize(self, A, t, node, selected):
@@ -96,6 +99,7 @@ class OrderExtend:
                     a_star = self.y[candidate,:]
                     c_min = c 
                     tau = _tau
+            #print('x', self.compute_lcn(A,t), c_min, self.theta)
         else:
             for candidate in np.setdiff1d(np.nonzero(self.x_computed)[0], selected):
                 (c, _tau) = self.compute_lcn_extend(A, t, C, self.x[candidate,:], candidate, node.idx)
@@ -103,6 +107,7 @@ class OrderExtend:
                     a_star = self.x[candidate,:]
                     c_min = c
                     tau = _tau
+            #print('y', self.compute_lcn(A,t), c_min, self.theta)
 
         if c_min < self.theta:
             log.debug('c_min : %f' % c_min)
@@ -115,7 +120,7 @@ class OrderExtend:
         Find initial ordering with graph degeneracy algorithm
         Reference: https://en.wikipedia.org/wiki/Degeneracy_(graph_theory)
         Repositioning algorithm describe in section 4.2 of the original paper should be added
-        (But the description is not clear enough to implement)
+        (But the description seems not clear enough to implement)
         """
 
         pi = list()
@@ -174,47 +179,24 @@ class OrderExtend:
 
     def construct_init_matrix(self, pi):
         """
-        construct initial nr x nr matrix using SVD
+        construct init matrix
+        choose first r x-indices from ordered list pi and initialize A_x by I_r (r x r identity matrix)
         """
         x_list = list()
-        y_list = list()
-
         x_cnt = 0
-        y_cnt = 0
-
         idx = 0
-        # compute candidate x and y indicies for nr x nr initial matrix with higest degree nodes
-        while x_cnt < self.nr or y_cnt < self.nr:
+
+        while x_cnt < self.nr:
             dim = pi[idx].dim
 
             if dim == x_dim and x_cnt < self.nr:
                 x_list.append(pi.pop(idx).idx)
                 x_cnt += 1
-            elif dim == y_dim and y_cnt < self.nr:
-                y_list.append(pi.pop(idx).idx)
-                y_cnt += 1
             else:
                 idx += 1
 
-        # query if value is unknown
-        for xi in x_list:
-            for yi in y_list:
-                if self.sigma[xi, yi] == 0:
-                    self.query(xi, yi)
-
-        # using svd to construct initial A
-        U, s, V = linalg.svd(self.T_sigma[np.ix_(x_list, y_list)], full_matrices = True)
-        
-        self.x[x_list,:] = np.dot(U, np.diag(s))
-        self.y[y_list,:] = V.T
-        #self.x[x_list,:] = U
-        #self.y[y_list,:] = np.dot(np.diag(s), V).T
-
+        self.x[x_list,:] = np.identity(self.nr)
         self.x_computed[x_list] = 1
-        self.y_computed[y_list] = 1
-
-        log.info('Init x matrix norm %.3f' % linalg.norm(self.x[x_list], ord = 2))
-        log.info('Init y matrix norm %.3f' % linalg.norm(self.y[y_list], ord = 2))
 
     def query(self, x_idx, y_idx):
         """
@@ -256,27 +238,38 @@ class OrderExtend:
             next_node = pi.pop(0)
 
             if next_node.dim == x_dim:
+                # check that the model needs to query a new data point
                 while np.sum(self.sigma[next_node.idx, :] * self.y_computed) < self.nr - 0.1:
                     candidate_idx = np.nonzero((self.y_computed - self.sigma[next_node.idx, :])==1)[0]
-                    max_degree = -1
-                    max_degree_idx = -1
-                    for _idx in candidate_idx:
-                        candidate_degree = self.node_dict[(y_dim, _idx)].degree
-                        if candidate_degree > max_degree:
-                            max_degree = candidate_degree
-                            max_degree_idx = _idx
+                    if len(candidate_idx) == 0:
+                        solve_system = False
+                        break
+                    # max degree quirying strategy                        
+                    # max_degree = -1
+                    # query_idx = -1
+                    # for _idx in candidate_idx:
+                    #     candidate_degree = self.node_dict[(y_dim, _idx)].degree
+                    #     if candidate_degree > max_degree:
+                    #         max_degree = candidate_degree
+                    #         query_idx = _idx
 
-                    self.query(next_node.idx, max_degree_idx)
+                    # random querying strategy
+                    query_idx = np.random.choice(candidate_idx)
+                    self.query(next_node.idx, query_idx)
 
                 candidate_list = np.nonzero(self.sigma[next_node.idx, :] * self.y_computed)[0]
 
                 # iterate every possible candidate set to find stable solution
-                for y_list in itertools.combinations(candidate_list, self.nr):
+                # this requires too much computation
+                #for y_list in itertools.combinations(candidate_list, self.nr):
+                
+                if len(candidate_list) >= self.nr:
+                    y_list = np.random.permutation(candidate_list)[:self.nr]
                     A = self.y[y_list, :]
                     t = self.T_sigma[next_node.idx, y_list]
 
-                    if self.compute_lcn(self.y[y_list, :], self.T_sigma[next_node.idx, y_list]) > self.theta:
-                        rval = self.stabilize(self.y[y_list, :], self.T_sigma[next_node.idx, y_list], next_node, y_list)
+                    if self.compute_lcn(A, t) > self.theta:
+                        rval = self.stabilize(A, t, next_node, y_list)
                         if rval == None:
                             pi.append(next_node)
                             solve_system = False
@@ -286,7 +279,9 @@ class OrderExtend:
                             t[:self.nr] = self.T_sigma[next_node.idx, y_list]
                             t[self.nr] = rval[1]
                             solve_system = True                            
-                            break
+                            # break
+                else:
+                    solve_system = False
 
                 if solve_system:
                     log.debug('x solved, idx: %d'%(next_node.idx))
@@ -295,24 +290,33 @@ class OrderExtend:
             else:
                 while np.sum(self.sigma[:, next_node.idx] * self.x_computed) < self.nr - 0.1:
                     candidate_idx = np.nonzero((self.x_computed - self.sigma[:, next_node.idx])==1)[0]
-                    max_degree = -1
-                    max_degree_idx = -1
-                    for _idx in candidate_idx:
-                        candidate_degree = self.node_dict[(x_dim, _idx)].degree
-                        if candidate_degree > max_degree:
-                            max_degree = candidate_degree
-                            max_degree_idx = _idx
+                    if len(candidate_idx) == 0:
+                        solve_system = False
+                        break         
+                    # max degree quirying strategy
+                    # max_degree = -1
+                    # candidate_idx = -1
+                    # for _idx in candidate_idx:
+                    #     candidate_degree = self.node_dict[(x_dim, _idx)].degree
+                    #     if candidate_degree > max_degree:
+                    #         max_degree = candidate_degree
+                    #         candidate_idx = _idx
 
-                    self.query(max_degree_idx, next_node.idx)
+                    # random querying strategy
+                    query_idx = np.random.choice(candidate_idx)
+                    self.query(query_idx, next_node.idx)
 
                 candidate_list = np.nonzero(self.sigma[:, next_node.idx] * self.x_computed)[0]
 
-                for x_list in itertools.combinations(candidate_list, self.nr):
+                # iterating over every possible combination requires too much computation
+                # for x_list in itertools.combinations(candidate_list, self.nr):
+                if len(candidate_list) >= self.nr:
+                    x_list = np.random.permutation(candidate_list)[:self.nr]
                     A = self.x[x_list, :]
                     t = self.T_sigma[x_list, next_node.idx]
 
-                    if self.compute_lcn(self.x[x_list, :], self.T_sigma[x_list, next_node.idx]) > self.theta:
-                        rval = self.stabilize(self.x[x_list, :], self.T_sigma[x_list, next_node.idx], next_node, x_list)
+                    if self.compute_lcn(A, t) > self.theta:
+                        rval = self.stabilize(A, t, next_node, x_list)
                         if rval == None:
                             pi.append(next_node)
                             solve_system = False
@@ -322,7 +326,9 @@ class OrderExtend:
                             t[:self.nr] = self.T_sigma[x_list, next_node.idx]
                             t[self.nr] = rval[1]
                             solve_system = True                            
-                            break
+                            # break
+                else:
+                    solve_system = False                            
 
                 if solve_system:
                     log.debug('y solved, idx: %d'%(next_node.idx))
@@ -332,7 +338,7 @@ class OrderExtend:
             log.debug('Iteration %d, Relative Error: %.3f' % (iter, self.compute_reconstruction_error()))
             iter += 1
 
-        log.info('Total budget used: %d' % self.budget_used)
+        log.info('Total budget used: %d / %d' % (self.budget_used, np.prod(self.sigma.shape)))
         log.info('Final relative error: %.3f' % self.compute_reconstruction_error())
         log.info('Solved x-dim: %d y-dim: %d' % (np.sum(self.x_computed), np.sum(self.y_computed)))
         return self.reconstruct(), self.x, self.y
@@ -344,8 +350,8 @@ def test():
     r = 2     # original rank
     p = 0.3   # mean proportion of observed items in matrix
     r_predicted = 2  # rank used for approx.
-    theta = 3
-    max_iter = 1000
+    theta = 1
+    max_iter = 100
 
     x = np.random.random((nx, r))
     y = np.random.random((ny, r))
