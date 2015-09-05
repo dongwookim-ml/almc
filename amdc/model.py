@@ -1,7 +1,7 @@
 __author__ = 'Dongwoo Kim'
 
 import numpy as np
-from scipy.io.matlab import loadmat
+import sklearn
 from sklearn.metrics import precision_recall_curve, auc
 
 heaviside = lambda x: 1 if x >= 0 else 0
@@ -10,14 +10,24 @@ heaviside = lambda x: 1 if x >= 0 else 0
 class AMDC:
     """
     Implementation of Active Multi-relational Data Construction (AMDC) method.
-    In this implementation, I did not consider the existence of negative examples suggested in the original paper.
 
     Reference:
     Kajino, H., Kishimoto, A., Botea, A., Daly, E., & Kotoulas, S. (2015). Active Learning for Multi-relational Data
-    Construction. In WWW. International World Wide Web Conferences Steering Committee.
+    Construction. WWW 2015
     """
 
     def __init__(self, D, alpha_0=0.1, gamma=0.3, gamma_p=0.9, c_e=5., c_n=1.):
+        """
+
+        @param D: latent dimension of entity
+        @param alpha_0: initial learning rate
+        @param gamma: hyperparameter
+        @param gamma_p: hyperparameter
+        @param c_e: hyperparameter, impose score of positive triple to be greater than 0,
+                    and negative triple to be less than 0
+        @param c_n: hyperparameter, importance of negative samples
+        @return:
+        """
         self.D = D
         self.alpha_0 = alpha_0
         self.gamma = gamma
@@ -25,7 +35,23 @@ class AMDC:
         self.c_e = c_e
         self.c_n = c_n
 
-    def learn(self, T, p_idx, n_idx, max_iter, e_gap=1000):
+    def learn(self, T, p_idx, n_idx, max_iter, e_gap=1):
+        """
+        Stochastic gradient descent optimization for AMDC
+
+        @param T: [E x E x K] multi-dimensional array,
+                tensor representation of knowledge graph
+                E = number of entities
+                K = number of relationships
+        @param p_idx: observed index of positive triples, all indices are raveled by np.ravel_multi_index
+        @param n_idx: observed index of negative triples
+        @param max_iter: maximum number of iterations
+        @param e_gap: evaluation gap
+        @return: A, R, r_error
+                A: [E x D] latent feature vector of entities
+                R: [D x D x K] rotation matrix for each entity
+                r_error: list of reconstruction errors at each evaluation point
+        """
         E, K = T.shape[0], T.shape[2]
 
         np_idx = np.setdiff1d(range(np.prod(T.shape)), p_idx)
@@ -68,7 +94,6 @@ class AMDC:
                     A[j_bar] -= learning_rate * (I_1 * np.dot(r_k_bar.T, a_i_bar))
                     R[:, :, k_bar] -= learning_rate * (I_1 * np.outer(a_i_bar, a_j_bar))
 
-
             else:
                 next_idx = np.random.randint(len(n_idx))
                 next_nn_idx = np.random.randint(len(nn_idx))
@@ -109,11 +134,9 @@ class AMDC:
 
             if it % e_gap == 0:
                 T_bar = self.reconstruct(A, R)
-                T_bar[T_bar <= 0] = -1
-                T_bar[T_bar > 0] = 1
                 err = np.sum(np.abs(T - T_bar))
                 r_error.append(err)
-                print('Iter %d, Reconstruction error: %d' % (it, err))
+                print('Iter %d, Reconstruction error: %.2f' % (it, err))
 
             it += 1
             learning_rate = self.alpha_0 / np.sqrt(it)
@@ -121,6 +144,13 @@ class AMDC:
         return A, R, r_error
 
     def reconstruct(self, A, R):
+        """
+        Reconstruct knowledge graph from latent representations of entities and rotation matrices
+
+        @param A: [E x D] multi-dimensional array, latent representation of entity
+        @param R: [D x D x K] multi-dimensional array, rotation matrix for each relation
+        @return: [E x E x K] reconstructed knowledge graph
+        """
         T = np.zeros((A.shape[0], A.shape[0], R.shape[2]))
 
         for i in range(R.shape[2]):
@@ -128,21 +158,38 @@ class AMDC:
 
         return T
 
+    def test(self, T, A, R, test_idx):
+        T_bar = self.reconstruct(A, R)
+        T_bar[T_bar > 0] = 1
+        T_bar[T_bar <= 0] = -1
+
+        idx = np.unravel_index(test_idx, T.shape)
+
+        prec, recall, _ = precision_recall_curve(T[idx], T_bar[idx])
+        return auc(recall, prec)
+
+
+if __name__ == '__main__':
+    test()
+
 
 def test():
+    """
+    Test with Kinship dataset
+    Use all positive triples and negative triples as a training set
+    See how the reconstruction error is reduced during training
+    """
+    from scipy.io.matlab import loadmat
     mat = loadmat('../data/alyawarradata.mat')
     T = np.array(mat['Rs'], np.float32)
     T[T == 0] = -1  # set negative value to -1
     E, K = T.shape[0], T.shape[2]
-    max_iter = E * E * K
+    max_iter = E * E * K * 10
 
     latent_dimension = 10
 
     p_idx = np.ravel_multi_index((T == 1).nonzero(), T.shape)  # raveled positive index
-    n_idx = np.ravel_multi_index((T == -1).nonzero(), T.shape)  #raveled negative index
+    n_idx = np.ravel_multi_index((T == -1).nonzero(), T.shape)  # raveled negative index
 
     model = AMDC(latent_dimension)
-    model.learn(T, p_idx, n_idx, max_iter)  #use all positive and negative samples as training data
-
-if __name__ == '__main__':
-    test()
+    model.learn(T, p_idx, n_idx, max_iter, e_gap=10000)
