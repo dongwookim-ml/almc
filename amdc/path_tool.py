@@ -5,9 +5,9 @@ import itertools
 from collections import defaultdict
 
 
-def sample_broken_tri(T):
+def sample_broken_tri(T, link_val=1):
     """
-    find three nodes which do not have triangular path (i->j->k<-i) and corresponding relations
+    find three nodes which do not have triangular path (i->j->k<-i) and corresponding relations a, b, c
     @param T: graph tensor matrix
     @return: tuple (a, b, c) where a, b, c is an index of link (i->j), (j->k), (i->k)
     """
@@ -17,13 +17,13 @@ def sample_broken_tri(T):
         i, j, k = np.random.permutation(range(T.shape[0]))[:3]
         a, b, c = np.random.randint(T.shape[2], size=3)
 
-        if not (T[i, j, a] == 1 and T[j, k, b] == 1 and T[i, k, c] == 1):
+        if not (T[i, j, a] == link_val and T[j, k, b] == link_val and T[i, k, c] == link_val):
             find = True
 
     return ((i, j, a), (j, k, b), (i, k, c))
 
 
-def tri_index(T):
+def tri_index(T, link_val=1):
     """
     extract indices of every possible triangular path in the graph
     especially for the following path structure
@@ -34,6 +34,8 @@ def tri_index(T):
     @param T: [E x E x K] tensor graph where T[i,j,k] = 1 when there is type k link between node i and j
     @return: list of tuples consist of (a, b, c) where a, b, c is an index of link (i->j), (j->k), (i->k)
     """
+    T = T.copy()
+    T[T!=link_val] = 0
 
     e, k = T.shape[0], T.shape[2]
     T_squeeze = np.sum(T, 2)
