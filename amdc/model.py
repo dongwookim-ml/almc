@@ -1,7 +1,6 @@
 __author__ = 'Dongwoo Kim'
 
 import numpy as np
-import sklearn
 from sklearn.metrics import precision_recall_curve, auc
 
 heaviside = lambda x: 1 if x >= 0 else 0
@@ -54,8 +53,8 @@ class AMDC:
         """
         E, K = T.shape[0], T.shape[2]
 
-        np_idx = np.setdiff1d(range(np.prod(T.shape)), p_idx)
-        nn_idx = np.setdiff1d(range(np.prod(T.shape)), n_idx)
+        np_idx = np.setdiff1d(range(np.prod(T.shape)), p_idx)  # not positive index
+        nn_idx = np.setdiff1d(range(np.prod(T.shape)), n_idx)  # not negative index
 
         A = np.random.random([E, self.D])
         A /= np.linalg.norm(A, axis=1)[:, np.newaxis]
@@ -169,10 +168,6 @@ class AMDC:
         return auc(recall, prec)
 
 
-if __name__ == '__main__':
-    test()
-
-
 def test():
     """
     Test with Kinship dataset
@@ -193,3 +188,7 @@ def test():
 
     model = AMDC(latent_dimension)
     model.learn(T, p_idx, n_idx, max_iter, e_gap=10000)
+
+
+if __name__ == '__main__':
+    test()

@@ -5,6 +5,24 @@ import itertools
 from collections import defaultdict
 
 
+def sample_broken_tri(T):
+    """
+    find three nodes which do not have triangular path (i->j->k<-i) and corresponding relations
+    @param T: graph tensor matrix
+    @return: tuple (a, b, c) where a, b, c is an index of link (i->j), (j->k), (i->k)
+    """
+    find = False
+
+    while not find:
+        i, j, k = np.random.permutation(range(T.shape[0]))[:3]
+        a, b, c = np.random.randint(T.shape[2], size=3)
+
+        if not (T[i, j, a] == 1 and T[j, k, b] == 1 and T[i, k, c] == 1):
+            find = True
+
+    return ((i, j, a), (j, k, b), (i, k, c))
+
+
 def tri_index(T):
     """
     extract indices of every possible triangular path in the graph
