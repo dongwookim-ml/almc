@@ -15,7 +15,7 @@ class AMDC:
     Construction. WWW 2015
     """
 
-    def __init__(self, D, alpha_0=0.1, gamma=0.3, gamma_p=0.9, c_e=5., c_n=10.):
+    def __init__(self, D, alpha_0=0.1, gamma=0.3, gamma_p=0.9, c_e=5., c_n=1.):
         """
 
         @param D: latent dimension of entity
@@ -133,14 +133,23 @@ class AMDC:
 
             if it % e_gap == 0:
                 T_bar = self.reconstruct(A, R)
-                err = np.sum(np.abs(T - T_bar))
-                r_error.append(err)
-                print('Iter %d, Reconstruction error: %.2f' % (it, err))
+                _T = T.copy()
+                _T[_T==-1] = 0
+                T_bar = (T_bar + 1.)/2.
+
+                from sklearn.metrics import roc_auc_score
+                err = 0.
+                for k in range(K):
+                    err += roc_auc_score(_T[:,:,k].flatten(),T_bar[:,:,k].flatten())
+                err /= float(K)
+
+                print('Iter %d, ROC-AUC: %.5f' % (it, err))
 
             it += 1
             learning_rate = self.alpha_0 / np.sqrt(it)
 
         return A, R, r_error
+
 
     def reconstruct(self, A, R):
         """
@@ -153,19 +162,9 @@ class AMDC:
         T = np.zeros((A.shape[0], A.shape[0], R.shape[2]))
 
         for i in range(R.shape[2]):
-            T[:, :, i] = np.dot(A, np.dot(R[:, :, i], A.T))
+            T[:, :, i] = np.dot(np.dot(A, R[:, :, i]), A.T)
 
         return T
-
-    def test(self, T, A, R, test_idx):
-        T_bar = self.reconstruct(A, R)
-        T_bar[T_bar > 0] = 1
-        T_bar[T_bar <= 0] = -1
-
-        idx = np.unravel_index(test_idx, T.shape)
-
-        prec, recall, _ = precision_recall_curve(T[idx], T_bar[idx])
-        return auc(recall, prec)
 
 
 def test():
