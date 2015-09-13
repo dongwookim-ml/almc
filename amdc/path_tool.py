@@ -1,15 +1,26 @@
 __author__ = 'Dongwoo Kim'
 
-import numpy as np
 import itertools
 from collections import defaultdict
+
+import numpy as np
+
+
+def num_neighbor(T, idx, link_val=1):
+    """
+    find neighborhood of given idx (node)
+    """
+    outlink = len(np.nonzero(T[idx, :, :] == link_val))
+    inlink = len(np.nonzero(T[:, idx, :] == link_val))
+
+    return outlink + inlink
 
 
 def sample_broken_tri(T, link_val=1):
     """
     find three nodes which do not have triangular path (i->j->k<-i) and corresponding relations a, b, c
     @param T: graph tensor matrix
-    @return: tuple (a, b, c) where a, b, c is an index of link (i->j), (j->k), (i->k)
+    @return: tuple (x, y, z) where a, b, c is an index of link (i->j), (j->k), (i->k)
     """
     find = False
 
@@ -32,7 +43,7 @@ def tri_index(T, link_val=1):
     i -> k
 
     @param T: [E x E x K] tensor graph where T[i,j,k] = 1 when there is type k link between node i and j
-    @return: list of tuples consist of (a, b, c) where a, b, c is an index of link (i->j), (j->k), (i->k)
+    @return: list of tuples consist of (x, y, z) where a, b, c is an index of link (i->j), (j->k), (i->k)
     """
     T = T.copy()
     T[T!=link_val] = 0
