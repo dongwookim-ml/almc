@@ -3,8 +3,11 @@ __author__ = 'Dongwoo Kim'
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-heaviside = lambda x: 1 if x >= 0 else 0
+from ..utils.formatted_logger import formatted_logger
 
+log = formatted_logger('AMDC', 'info')
+
+heaviside = lambda x: 1 if x >= 0 else 0
 
 class AMDC:
     """
@@ -144,8 +147,10 @@ class AMDC:
                 err /= float(K)
 
                 obj = self.evaluate_objfn(A, R, p_idx, n_idx)
-                print('Iter %d, ObjectiveFn: %.5f, ROC-AUC: %.5f' % (it, obj, err))
 
+                r_error.append((obj, err))
+
+                log.info('Iter %d, ObjectiveFn: %.5f, ROC-AUC: %.5f' % (it, obj, err))
             it += 1
             learning_rate = self.alpha_0 / np.sqrt(it)
 

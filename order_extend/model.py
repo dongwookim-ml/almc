@@ -2,12 +2,14 @@
 Implementation of Order&Extend model
 Reference: [Matrix Completion with Queries, Ruchansky et al, KDD 2015]
 """
-import numpy as np
-import numpy.linalg as linalg
-import itertools
+__author__ = 'Dongwoo Kim'
+
 from collections import defaultdict
 
-from formatted_logger import formatted_logger
+import numpy as np
+import numpy.linalg as linalg
+
+from ..utils.formatted_logger import formatted_logger
 
 log = formatted_logger('OrderExtend', 'info')
 
