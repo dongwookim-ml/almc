@@ -1,7 +1,7 @@
 __author__ = 'Dongwoo Kim'
 
 import numpy as np
-from sklearn.metrics import precision_recall_curve, auc
+from sklearn.metrics import roc_auc_score
 
 heaviside = lambda x: 1 if x >= 0 else 0
 
@@ -42,13 +42,14 @@ class AMDC:
                 tensor representation of knowledge graph
                 E = number of entities
                 K = number of relationships
-        @param p_idx: observed index of positive triples, all indices are raveled by np.ravel_multi_index
-        @param n_idx: observed index of negative triples
+        @param p_idx: index of observed positive triples, all indices are raveled by np.ravel_multi_index
+        @param n_idx: index of observed negative triples
         @param max_iter: maximum number of iterations
         @param e_gap: evaluation gap
         @return: A, R, r_error
                 A: [E x D] latent feature vector of entities
                 R: [D x D x K] rotation matrix for each entity
+                D = size of latent dimension
                 r_error: list of reconstruction errors at each evaluation point
         """
         E, K = T.shape[0], T.shape[2]
@@ -137,13 +138,13 @@ class AMDC:
                 _T[_T==-1] = 0
                 T_bar = (T_bar + 1.)/2.
 
-                from sklearn.metrics import roc_auc_score
                 err = 0.
                 for k in range(K):
                     err += roc_auc_score(_T[:,:,k].flatten(),T_bar[:,:,k].flatten())
                 err /= float(K)
 
-                print('Iter %d, ROC-AUC: %.5f' % (it, err))
+                obj = self.evaluate_objfn(A, R, p_idx, n_idx)
+                print('Iter %d, ObjectiveFn: %.5f, ROC-AUC: %.5f' % (it, obj, err))
 
             it += 1
             learning_rate = self.alpha_0 / np.sqrt(it)
@@ -165,6 +166,52 @@ class AMDC:
             T[:, :, i] = np.dot(np.dot(A, R[:, :, i]), A.T)
 
         return T
+
+    def evaluate_objfn(self, A, R, p_idx, n_idx):
+        """
+        compute objective function of AMDC model
+
+        @param A: [E x D] multi-dimensional array, latent representation of entity
+        @param R: [D x D x K] multi-dimensional array, rotation matrix for each relation
+        @param p_idx: index of observed positive triples, all indices are raveled by np.ravel_multi_index
+        @param n_idx: index of observed negative triples
+        @return: objective function of AMDC model
+                Equation (4) in the original paper
+        """
+        obj = 0
+        total = A.shape[0] * A.shape[0] * R.shape[2]
+        np_idx = np.setdiff1d(range(total), p_idx)  # not positive index
+        nn_idx = np.setdiff1d(range(total), n_idx)  # not negative index
+
+        scores = self.reconstruct(A, R)
+        scores = scores.flatten()
+
+        # this approach requires too much memory
+        # first = self.gamma - scores[p_idx] + scores[np_idx][:,np.newaxis]
+        # first = np.sum(first[first>0])
+
+        # alternative (takes too much time...)
+        first, third = 0, 0
+        for i in p_idx:
+            tmp = self.gamma - scores[i] + scores[np_idx]
+            first += np.sum(tmp[tmp > 0])
+
+        second = self.c_e * (self.gamma_p - scores[p_idx])
+        second = np.sum(second[second > 0])
+
+        # third = self.c_n * (self.gamma - scores[nn_idx] + scores[n_idx][:,np.newaxis])
+        # third = np.sum(third[third>0])
+        for i in nn_idx:
+            tmp = self.c_n * (self.gamma - scores[i] + scores[n_idx])
+            third += np.sum(tmp[tmp > 0])
+
+        fourth = self.c_e * (self.gamma_p + scores[n_idx])
+        fourth = np.sum(fourth[fourth > 0])
+
+        obj += (first + second) / float(len(p_idx) * len(np_idx))
+        obj += (third + fourth) / float(len(n_idx) * len(nn_idx))
+
+        return obj
 
 
 def test():
