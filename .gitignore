@@ -59,3 +59,10 @@ target/
 # manually added for log and notebook temporary files
 .ipynb_checkpoints/
 logs/
+*.aux
+*.bbl
+*.blg
+*.fls
+*.gz
+*.pdf
+*.fdb_latexmk

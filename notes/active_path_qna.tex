@@ -1,0 +1,77 @@
+% !TEX TS-program = pdflatexmk
+\documentclass{article}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[a4paper, total={6.5in, 8.5in}, voffset=0.2in, footskip=15pt]{geometry}
+\usepackage{amsthm}
+
+
+\newtheorem{theorem}{Theorem} %This is the example presented in the introduction but it has the additional parameter [section] that restarts the theorem counter at every new section.
+\newtheorem{corollary}{Corollary}[theorem] %A environment called corollary is created, the counter of this new environment will be reset every time a new theorem environment is used.
+\newtheorem{lemma}[theorem]{Lemma} %In this case, the even though a new environment called lemma is created, it will use the same counter as the theorem environment.
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}[definition]
+\newtheorem{remark}{Remark}
+
+\begin{document}
+ 
+\section[ctf]{Active Learning for Compositional\footnote{Tensor factorisation with sequences of relations\cite{gu2015traversing}.} Tensor Factorisation}
+
+\begin{itemize}
+\item Let $E$ be a set of entities and $R$ be a set of binary relations. A triple $\lambda_{(i, k, j)}$ consists of two entities $i,j\in E$ and binary relation $k \in R$.
+\begin{itemize}
+\item To develop active learning on a knowledge graph, we have to distinguish \{positive $\Lambda_P$ /negative $\Lambda_N$/unknown $\Lambda_U$\} triples. We can query unknown triples to an oracle.
+\item Knowledge graph $\mathcal{G}$ is a set of positive triples $\Lambda_P$. 
+\end{itemize}
+
+\item \textbf{Positive path} $p = (i, {k_1}, {k_2}, ... , {k_L}, j)$. We can find one or more paths from entity $i$ to entity $j$ through a sequence of relations $k_1 / k_2 / \dots / k_L$ on $\mathcal{G}$. Let $\mathcal{P}_\mathcal{G}^L$ be a set of all possible paths, which length is equal or less than $L$.
+
+\item \textbf{Complementary path} $p' = (i, {k_1}, {k_2}, ... , {k_L}, {j'})$. We cannot find any path from entity $i$ to entity $j'$ through a sequence of relations $k_1 / k_2 / \dots / k_L$ on  $\mathcal{G}$. Note that only target entity $j'$ is different from the positive path $p$. Let $C(p)$ be a set of all possible complementary path of $p$.
+
+%\item \textbf{Negative path} $n = (e_i, W_{k_1}, W_{k_2}, ... , W_{k_L}, e_j)$. We can find one or more paths from entity $i$ to entity $j$ through a sequence of relations $k_1 / k_2 / \dots / k_L$ on $\Lambda - \mathcal{G}$.
+
+%\item \textbf{Complementary negative path} $n' = (e_i, W_{k_1}, W_{k_2}, ... , W_{k_L}, e_{j'})$. We cannot find any path from entity $i$ to entity $j'$ through a sequence of relations $k_1 / k_2 / \dots / k_L$ on  $\Lambda - \mathcal{G}$.
+
+\item Latent vector representation of entities and relations:
+\begin{itemize}
+\item $e_i \in \mathbb{R}^{D}$, $W_k \in \mathbb{R}^{D\times D}$
+\end{itemize}
+
+\item Objective function with pairwise losses (smoothed AUC loss)\cite{gu2015traversing}:
+\begin{itemize}
+\item $J_\Theta = \sum_{p\in \mathcal{P_G}} \sum_{p' \in C(p)} [1 - \text{score}(p) + \text{score}(p')]_+ \qquad\qquad\qquad\qquad\quad$ // positive paths \\
+ $ + \sum_{\lambda(i,k,j) \in \Lambda_N} \sum_{\lambda(i,k,l') \notin \Lambda_N} [1 - \text{score}((i,k,l)) + \text{score}((i,k,j')]_+ \quad\quad$  // negative triples\footnote{One may include negative paths in here, but the meaning of negative sequence is unclear and ambiguous.}
+\item score$(p) = e_i^T W_{k_1} \dots W_{k_L} e_j$
+\item score$((i,j,k)) = e_i^T W_{k} e_j$
+\item Model parameter $\Theta = \{\{e_i\}_{i \in E}, \{W_k\}_{k \in R}\}$ \quad s.t $|e_i| = 1 \quad \forall i \in E \quad$ // or with proper regularisation.
+\end{itemize}
+
+\item Active learning:
+\begin{itemize}
+\item Goal: to maximise predictive performance (AUC) of a test set $\Lambda_T$
+\item Query: triple $\lambda_{i,k,j}$ to be labeled by the oracle from a set of unknown triples $\Lambda_U$
+\item We can simply applying \textbf{active learning for pairwise loss function}\cite{Donmez2008} to choose a triple which maximise the expected loss from unlabelled triples.
+\item However, incorporating one positive triple $\lambda_{(i,k,j)}$ into the current graph $\mathcal{G}$ \textbf{will expand set of possible positive path} from $\mathcal{P}_\mathcal{G}$ to $\mathcal{P}_{\{\mathcal{G} \cup \lambda{(i,k,j)}\}}$, which requires a new method to compute the expected loss of unknown triple.
+\item Therefore, a new active learning algorithm should reflect the compositional structure of relations based on some existing criteria, i.e. uncertainty sampling, QBC, expected loss reduction, \dots
+\end{itemize}
+
+
+\item (Alternative objective function) Objective function with log-loss\cite{nickel2013logistic}.
+\begin{itemize}
+\item Formulate tensor factorisation in a probabilistic framework.
+\item Most of the active learning methods are derived from a probabilistic framework\cite{Settles2010}
+\end{itemize}
+
+\item Next move: design active learning algorithm for compositional matrix factorisation\cite{silva2012active}. Will expand it to the tensor factorisation problem. The compositional model has similar form of the recurrent neural net(RNN). Search previous studies for active learning on RNN if any (I couldn't find anything so far).
+
+\end{itemize}
+
+
+\bibliographystyle{plain}
+\bibliography{ref}
+
+\end{document}
