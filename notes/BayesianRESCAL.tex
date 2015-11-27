@@ -1,0 +1,60 @@
+% !TEX TS-program = pdflatexmk
+\documentclass{article}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[a4paper, total={6.5in, 8.5in}, voffset=0.2in, footskip=15pt]{geometry}
+\usepackage{amsthm}
+
+
+\newtheorem{theorem}{Theorem} %This is the example presented in the introduction but it has the additional parameter [section] that restarts the theorem counter at every new section.
+\newtheorem{corollary}{Corollary}[theorem] %A environment called corollary is created, the counter of this new environment will be reset every time a new theorem environment is used.
+\newtheorem{lemma}[theorem]{Lemma} %In this case, the even though a new environment called lemma is created, it will use the same counter as the theorem environment.
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}[definition]
+\newtheorem{remark}{Remark}
+
+\begin{document}
+ 
+\section{Bayesian RESCAL: Version 1}
+\subsection{Model}
+
+For each entity $i$, $e_i \in \mathbb{R}^{D}$ is drawn from multivariate-normal distribution.
+\begin{align}
+e_i \sim {N}(\mathbf{0}, \sigma_e^2{I}_D)
+\end{align}
+For each relation $k$, we draw matrix $R_k \in \mathbb{R}^{D\times D}$ from zero-mean matrix normal distribution.
+\begin{align}
+R_k \sim {N}_{D \times D}(\mathbf{0}, \sigma_r^2{I}, {I}) \\
+\text{vec}(R_k) = N(\mathbf{0}, \sigma_r^2 I_{D^2}{D^2})
+\end{align}
+For each triple $(i,k,j)$, we draw $x_{ikj}$ 
+\begin{align}
+x_{ikj} |e_i, e_j, R_k \sim N(e_i^{\top} R_k e_j, \sigma_x^2) = N(\text{vec}(R_k)^{\top} e_i \otimes e_j, \sigma_x^2)
+\end{align}
+
+\subsection{Inference}
+We use Gibbs sampling to infer the posterior distribution of $e_i$ and $R_k$.
+
+Conditional distribution of $e_i$ given $R$ and other entities $E_{-i}$
+\begin{align}
+p(e_i |\mathbf{e}_{-i}, \mathbf{R}, \mathbf{x}, \sigma_e, \sigma_x) = N(e_i | \mu_i, \Lambda_i^{-1})\\
+\mu_i = \frac{1}{\sigma_x^2}(\Lambda_i)^{-1}\xi_i \\
+\Lambda_i = \frac{1}{\sigma_x^2} \sum_{j,k} (R_k e_j)(R_k e_j)^\top + \frac{1}{\sigma_x^2} \sum_{j,k} (R_k^\top e_j)(R_k^\top e_j)^\top+ \frac{1}{\sigma_e^2} {I}_D\\
+\xi_i = \sum_{j,k} x_{ikj} R_{k} e_{j} + x_{jki} R_{k}^\top e_{j}
+\end{align}
+Conditional distribution of $R_k$ given $\mathbf{e}$
+\begin{align}
+p(R_k|\mathbf{e}, \mathbf{x}, \sigma_r, \sigma_x)  = N(e_i | \mu_k, \Lambda_k^{-1})\\
+\mu_k = \frac{1}{\sigma_x^2}(\Lambda_k)^{-1}\xi_k \\
+\Lambda_k = \frac{1}{\sigma_x^2} \sum_{i,j} (e_i \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2 \times D^2}\\
+\xi_k = \sum_{ij} x_{ikj} e_{i} \otimes e_{j}
+\end{align}
+
+\bibliographystyle{plain}
+\bibliography{ref}
+
+\end{document}
