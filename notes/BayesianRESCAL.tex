@@ -50,7 +50,7 @@ Conditional distribution of $R_k$ given $\mathbf{e}$
 \begin{align}
 p(R_k|\mathbf{e}, \mathbf{x}, \sigma_r, \sigma_x)  = N(e_i | \mu_k, \Lambda_k^{-1})\\
 \mu_k = \frac{1}{\sigma_x^2}(\Lambda_k)^{-1}\xi_k \\
-\Lambda_k = \frac{1}{\sigma_x^2} \sum_{i,j} (e_i \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2 \times D^2}\\
+\Lambda_k = \frac{1}{\sigma_x^2} \sum_{i,j} (e_i \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2}\\
 \xi_k = \sum_{ij} x_{ikj} e_{i} \otimes e_{j}
 \end{align}
 
