@@ -1,15 +1,15 @@
 import itertools
 import logging
-
+import time
 import numpy as np
 from numpy.random import multivariate_normal, gamma
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
 class BayesianRescal:
-    def __init__(self, n_dim, var_e=1., var_x=1., var_r=1., compute_score=True, sample_prior=True, e_alpha=1.,
+    def __init__(self, n_dim, var_e=1., var_x=1., var_r=1., compute_score=True, sample_prior=False, e_alpha=1.,
                  e_beta=1., x_alpha=1., x_beta=1., r_alpha=1., r_beta=1., prior_sample_gap=10):
         self.n_dim = n_dim
         self.var_e = var_e
@@ -34,16 +34,27 @@ class BayesianRescal:
         self._gibbs(X, max_iter)
 
     def _gibbs(self, X, max_iter):
+
+        if getattr(self, 'E', True):
+            self.n_relations = X.shape[0]
+            self.n_entities = X.shape[1]
+
+            self.E = np.zeros([self.n_entities, self.n_dim])
+            self.R = np.zeros([self.n_relations, self.n_dim, self.n_dim])
+
         for i in range(max_iter):
+            tic = time.time()
             self._sample_entities(X)
             self._sample_relations(X)
 
             if self.sample_prior and (i + 1) % self.prior_sample_gap == 0:
                 self._sample_prior()
+            toc = time.time()
 
             if self.compute_score:
                 _score = self.score(X)
-                logger.info("Iter %d: Score %.3f", i, _score)
+                _fit, r_error = self._compute_fit(X)
+                logger.info("[%3d] LL: %.3f | fit: %0.5f | r_error: %.3f | sec: %.3f", i, _score, _fit, r_error, (toc-tic))
 
     def _sample_prior(self):
         self._sample_var_r()
@@ -90,7 +101,7 @@ class BayesianRescal:
             _lambda *= 1. / self.var_r
             inv_lambda = np.linalg.inv(_lambda)
             mu = 1. / self.var_x * np.dot(inv_lambda, xi)
-            self.R[k] = multivariate_normal(mu, inv_lambda).reshape([10, 10])
+            self.R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
 
     def _reconstruct(self):
         _X = np.zeros([self.n_relations, self.n_entities, self.n_entities])
@@ -126,3 +137,18 @@ class BayesianRescal:
             score += (self.r_alpha - 1.) * np.log(self.var_r) - self.r_beta * self.var_r
 
         return score
+
+    # metric used in rescal
+    def _compute_fit(self, X):
+        from numpy.linalg import norm
+
+        f = 0
+        r_error = 0
+        sumNorm = np.sum(X ** 2)
+        for k in range(self.n_relations):
+            mean = np.dot(np.dot(self.E, self.R[k]), self.E.T)
+            _diff = X[k] - mean
+            f += norm(_diff) ** 2
+            r_error += np.sum(np.abs(_diff))
+
+        return (1. - f /sumNorm), r_error

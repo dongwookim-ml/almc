@@ -10,7 +10,7 @@ if __name__ == '__main__':
     T = np.array(mat['Rs'], np.float32)
 
     D = 10
-    T = np.swapaxes(T,1,2)
+    T = np.swapaxes(T, 1, 2)
     T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
     print(T.shape)
     model = BayesianRescal(D)
