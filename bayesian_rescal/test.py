@@ -13,6 +13,6 @@ if __name__ == '__main__':
     T = np.swapaxes(T, 1, 2)
     T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
     print(T.shape)
-    model = BayesianRescal(D)
+    model = BayesianRescal(D, controlled_var=True)
     model.fit(T)
 
