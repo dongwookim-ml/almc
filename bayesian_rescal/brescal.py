@@ -33,8 +33,10 @@ class BayesianRescal:
         self.n_relations = X.shape[0]
         self.n_entities = X.shape[1]
 
-        self.E = np.zeros([self.n_entities, self.n_dim])
-        self.R = np.zeros([self.n_relations, self.n_dim, self.n_dim])
+        #self.E = np.zeros([self.n_entities, self.n_dim])
+        self.E = np.random.random([self.n_entities,self.n_dim])
+        #self.R = np.zeros([self.n_relations, self.n_dim, self.n_dim])
+        self.R = np.random.random([self.n_relations, self.n_dim, self.n_dim])
 
         # for controlled variance
         if self.controlled_var:
@@ -44,6 +46,8 @@ class BayesianRescal:
         self._gibbs(X, max_iter)
 
     def _gibbs(self, X, max_iter):
+        logger.info("[INIT] LL: %.3f | fit: %0.5f", self.score(X), self._compute_fit(X)[0])
+
         for i in range(max_iter):
             tic = time.time()
             self._sample_entities(X)
@@ -57,6 +61,8 @@ class BayesianRescal:
                 _score = self.score(X)
                 _fit, _ = self._compute_fit(X)
                 logger.info("[%3d] LL: %.3f | fit: %0.5f |  sec: %.3f", i, _score, _fit, (toc - tic))
+            else:
+                logger.info("[%3d] sec: %.3f", i, (toc - tic))
 
     def _sample_prior(self):
         self._sample_var_r()
@@ -151,14 +157,27 @@ class BayesianRescal:
         X
 
         """
+        from scipy.stats import norm, multivariate_normal
+
+        if not hasattr(self, 'n_relations'):
+            self.n_entities, self.n_relations, _ = X.shape
+
         score = 0
         for k in range(self.n_relations):
             mean = np.dot(np.dot(self.E, self.R[k]), self.E.T)
-            score -= np.sum((X[k] - mean) ** 2. / (2. * self.var_x))  # p(x|E,R)
-            score -= np.sum(self.R[k] ** 2 / (2. * self.var_r))  # p(R)
+            #score -= np.sum((X[k] - mean) ** 2. / (2. * self.var_x))  # p(x|E,R)
+            #score -= np.sum(self.R[k] ** 2 / (2. * self.var_r))  # p(R)
+            #for i,j in itertools.product(range(self.n_entities), repeat=2):
+            score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)))
+            score += np.sum(norm.logpdf(self.R[k].flatten(), 0, np.sqrt(self.var_r)))
 
         for i in range(self.n_entities):
-            score -= np.sum(self.E[i] ** 2 / (2. * self.var_e))  # p(E)
+            #score -= np.sum(self.E[i] ** 2 / (2. * self.var_e))  # p(E)
+            a = multivariate_normal.logpdf(self.E[i], np.zeros(self.n_dim), np.identity(self.n_dim)*self.var_e)
+            b = np.sum(norm.logpdf(self.E[i], 0, np.sqrt(self.var_e)))
+
+            assert np.all(np.isclose(a,b))
+            score += multivariate_normal.logpdf(self.E[i], np.zeros(self.n_dim), np.identity(self.n_dim)*self.var_e)
 
         if self.sample_prior:
             score += (self.e_alpha - 1.) * np.log(self.var_e) - self.e_beta * self.var_e

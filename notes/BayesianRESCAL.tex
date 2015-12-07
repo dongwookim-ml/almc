@@ -37,7 +37,7 @@ x_{ikj} |e_i, e_j, R_k \sim N(e_i^{\top} R_k e_j, \sigma_x^2) = N(\text{vec}(R_k
 \end{align}
 
 \subsection{Inference}
-We use Gibbs sampling to infer the posterior distribution of $e_i$ and $R_k$.
+We use Gibbs sampling to infer the posterior distribution of $e_i$ and $R_k$ \cite{Salakhutdinov2008}.
 
 Conditional distribution of $e_i$ given $R$ and other entities $E_{-i}$
 \begin{align}
@@ -53,6 +53,8 @@ p(R_k|\mathbf{e}, \mathbf{x}, \sigma_r, \sigma_x)  = N(e_i | \mu_k, \Lambda_k^{-
 \Lambda_k = \frac{1}{\sigma_x^2} \sum_{i,j} (e_i \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2}\\
 \xi_k = \sum_{ij} x_{ikj} e_{i} \otimes e_{j}
 \end{align}
+
+
 
 \bibliographystyle{plain}
 \bibliography{ref}

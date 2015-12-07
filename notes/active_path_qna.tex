@@ -32,10 +32,6 @@
 
 \item \textbf{Complementary path} $p' = (i, {k_1}, {k_2}, ... , {k_L}, {j'})$. We cannot find any path from entity $i$ to entity $j'$ through a sequence of relations $k_1 / k_2 / \dots / k_L$ on  $\mathcal{G}$. Note that only target entity $j'$ is different from the positive path $p$. Let $C(p)$ be a set of all possible complementary path of $p$.
 
-%\item \textbf{Negative path} $n = (e_i, W_{k_1}, W_{k_2}, ... , W_{k_L}, e_j)$. We can find one or more paths from entity $i$ to entity $j$ through a sequence of relations $k_1 / k_2 / \dots / k_L$ on $\Lambda - \mathcal{G}$.
-
-%\item \textbf{Complementary negative path} $n' = (e_i, W_{k_1}, W_{k_2}, ... , W_{k_L}, e_{j'})$. We cannot find any path from entity $i$ to entity $j'$ through a sequence of relations $k_1 / k_2 / \dots / k_L$ on  $\Lambda - \mathcal{G}$.
-
 \item Latent vector representation of entities and relations:
 \begin{itemize}
 \item $e_i \in \mathbb{R}^{D}$, $W_k \in \mathbb{R}^{D\times D}$
@@ -68,6 +64,15 @@
 
 \item Next move: design active learning algorithm for compositional matrix factorisation\cite{silva2012active}. Will expand it to the tensor factorisation problem. The compositional model has similar form of the recurrent neural net(RNN). Search previous studies for active learning on RNN if any (I couldn't find anything so far).
 
+\end{itemize}
+
+\section{Discussions}
+\begin{itemize}
+\item \textbf{Relation}: One-to-many relation.
+
+\item \textbf{Complementary path}: Definition of complementary path. Why is the final entity of the complementary path different from the positive path? Is there another way to define complementary path?
+
+\item \textbf{Path}: Above definition of a path is not a path on graph structure. It is more likely to be a template since there would be multiple paths on graph for one `positive path' or `complementary path'.
 \end{itemize}
 
 
