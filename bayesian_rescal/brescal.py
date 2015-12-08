@@ -55,6 +55,7 @@ class BayesianRescal:
 
             if self.sample_prior and (i + 1) % self.prior_sample_gap == 0:
                 self._sample_prior()
+
             toc = time.time()
 
             if self.compute_score:
@@ -82,15 +83,22 @@ class BayesianRescal:
         for i in range(self.n_entities):
             self.E[i] *= 0
             _lambda = np.zeros([self.n_dim, self.n_dim])
+            #_tmp = np.zeros_like(_lambda)
             xi = np.zeros(self.n_dim)
 
             if self.controlled_var:
                 for k in range(self.n_relations):
-                    tmp = np.dot(self.R[k], self.E.T) * (1. / self.var_X[k, i, :])  # D x E
-                    tmp2 = np.dot(self.R[k].T, self.E.T) * (1. / self.var_X[k, :, i])
-                    _lambda += np.dot(tmp, tmp.T) + np.dot(tmp2, tmp2.T)
+                    tmp = np.dot(self.R[k], self.E.T)  # D x E
+                    tmp2 = np.dot(self.R[k].T, self.E.T)
+                    # _lambda += np.dot(np.dot(tmp,np.diag((1. / self.var_X[k, i, :]))), tmp.T) \
+                    #            + np.dot(np.dot(tmp2,np.diag((1. / self.var_X[k, :, i]))), tmp2.T)
+                    _lambda += np.dot(tmp * (1./self.var_X[k,i,:]), tmp.T) + np.dot(tmp2 * (1./self.var_X[k,:,i]), tmp2.T)
+
+                    #assert np.all(np.isclose(_lambda,_tmp))
+
                     xi += np.sum((1. / self.var_X[k, i, :]) * X[k, i, :] * tmp, 1) \
                           + np.sum((1. / self.var_X[k, :, i]) * X[k, :, i] * tmp2, 1)
+
 
                 _lambda += (1. / self.var_e) * np.identity(self.n_dim)
                 inv_lambda = np.linalg.inv(_lambda)
@@ -103,10 +111,11 @@ class BayesianRescal:
                     _lambda += np.dot(tmp, tmp.T) + np.dot(tmp2, tmp2.T)
                     xi += np.sum(X[k, i, :] * tmp, 1) + np.sum(X[k, :, i] * tmp2, 1)
 
+                xi *= (1. / self.var_x)
                 _lambda *= 1. / self.var_x
                 _lambda += (1. / self.var_e) * np.identity(self.n_dim)
                 inv_lambda = np.linalg.inv(_lambda)
-                mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
+                mu = np.dot(inv_lambda, xi)
 
             self.E[i] = multivariate_normal(mu, inv_lambda)
 
@@ -116,12 +125,16 @@ class BayesianRescal:
             EXE = np.kron(self.E, self.E)
 
             for k in range(self.n_relations):
-                _EXE = EXE * (1. / self.var_X[k, :, :].flatten()[:, np.newaxis])
-                _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
+                #_lambda = np.dot(np.dot(EXE.T, np.diag((1. / self.var_X[k, :, :].flatten()))),EXE)  # D^2 x D^2
+                tmp = EXE * (1./self.var_X[k, :, :].flatten()[:,np.newaxis])
+                _lambda = np.dot(tmp.T, EXE)
+
+                #assert np.all(np.isclose(_lambda, _tmp))
+
                 _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
                 inv_lambda = np.linalg.inv(_lambda)
 
-                xi = np.sum(_EXE * X[k].flatten()[:, np.newaxis] * (1. / self.var_X[k].flatten()[:, np.newaxis]), 0)
+                xi = np.sum(EXE * X[k].flatten()[:, np.newaxis] * (1. / self.var_X[k, :, :].flatten()[:, np.newaxis]), 0)
                 mu = np.dot(inv_lambda, xi)
                 self.R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
 
