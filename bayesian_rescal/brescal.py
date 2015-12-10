@@ -3,15 +3,20 @@ import logging
 import time
 import numpy as np
 from numpy.random import multivariate_normal, gamma
+from sklearn.metrics import mean_squared_error
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+_E_ALPHA = 1.
+_E_BETA = 1.
+_R_ALPHA = 1.
+_R_BETA = 1.
 
 class BayesianRescal:
-    def __init__(self, n_dim, var_e=1., var_x=1., var_r=1., compute_score=True, sample_prior=False, e_alpha=1.,
-                 e_beta=1., x_alpha=1., x_beta=1., r_alpha=1., r_beta=1., prior_sample_gap=5, controlled_var=False,
-                 obs_var=1., unobs_var=10.):
+    def __init__(self, n_dim, var_e=1., var_x=0.01, var_r=1., compute_score=True, sample_prior=False, e_alpha=1.,
+                 e_beta=1., r_alpha=1., r_beta=1., prior_sample_gap=5, controlled_var=False,
+                 obs_var=1., unobs_var=10., eval_fn=mean_squared_error, **kwargs):
         self.n_dim = n_dim
         self.var_e = var_e
         self.var_x = var_x
@@ -19,15 +24,18 @@ class BayesianRescal:
         self.compute_score = compute_score
 
         self.sample_prior = sample_prior
-        self.e_alpha = e_alpha
-        self.e_beta = e_beta
-        self.r_alpha = r_alpha
-        self.r_beta = r_beta
         self.prior_sample_gap = prior_sample_gap
+
+        self.e_alpha = kwargs.pop('e_alpha', _E_ALPHA)
+        self.e_beta = kwargs.pop('e_beta', _E_BETA)
+        self.r_alpha = kwargs.pop('r_alpha', _R_ALPHA)
+        self.r_beta = kwargs.pop('r_beta', _R_BETA)
 
         self.controlled_var = controlled_var
         self.obs_var = obs_var
         self.unobs_var = unobs_var
+
+        self.eval_fn = eval_fn
 
     def fit(self, X, max_iter=100):
         self.n_relations = X.shape[0]
@@ -46,7 +54,7 @@ class BayesianRescal:
         self._gibbs(X, max_iter)
 
     def _gibbs(self, X, max_iter):
-        logger.info("[INIT] LL: %.3f | fit: %0.5f", self.score(X), self._compute_fit(X)[0])
+        logger.info("[INIT] LL: %.3f | fit: %0.5f", self.score(X), self._compute_fit(X))
 
         for i in range(max_iter):
             tic = time.time()
@@ -60,7 +68,7 @@ class BayesianRescal:
 
             if self.compute_score:
                 _score = self.score(X)
-                _fit, _ = self._compute_fit(X)
+                _fit = self._compute_fit(X)
                 logger.info("[%3d] LL: %.3f | fit: %0.5f |  sec: %.3f", i, _score, _fit, (toc - tic))
             else:
                 logger.info("[%3d] sec: %.3f", i, (toc - tic))
@@ -83,18 +91,13 @@ class BayesianRescal:
         for i in range(self.n_entities):
             self.E[i] *= 0
             _lambda = np.zeros([self.n_dim, self.n_dim])
-            #_tmp = np.zeros_like(_lambda)
             xi = np.zeros(self.n_dim)
 
             if self.controlled_var:
                 for k in range(self.n_relations):
                     tmp = np.dot(self.R[k], self.E.T)  # D x E
                     tmp2 = np.dot(self.R[k].T, self.E.T)
-                    # _lambda += np.dot(np.dot(tmp,np.diag((1. / self.var_X[k, i, :]))), tmp.T) \
-                    #            + np.dot(np.dot(tmp2,np.diag((1. / self.var_X[k, :, i]))), tmp2.T)
                     _lambda += np.dot(tmp * (1./self.var_X[k,i,:]), tmp.T) + np.dot(tmp2 * (1./self.var_X[k,:,i]), tmp2.T)
-
-                    #assert np.all(np.isclose(_lambda,_tmp))
 
                     xi += np.sum((1. / self.var_X[k, i, :]) * X[k, i, :] * tmp, 1) \
                           + np.sum((1. / self.var_X[k, :, i]) * X[k, :, i] * tmp2, 1)
@@ -125,12 +128,8 @@ class BayesianRescal:
             EXE = np.kron(self.E, self.E)
 
             for k in range(self.n_relations):
-                #_lambda = np.dot(np.dot(EXE.T, np.diag((1. / self.var_X[k, :, :].flatten()))),EXE)  # D^2 x D^2
                 tmp = EXE * (1./self.var_X[k, :, :].flatten()[:,np.newaxis])
                 _lambda = np.dot(tmp.T, EXE)
-
-                #assert np.all(np.isclose(_lambda, _tmp))
-
                 _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
                 inv_lambda = np.linalg.inv(_lambda)
 
@@ -178,18 +177,14 @@ class BayesianRescal:
         score = 0
         for k in range(self.n_relations):
             mean = np.dot(np.dot(self.E, self.R[k]), self.E.T)
-            #score -= np.sum((X[k] - mean) ** 2. / (2. * self.var_x))  # p(x|E,R)
-            #score -= np.sum(self.R[k] ** 2 / (2. * self.var_r))  # p(R)
-            #for i,j in itertools.product(range(self.n_entities), repeat=2):
-            score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)))
+            if self.controlled_var:
+                score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_X[k].flatten())))
+            else:
+                score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)))
+
             score += np.sum(norm.logpdf(self.R[k].flatten(), 0, np.sqrt(self.var_r)))
 
         for i in range(self.n_entities):
-            #score -= np.sum(self.E[i] ** 2 / (2. * self.var_e))  # p(E)
-            a = multivariate_normal.logpdf(self.E[i], np.zeros(self.n_dim), np.identity(self.n_dim)*self.var_e)
-            b = np.sum(norm.logpdf(self.E[i], 0, np.sqrt(self.var_e)))
-
-            assert np.all(np.isclose(a,b))
             score += multivariate_normal.logpdf(self.E[i], np.zeros(self.n_dim), np.identity(self.n_dim)*self.var_e)
 
         if self.sample_prior:
@@ -198,17 +193,10 @@ class BayesianRescal:
 
         return score
 
-    # metric used in rescal
     def _compute_fit(self, X):
         from numpy.linalg import norm
 
-        f = 0
-        r_error = 0
-        sumNorm = np.sum(X ** 2)
-        for k in range(self.n_relations):
-            mean = np.dot(np.dot(self.E, self.R[k]), self.E.T)
-            _diff = X[k] - mean
-            f += norm(_diff) ** 2
-            r_error += np.sum(np.abs(_diff))
+        _X = self._reconstruct()
+        _fit = self.eval_fn(X.flatten(), _X.flatten())
 
-        return (1. - f / sumNorm), r_error
+        return _fit
