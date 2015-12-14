@@ -2,7 +2,7 @@ import itertools
 import logging
 import time
 import numpy as np
-import multiprocessing as mp
+import concurrent.futures
 from numpy.random import multivariate_normal, gamma, multinomial
 from sklearn.metrics import mean_squared_error
 
@@ -13,8 +13,9 @@ _E_ALPHA = 1.
 _E_BETA = 1.
 _R_ALPHA = 1.
 _R_BETA = 1.
-_PARALLEL = False
 _P_SAMPLE_GAP = 5
+_PARALLEL = True
+_MAX_THREAD = 4
 
 _VAR_E = 1.
 _VAR_R = 1.
@@ -40,6 +41,7 @@ class PFBayesianRescal:
         self.r_beta = kwargs.pop('r_beta', _R_BETA)
 
         self.parallelize = kwargs.pop('parallel', _PARALLEL)
+        self.max_thread = kwargs.pop('max_thread', _MAX_THREAD)
 
         self.controlled_var = controlled_var
         self.obs_var = obs_var
@@ -221,7 +223,6 @@ class PFBayesianRescal:
                 xi += np.sum((1. / self.var_X[k, i, :]) * X[k, i, :] * tmp, 1) \
                       + np.sum((1. / self.var_X[k, :, i]) * X[k, :, i] * tmp2, 1)
 
-
             _lambda += (1. / self.var_e) * np.identity(self.n_dim)
             inv_lambda = np.linalg.inv(_lambda)
             mu = np.dot(inv_lambda, xi)
@@ -266,32 +267,30 @@ class PFBayesianRescal:
         return (R[k], k)
 
     def _sample_relations(self, X, E, R):
-        def _overwrite(result):
-            R[result[1]] = result[0]
-
         EXE = np.kron(E, E)
-        pool = mp.Pool()
+
         if not self.controlled_var:
             _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
             _lambda *= (1. / self.var_x)
             _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
             inv_lambda = np.linalg.inv(_lambda)
 
-            for k in range(self.n_relations):
-                if self.parallelize:
-                    pool.apply_async(self._sample_relation, args = (X, E, R, k, EXE, inv_lambda), callback=_overwrite)
-                else:
-                    self._sample_relation(X, E, R, k, EXE, inv_lambda)
+            if self.parallelize:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
+                    fs = [executor.submit(self._sample_relation, X, E, R, k, EXE, inv_lambda) for k in range(self.n_relations)]
+                concurrent.futures.wait(fs)
+            else:
+                [self._sample_relation(X, E, R, k, EXE, inv_lambda) for k in range(self.n_relations)]
 
         else:
-            for k in range(self.n_relations):
-                if self.parallelize:
-                    pool.apply_async(self._sample_relation, args = (X, E, R, k, EXE), callback=_overwrite)
-                else:
-                    self._sample_relation(X, E, R, k, EXE)
+            if self.parallelize:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
+                    fs = [executor.submit(self._sample_relation, X, E, R, k, EXE) for k in range(self.n_relations)]
+                concurrent.futures.wait(fs)
 
-        pool.close()
-        pool.join()
+            else:
+                [self._sample_relation(X, E, R, k, EXE) for k in range(self.n_relations)]
+
         return R
 
     def _reconstruct(self, E, R):
@@ -340,8 +339,6 @@ class PFBayesianRescal:
         return score/self.n_particles
 
     def _compute_fit(self, X):
-        from numpy.linalg import norm
-
         p = self.p_weights.argmax()
         _X = self._reconstruct(self.E[p], self.R[p])
         _fit = self.eval_fn(X.flatten(), _X.flatten())

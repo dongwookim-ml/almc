@@ -1,8 +1,7 @@
-import itertools
 import logging
 import time
 import numpy as np
-import multiprocessing as mp
+import concurrent.futures
 from numpy.random import multivariate_normal, gamma
 from sklearn.metrics import mean_squared_error
 
@@ -14,15 +13,22 @@ _E_BETA = 1.
 _R_ALPHA = 1.
 _R_BETA = 1.
 _P_SAMPLE_GAP = 5
-_PARALLEL = False
+_PARALLEL = True
+_MAX_THREAD = 4
+
+_VAR_E = 1.
+_VAR_R = 1.
+_VAR_X = 0.01
 
 class BayesianRescal:
     def __init__(self, n_dim, var_e=1., var_x=0.01, var_r=1., compute_score=True, sample_prior=False,
                  controlled_var=False, obs_var=0.01, unobs_var=10., eval_fn=mean_squared_error, **kwargs):
         self.n_dim = n_dim
-        self.var_e = var_e
-        self.var_x = var_x
-        self.var_r = var_r
+
+        self.var_e = kwargs.pop('var_e', _VAR_E)
+        self.var_r = kwargs.pop('var_r', _VAR_R)
+        self.var_x = kwargs.pop('var_x', _VAR_X)
+
         self.compute_score = compute_score
 
         self.sample_prior = sample_prior
@@ -34,6 +40,7 @@ class BayesianRescal:
         self.r_beta = kwargs.pop('r_beta', _R_BETA)
 
         self.parallelize = kwargs.pop('parallel', _PARALLEL)
+        self.max_thread = kwargs.pop('max_thread', _MAX_THREAD)
 
         self.controlled_var = controlled_var
         self.obs_var = obs_var
@@ -148,32 +155,30 @@ class BayesianRescal:
         return (R[k], k)
 
     def _sample_relations(self, X, E, R):
-        def _overwrite(result):
-            R[result[1]] = result[0]
-
         EXE = np.kron(E, E)
-        pool = mp.Pool()
+
         if not self.controlled_var:
             _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
             _lambda *= (1. / self.var_x)
             _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
             inv_lambda = np.linalg.inv(_lambda)
 
-            for k in range(self.n_relations):
-                if self.parallelize:
-                    pool.apply_async(self._sample_relation, args = (X, E, R, k, EXE, inv_lambda), callback=_overwrite)
-                else:
-                    self._sample_relation(X, E, R, k, EXE, inv_lambda)
+            if self.parallelize:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
+                    fs = [executor.submit(self._sample_relation, X, E, R, k, EXE, inv_lambda) for k in range(self.n_relations)]
+                concurrent.futures.wait(fs)
+            else:
+                [self._sample_relation(X, E, R, k, EXE, inv_lambda) for k in range(self.n_relations)]
 
         else:
-            for k in range(self.n_relations):
-                if self.parallelize:
-                    pool.apply_async(self._sample_relation, args = (X, E, R, k, EXE), callback=_overwrite)
-                else:
-                    self._sample_relation(X, E, R, k, EXE)
+            if self.parallelize:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
+                    fs = [executor.submit(self._sample_relation, X, E, R, k, EXE) for k in range(self.n_relations)]
+                concurrent.futures.wait(fs)
 
-        pool.close()
-        pool.join()
+            else:
+                [self._sample_relation(X, E, R, k, EXE) for k in range(self.n_relations)]
+
         return R
 
     def _reconstruct(self):
@@ -221,8 +226,6 @@ class BayesianRescal:
         return score
 
     def _compute_fit(self, X):
-        from numpy.linalg import norm
-
         _X = self._reconstruct()
         _fit = self.eval_fn(X.flatten(), _X.flatten())
 

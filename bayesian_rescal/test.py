@@ -1,9 +1,13 @@
-import numpy as np
 import logging
+import itertools
+
+import numpy as np
 from scipy.io.matlab import loadmat
 from scipy.sparse import csr_matrix
+
 import matplotlib
 import matplotlib.pyplot as plt
+
 from sklearn.metrics import roc_auc_score
 
 import rescal
@@ -23,7 +27,7 @@ if __name__ == '__main__':
     T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
     n_relation, n_entity, _ = T.shape
 
-    import itertools
+
     maskT = np.zeros_like(T)
     p = 0.1
     for k in range(n_relation):
@@ -31,6 +35,9 @@ if __name__ == '__main__':
             if T[k, i, j] and np.random.binomial(1, p):
                 maskT[k, i, j] = 1
 
-    model = PFBayesianRescal(n_dim, controlled_var=True, obs_var=.01, unobs_var=.01, n_particles=5,
-                         eval_fn=roc_auc_score, parallelize=False)
-    seq = model.fit(T, obs_mask = maskT.copy(), max_iter=300)
+    # model = BayesianRescal(n_dim, eval_fn=roc_auc_score, controlled_var=True, parallelize=True)
+    # model.fit(T, max_iter=100)
+
+    model = PFBayesianRescal(n_dim, controlled_var=False, obs_var=.01, unobs_var=10., n_particles=5,
+                         eval_fn=roc_auc_score, parallelize=True)
+    seq = model.fit(T, obs_mask = maskT.copy(), max_iter=100)
