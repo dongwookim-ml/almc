@@ -2,6 +2,7 @@ import itertools
 import logging
 import time
 import numpy as np
+import multiprocessing as mp
 from numpy.random import multivariate_normal, gamma, multinomial
 from sklearn.metrics import mean_squared_error
 
@@ -12,23 +13,33 @@ _E_ALPHA = 1.
 _E_BETA = 1.
 _R_ALPHA = 1.
 _R_BETA = 1.
+_PARALLEL = False
+_P_SAMPLE_GAP = 5
+
+_VAR_E = 1.
+_VAR_R = 1.
+_VAR_X = 0.01
 
 class PFBayesianRescal:
-    def __init__(self, n_dim, var_e=1., var_x=.01, var_r=1., compute_score=True, sample_prior=False, prior_sample_gap=5,
-                 controlled_var=False, obs_var=1., unobs_var=10., n_particles=30, selection='Thompson',
+    def __init__(self, n_dim, compute_score=True, sample_prior=False,
+                 controlled_var=False, obs_var=.01, unobs_var=10., n_particles=30, selection='Thompson',
                  eval_fn=mean_squared_error, **kwargs):
         self.n_dim = n_dim
-        self.var_e = var_e
-        self.var_x = var_x
-        self.var_r = var_r
+
+        self.var_e = kwargs.pop('var_e', _VAR_E)
+        self.var_r = kwargs.pop('var_r', _VAR_R)
+        self.var_x = kwargs.pop('var_x', _VAR_X)
+
         self.compute_score = compute_score
 
         self.sample_prior = sample_prior
-        self.prior_sample_gap = prior_sample_gap
+        self.prior_sample_gap = kwargs.pop('prior_sample_gap', _P_SAMPLE_GAP)
         self.e_alpha = kwargs.pop('e_alpha', _E_ALPHA)
         self.e_beta = kwargs.pop('e_beta', _E_BETA)
         self.r_alpha = kwargs.pop('r_alpha', _R_ALPHA)
         self.r_beta = kwargs.pop('r_beta', _R_BETA)
+
+        self.parallelize = kwargs.pop('parallel', _PARALLEL)
 
         self.controlled_var = controlled_var
         self.obs_var = obs_var
@@ -119,7 +130,7 @@ class PFBayesianRescal:
             if self.compute_score:
                 _score = self.score(X)
                 _fit = self._compute_fit(X)
-                logger.info("[%3d] LL: %.3f | fit: %0.5f |  sec: %.3f", i, _score, _fit, (toc - tic))
+                logger.info("[%3d] LL: %.3f | fit(%s): %0.5f |  sec: %.3f", i, _score, self.eval_fn.__name__,  _fit, (toc - tic))
             else:
                 logger.info("[%3d] sec: %.3f", i, (toc - tic))
 
@@ -237,27 +248,29 @@ class PFBayesianRescal:
         return E
 
     def _sample_relation(self, X, E, R, k, EXE, inv_lambda=None):
-        if self.controlled_var:
-            for k in range(self.n_relations):
-                tmp = EXE * (1./self.var_X[k, :, :].flatten()[:,np.newaxis])
-                _lambda = np.dot(tmp.T, EXE)
-                _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
-                inv_lambda = np.linalg.inv(_lambda)
-
-                xi = np.sum(EXE * X[k].flatten()[:, np.newaxis] * (1. / self.var_X[k, :, :].flatten()[:, np.newaxis]), 0)
-                mu = np.dot(inv_lambda, xi)
-                R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+        if not self.controlled_var:
+            xi = np.sum(EXE * X[k].flatten()[:, np.newaxis], 0)
+            mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
+            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
 
         else:
-            for k in range(self.n_relations):
-                xi = np.sum(EXE * X[k].flatten()[:, np.newaxis], 0)
-                mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
-                R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+            tmp = EXE * (1./self.var_X[k, :, :].flatten()[:,np.newaxis])
+            _lambda = np.dot(tmp.T, EXE)
+            _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
+            inv_lambda = np.linalg.inv(_lambda)
 
-        return R[k]
+            xi = np.sum(EXE * X[k].flatten()[:, np.newaxis] * (1. / self.var_X[k, :, :].flatten()[:, np.newaxis]), 0)
+            mu = np.dot(inv_lambda, xi)
+            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+
+        return (R[k], k)
 
     def _sample_relations(self, X, E, R):
+        def _overwrite(result):
+            R[result[1]] = result[0]
+
         EXE = np.kron(E, E)
+        pool = mp.Pool()
         if not self.controlled_var:
             _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
             _lambda *= (1. / self.var_x)
@@ -265,11 +278,20 @@ class PFBayesianRescal:
             inv_lambda = np.linalg.inv(_lambda)
 
             for k in range(self.n_relations):
-                self._sample_relation(X, E, R, k, EXE, inv_lambda)
+                if self.parallelize:
+                    pool.apply_async(self._sample_relation, args = (X, E, R, k, EXE, inv_lambda), callback=_overwrite)
+                else:
+                    self._sample_relation(X, E, R, k, EXE, inv_lambda)
+
         else:
             for k in range(self.n_relations):
-                self._sample_relation(X, E, R, k, EXE)
+                if self.parallelize:
+                    pool.apply_async(self._sample_relation, args = (X, E, R, k, EXE), callback=_overwrite)
+                else:
+                    self._sample_relation(X, E, R, k, EXE)
 
+        pool.close()
+        pool.join()
         return R
 
     def _reconstruct(self, E, R):

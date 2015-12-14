@@ -2,6 +2,7 @@ import itertools
 import logging
 import time
 import numpy as np
+import multiprocessing as mp
 from numpy.random import multivariate_normal, gamma
 from sklearn.metrics import mean_squared_error
 
@@ -12,11 +13,12 @@ _E_ALPHA = 1.
 _E_BETA = 1.
 _R_ALPHA = 1.
 _R_BETA = 1.
+_P_SAMPLE_GAP = 5
+_PARALLEL = False
 
 class BayesianRescal:
-    def __init__(self, n_dim, var_e=1., var_x=0.01, var_r=1., compute_score=True, sample_prior=False, e_alpha=1.,
-                 e_beta=1., r_alpha=1., r_beta=1., prior_sample_gap=5, controlled_var=False,
-                 obs_var=1., unobs_var=10., eval_fn=mean_squared_error, **kwargs):
+    def __init__(self, n_dim, var_e=1., var_x=0.01, var_r=1., compute_score=True, sample_prior=False,
+                 controlled_var=False, obs_var=0.01, unobs_var=10., eval_fn=mean_squared_error, **kwargs):
         self.n_dim = n_dim
         self.var_e = var_e
         self.var_x = var_x
@@ -24,12 +26,14 @@ class BayesianRescal:
         self.compute_score = compute_score
 
         self.sample_prior = sample_prior
-        self.prior_sample_gap = prior_sample_gap
+        self.prior_sample_gap = kwargs.pop('prior_sample_gap', _P_SAMPLE_GAP)
 
         self.e_alpha = kwargs.pop('e_alpha', _E_ALPHA)
         self.e_beta = kwargs.pop('e_beta', _E_BETA)
         self.r_alpha = kwargs.pop('r_alpha', _R_ALPHA)
         self.r_beta = kwargs.pop('r_beta', _R_BETA)
+
+        self.parallelize = kwargs.pop('parallel', _PARALLEL)
 
         self.controlled_var = controlled_var
         self.obs_var = obs_var
@@ -41,9 +45,7 @@ class BayesianRescal:
         self.n_relations = X.shape[0]
         self.n_entities = X.shape[1]
 
-        #self.E = np.zeros([self.n_entities, self.n_dim])
         self.E = np.random.random([self.n_entities,self.n_dim])
-        #self.R = np.zeros([self.n_relations, self.n_dim, self.n_dim])
         self.R = np.random.random([self.n_relations, self.n_dim, self.n_dim])
 
         # for controlled variance
@@ -58,8 +60,8 @@ class BayesianRescal:
 
         for i in range(max_iter):
             tic = time.time()
-            self._sample_entities(X)
-            self._sample_relations(X)
+            self._sample_entities(X, self.E, self.R)
+            self._sample_relations(X, self.E, self.R)
 
             if self.sample_prior and (i + 1) % self.prior_sample_gap == 0:
                 self._sample_prior()
@@ -87,67 +89,92 @@ class BayesianRescal:
                                 1. / (0.5 * np.sum(self.E ** 2) + self.e_beta))
         logger.debug("Sampled var_e %.3f", self.var_e)
 
-    def _sample_entities(self, X):
-        for i in range(self.n_entities):
-            self.E[i] *= 0
-            _lambda = np.zeros([self.n_dim, self.n_dim])
-            xi = np.zeros(self.n_dim)
-
-            if self.controlled_var:
-                for k in range(self.n_relations):
-                    tmp = np.dot(self.R[k], self.E.T)  # D x E
-                    tmp2 = np.dot(self.R[k].T, self.E.T)
-                    _lambda += np.dot(tmp * (1./self.var_X[k,i,:]), tmp.T) + np.dot(tmp2 * (1./self.var_X[k,:,i]), tmp2.T)
-
-                    xi += np.sum((1. / self.var_X[k, i, :]) * X[k, i, :] * tmp, 1) \
-                          + np.sum((1. / self.var_X[k, :, i]) * X[k, :, i] * tmp2, 1)
-
-
-                _lambda += (1. / self.var_e) * np.identity(self.n_dim)
-                inv_lambda = np.linalg.inv(_lambda)
-                mu = np.dot(inv_lambda, xi)
-
-            else:
-                for k in range(self.n_relations):
-                    tmp = np.dot(self.R[k], self.E.T)  # D x E
-                    tmp2 = np.dot(self.R[k].T, self.E.T)
-                    _lambda += np.dot(tmp, tmp.T) + np.dot(tmp2, tmp2.T)
-                    xi += np.sum(X[k, i, :] * tmp, 1) + np.sum(X[k, :, i] * tmp2, 1)
-
-                xi *= (1. / self.var_x)
-                _lambda *= 1. / self.var_x
-                _lambda += (1. / self.var_e) * np.identity(self.n_dim)
-                inv_lambda = np.linalg.inv(_lambda)
-                mu = np.dot(inv_lambda, xi)
-
-            self.E[i] = multivariate_normal(mu, inv_lambda)
-
-    def _sample_relations(self, X):
+    def _sample_entity(self, X, E, R, i):
+        E[i] *= 0
+        _lambda = np.zeros([self.n_dim, self.n_dim])
+        xi = np.zeros(self.n_dim)
 
         if self.controlled_var:
-            EXE = np.kron(self.E, self.E)
-
             for k in range(self.n_relations):
-                tmp = EXE * (1./self.var_X[k, :, :].flatten()[:,np.newaxis])
-                _lambda = np.dot(tmp.T, EXE)
-                _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
-                inv_lambda = np.linalg.inv(_lambda)
+                tmp = np.dot(R[k], E.T)  # D x E
+                tmp2 = np.dot(R[k].T, E.T)
+                _lambda += np.dot(tmp * (1./self.var_X[k,i,:]), tmp.T) + np.dot(tmp2 * (1./self.var_X[k,:,i]), tmp2.T)
 
-                xi = np.sum(EXE * X[k].flatten()[:, np.newaxis] * (1. / self.var_X[k, :, :].flatten()[:, np.newaxis]), 0)
-                mu = np.dot(inv_lambda, xi)
-                self.R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+                xi += np.sum((1. / self.var_X[k, i, :]) * X[k, i, :] * tmp, 1) \
+                      + np.sum((1. / self.var_X[k, :, i]) * X[k, :, i] * tmp2, 1)
+
+
+            _lambda += (1. / self.var_e) * np.identity(self.n_dim)
+            inv_lambda = np.linalg.inv(_lambda)
+            mu = np.dot(inv_lambda, xi)
 
         else:
-            EXE = np.kron(self.E, self.E)
+            for k in range(self.n_relations):
+                tmp = np.dot(R[k], E.T)  # D x E
+                tmp2 = np.dot(R[k].T, E.T)
+                _lambda += np.dot(tmp, tmp.T) + np.dot(tmp2, tmp2.T)
+                xi += np.sum(X[k, i, :] * tmp, 1) + np.sum(X[k, :, i] * tmp2, 1)
+
+            xi *= (1. / self.var_x)
+            _lambda *= 1. / self.var_x
+            _lambda += (1. / self.var_e) * np.identity(self.n_dim)
+            inv_lambda = np.linalg.inv(_lambda)
+            mu = np.dot(inv_lambda, xi)
+
+        E[i] = multivariate_normal(mu, inv_lambda)
+        return E[i]
+
+    def _sample_entities(self, X, E, R):
+        for i in range(self.n_entities):
+            self._sample_entity(X, E, R, i)
+        return E
+
+    def _sample_relation(self, X, E, R, k, EXE, inv_lambda=None):
+        if not self.controlled_var:
+            xi = np.sum(EXE * X[k].flatten()[:, np.newaxis], 0)
+            mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
+            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+
+        else:
+            tmp = EXE * (1./self.var_X[k, :, :].flatten()[:,np.newaxis])
+            _lambda = np.dot(tmp.T, EXE)
+            _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
+            inv_lambda = np.linalg.inv(_lambda)
+
+            xi = np.sum(EXE * X[k].flatten()[:, np.newaxis] * (1. / self.var_X[k, :, :].flatten()[:, np.newaxis]), 0)
+            mu = np.dot(inv_lambda, xi)
+            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+
+        return (R[k], k)
+
+    def _sample_relations(self, X, E, R):
+        def _overwrite(result):
+            R[result[1]] = result[0]
+
+        EXE = np.kron(E, E)
+        pool = mp.Pool()
+        if not self.controlled_var:
             _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
             _lambda *= (1. / self.var_x)
             _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
             inv_lambda = np.linalg.inv(_lambda)
 
             for k in range(self.n_relations):
-                xi = np.sum(EXE * X[k].flatten()[:, np.newaxis], 0)
-                mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
-                self.R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+                if self.parallelize:
+                    pool.apply_async(self._sample_relation, args = (X, E, R, k, EXE, inv_lambda), callback=_overwrite)
+                else:
+                    self._sample_relation(X, E, R, k, EXE, inv_lambda)
+
+        else:
+            for k in range(self.n_relations):
+                if self.parallelize:
+                    pool.apply_async(self._sample_relation, args = (X, E, R, k, EXE), callback=_overwrite)
+                else:
+                    self._sample_relation(X, E, R, k, EXE)
+
+        pool.close()
+        pool.join()
+        return R
 
     def _reconstruct(self):
         _X = np.zeros([self.n_relations, self.n_entities, self.n_entities])
