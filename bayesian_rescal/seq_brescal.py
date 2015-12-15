@@ -16,6 +16,7 @@ _R_BETA = 1.
 _P_SAMPLE_GAP = 5
 _PARALLEL = True
 _MAX_THREAD = 4
+_POS_VAL = 1
 
 _VAR_E = 1.
 _VAR_R = 1.
@@ -42,6 +43,8 @@ class PFBayesianRescal:
 
         self.parallelize = kwargs.pop('parallel', _PARALLEL)
         self.max_thread = kwargs.pop('max_thread', _MAX_THREAD)
+
+        self.pos_val = kwargs.pop('pos_val', _POS_VAL)
 
         self.controlled_var = controlled_var
         self.obs_var = obs_var
@@ -84,7 +87,7 @@ class PFBayesianRescal:
 
         seq = list()
 
-        init_sum = np.sum(cur_obs)
+        pop = 0
 
         for i in range(max_iter):
             tic = time.time()
@@ -93,12 +96,15 @@ class PFBayesianRescal:
             cur_obs[next_idx] = X[next_idx]
             mask[next_idx] = 1
 
+            if X[next_idx] == self.pos_val:
+                pop += 1
+
             if self.controlled_var:
                 self.var_X[next_idx] = self.obs_var
 
             seq.append(next_idx)
 
-            logger.info('[NEXT] %s: %f, population: %d/%d', str(next_idx), X[next_idx], (np.sum(cur_obs)-init_sum),i)
+            logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop,i)
 
             self.p_weights *= self.compute_particle_weight(next_idx, cur_obs)
             self.p_weights /= np.sum(self.p_weights)
@@ -250,6 +256,12 @@ class PFBayesianRescal:
 
     def _sample_relation(self, X, E, R, k, EXE, inv_lambda=None):
         if not self.controlled_var:
+            if type(inv_lambda) == type(None):
+                _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
+                _lambda *= (1. / self.var_x)
+                _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
+                inv_lambda = np.linalg.inv(_lambda)
+
             xi = np.sum(EXE * X[k].flatten()[:, np.newaxis], 0)
             mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
@@ -264,7 +276,7 @@ class PFBayesianRescal:
             mu = np.dot(inv_lambda, xi)
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
 
-        return (R[k], k)
+        return R[k]
 
     def _sample_relations(self, X, E, R):
         EXE = np.kron(E, E)
