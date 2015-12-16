@@ -66,3 +66,4 @@ logs/
 *.gz
 *.pdf
 *.fdb_latexmk
+*.out
