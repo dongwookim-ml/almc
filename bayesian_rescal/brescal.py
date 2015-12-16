@@ -13,6 +13,7 @@ _E_BETA = 1.
 _R_ALPHA = 1.
 _R_BETA = 1.
 _P_SAMPLE_GAP = 5
+_P_SAMPLE = False
 _PARALLEL = True
 _MAX_THREAD = 4
 
@@ -31,7 +32,7 @@ class BayesianRescal:
 
         self.compute_score = compute_score
 
-        self.sample_prior = sample_prior
+        self.sample_prior = kwargs.pop('sample_prior', _P_SAMPLE)
         self.prior_sample_gap = kwargs.pop('prior_sample_gap', _P_SAMPLE_GAP)
 
         self.e_alpha = kwargs.pop('e_alpha', _E_ALPHA)

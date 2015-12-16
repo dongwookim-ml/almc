@@ -14,6 +14,7 @@ _E_BETA = 1.
 _R_ALPHA = 1.
 _R_BETA = 1.
 _P_SAMPLE_GAP = 5
+_P_SAMPLE = False
 _PARALLEL = True
 _MAX_THREAD = 4
 _POS_VAL = 1
@@ -34,7 +35,7 @@ class PFBayesianRescal:
 
         self.compute_score = compute_score
 
-        self.sample_prior = sample_prior
+        self.sample_prior = kwargs.pop('sample_prior', _P_SAMPLE)
         self.prior_sample_gap = kwargs.pop('prior_sample_gap', _P_SAMPLE_GAP)
         self.e_alpha = kwargs.pop('e_alpha', _E_ALPHA)
         self.e_beta = kwargs.pop('e_beta', _E_BETA)
@@ -66,11 +67,15 @@ class PFBayesianRescal:
             self.E.append(np.random.random([self.n_entities, self.n_dim]))
             self.R.append(np.random.random([self.n_relations, self.n_dim, self.n_dim]))
 
-        if type(np.any(obs_mask)) == type(None):
+        if self.sample_prior:
+            self.var_e = np.ones(self.n_particles) * self.var_e
+            self.var_r = np.ones(self.n_particles) * self.var_r
+
+        if type(obs_mask) == type(None):
             obs_mask = np.zeros_like(X)
 
         if max_iter == None:
-            max_iter = np.prod([self.n_relations, self.n_entities, self.n_entities])
+            max_iter = np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask)
 
         # for controlled variance
         if self.controlled_var:
@@ -102,6 +107,9 @@ class PFBayesianRescal:
             if self.controlled_var:
                 self.var_X[next_idx] = self.obs_var
 
+            if i!=0 and i%self.prior_sample_gap==0:
+                self._sample_prior()
+
             seq.append(next_idx)
 
             logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop,i)
@@ -115,24 +123,10 @@ class PFBayesianRescal:
                 self.resample()
 
             for p in range(self.n_particles):
-                self._sample_entities(cur_obs, self.E[p], self.R[p])
-                self._sample_relations(cur_obs, self.E[p], self.R[p])
-
                 # self._sample_entity(cur_obs,self.E[p],self.R[p],next_idx[1])
                 # self._sample_entity(cur_obs,self.E[p],self.R[p],next_idx[2])
-                #
-                # EXE = np.kron(self.E[p], self.E[p])
-                # if not self.controlled_var:
-                #     _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
-                #     _lambda *= (1. / self.var_x)
-                #     _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
-                #     inv_lambda = np.linalg.inv(_lambda)
-                #
-                #     for k in range(self.n_relations):
-                #         self._sample_relation(X, self.E[p], self.R[p], k, EXE, inv_lambda)
-                # else:
-                #     for k in range(self.n_relations):
-                #         self._sample_relation(X, self.E[p], self.R[p], k, EXE)
+                self._sample_entities(cur_obs, self.E[p], self.R[p])
+                self._sample_relations(cur_obs, self.E[p], self.R[p])
 
             toc = time.time()
             if self.compute_score:
@@ -151,16 +145,19 @@ class PFBayesianRescal:
 
         log_weight = np.zeros(self.n_particles)
         for p in range(self.n_particles):
-            #mean = np.dot(np.dot(self.E[p][e_i], self.R[p][r_k]), self.E[p][e_j])
-            #log_weight[p] = norm.logpdf(X[next_idx], mean, self.var_x)
-            score = 0
-            for k in range(self.n_relations):
-                mean = np.dot(np.dot(self.E[p], self.R[p][k]), self.E[p].T)
-                if self.controlled_var:
-                    score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_X[k].flatten())))
-                else:
-                    score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)))
-            log_weight[p] = score
+            mean = np.dot(np.dot(self.E[p][e_i], self.R[p][r_k]), self.E[p][e_j])
+            if self.controlled_var:
+                log_weight[p] = norm.logpdf(X[next_idx], mean, self.obs_var)
+            else:
+                log_weight[p] = norm.logpdf(X[next_idx], mean, self.var_x)
+            # score = 0
+            # for k in range(self.n_relations):
+            #     mean = np.dot(np.dot(self.E[p], self.R[p][k]), self.E[p].T)
+            #     if self.controlled_var:
+            #         score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_X[k].flatten())))
+            #     else:
+            #         score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)))
+            # log_weight[p] = score
 
         log_weight -= np.max(log_weight)
         weight = np.exp(log_weight)
@@ -206,14 +203,16 @@ class PFBayesianRescal:
         self._sample_var_e()
 
     def _sample_var_r(self):
-        self.var_r = 1. / gamma(0.5 * self.n_relations * self.n_dim * self.n_dim + self.r_alpha,
-                                1. / (0.5 * np.sum(self.R ** 2) + self.r_beta))
-        logger.debug("Sampled var_r %.3f", self.var_r)
+        for p in range(self.n_particles):
+            self.var_r[p] = 1. / gamma(0.5 * self.n_relations * self.n_dim * self.n_dim + self.r_alpha,
+                                    1. / (0.5 * np.sum(self.R[p] ** 2) + self.r_beta))
+        logger.debug("Sampled var_r %.3f", np.mean(self.var_r))
 
     def _sample_var_e(self):
-        self.var_e = 1. / gamma(0.5 * self.n_entities * self.n_dim + self.e_alpha,
-                                1. / (0.5 * np.sum(self.E ** 2) + self.e_beta))
-        logger.debug("Sampled var_e %.3f", self.var_e)
+        for p in range(self.n_particles):
+            self.var_e[p] = 1. / gamma(0.5 * self.n_entities * self.n_dim + self.e_alpha,
+                                    1. / (0.5 * np.sum(self.E[p] ** 2) + self.e_beta))
+        logger.debug("Sampled var_e %.3f", np.mean(self.var_e))
 
     def _sample_entity(self, X, E, R, i):
         E[i] *= 0
