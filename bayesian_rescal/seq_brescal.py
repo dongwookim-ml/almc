@@ -18,6 +18,7 @@ _P_SAMPLE = False
 _PARALLEL = True
 _MAX_THREAD = 4
 _POS_VAL = 1
+_MC_MOVE = 1
 
 _VAR_E = 1.
 _VAR_R = 1.
@@ -46,6 +47,7 @@ class PFBayesianRescal:
 
         self.parallelize = kwargs.pop('parallel', _PARALLEL)
         self.max_thread = kwargs.pop('max_thread', _MAX_THREAD)
+        self.mc_move = kwargs.pop('mc_move', _MC_MOVE)
 
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
 
@@ -108,7 +110,7 @@ class PFBayesianRescal:
             if self.controlled_var:
                 self.var_X[next_idx] = self.obs_var
 
-            if i!=0 and i%self.prior_sample_gap==0:
+            if self.sample_prior and i!=0 and i%self.prior_sample_gap==0:
                 self._sample_prior()
 
             seq.append(next_idx)
@@ -126,13 +128,15 @@ class PFBayesianRescal:
             for p in range(self.n_particles):
                 # self._sample_entity(cur_obs,self.E[p],self.R[p],next_idx[1], self.var_e[p])
                 # self._sample_entity(cur_obs,self.E[p],self.R[p],next_idx[2], self.var_e[p])
-                self._sample_entities(cur_obs, self.E[p], self.R[p], self.var_e[p])
-                self._sample_relations(cur_obs, self.E[p], self.R[p], self.var_r[p])
+                for m in range(self.mc_move):
+                    self._sample_entities(cur_obs, self.E[p], self.R[p], self.var_e[p])
+                    self._sample_relations(cur_obs, self.E[p], self.R[p], self.var_r[p])
 
             toc = time.time()
             if self.compute_score:
-                _score = self.score(X)
-                _fit = self._compute_fit(X)
+                #compute training log-likelihood and erorr
+                _score = self.score(cur_obs)
+                _fit = self._compute_fit(cur_obs)
                 logger.info("[%3d] LL: %.3f | fit(%s): %0.5f |  sec: %.3f", i, _score, self.eval_fn.__name__,  _fit, (toc - tic))
             else:
                 logger.info("[%3d] sec: %.3f", i, (toc - tic))
@@ -352,7 +356,7 @@ class PFBayesianRescal:
         X
 
         """
-        from scipy.stats import norm, multivariate_normal
+        from scipy.stats import norm, multivariate_normal, gamma
 
         if not hasattr(self, 'n_relations'):
             self.n_entities, self.n_relations, _ = X.shape
@@ -372,8 +376,8 @@ class PFBayesianRescal:
             score += multivariate_normal.logpdf(self.E[p][i], np.zeros(self.n_dim), np.identity(self.n_dim)*self.var_e[p])
 
         if self.sample_prior:
-            score += (self.e_alpha - 1.) * np.log(self.var_e[p]) - self.e_beta * self.var_e[p]
-            score += (self.r_alpha - 1.) * np.log(self.var_r[p]) - self.r_beta * self.var_r[p]
+            score += gamma.logpdf(self.var_e[p], loc=self.e_alpha, shape=self.e_beta)
+            score += gamma.logpdf(self.var_r[p], loc=self.r_alpha, shape=self.r_beta)
 
         return score/self.n_particles
 
