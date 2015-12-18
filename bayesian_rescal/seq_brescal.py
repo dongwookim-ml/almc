@@ -26,8 +26,54 @@ _VAR_X = 0.01
 
 class PFBayesianRescal:
     def __init__(self, n_dim, compute_score=True, sample_prior=False, rbp=False,
-                 controlled_var=False, obs_var=.01, unobs_var=10., n_particles=30, selection='Thompson',
+                 controlled_var=False, obs_var=.01, unobs_var=10., n_particles=5, selection='Thompson',
                  eval_fn=mean_squared_error, **kwargs):
+        """
+
+        Parameters
+        ----------
+        n_dim: int
+            Number of latent features (size of latent dimension)
+
+        compute_score: boolean, default=True
+            Compute log-likelihood of the model given training data. Also
+            compute the evaluation function. Default evaluation function
+            is the mean squared error
+
+        sample_prior: boolean default=False
+            If True, sample variances of entities and relations every ``prior_sample_gap``
+
+        rbp: boolean, default=False
+            If True, Rao-Blackwellized particle sampling algorithm will be
+            applied instead basic particle sampling.
+
+        controlled_var: boolean, default=False
+            Apply controlled variance approach where we place different
+            variances on observed triple and unobserved triple. A variance
+            of observed triple is set to be ```obs_var``` and a variance of
+            unobserved triple is set to be ```unobs_var```
+
+        obs_var: float, default=0.01
+            The variance of the observed triple.
+
+        unobs_var: float, default=10.0
+            The variance of the unobserved triple.
+
+        n_particles: int, default=5
+            Number of particles for sequential Monte Carlo sampler
+
+        selection: string {'Thompson', 'random'}
+            Query selection method.
+
+        eval_fn: callable
+            Evaluate scoring function between training data and reconstructed data
+
+        kwargs
+
+        Returns
+        -------
+
+        """
         self.n_dim = n_dim
 
         self._var_e = kwargs.pop('var_e', _VAR_E)
