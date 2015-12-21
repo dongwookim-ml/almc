@@ -121,6 +121,12 @@ class PFBayesianRescal:
         self.selection = selection
         self.eval_fn = eval_fn
 
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        if self.controlled_var:
+            del d['var_X']
+        return d
+
     def fit(self, X, obs_mask=None, max_iter=None):
         if not self.parallelize:
             self.max_thread = 1
@@ -133,6 +139,17 @@ class PFBayesianRescal:
 
         self.var_e = np.ones(self.n_particles) * self._var_e
         self.var_r = np.ones(self.n_particles) * self._var_r
+
+        if type(obs_mask) == type(None):
+            obs_mask = np.zeros_like(X)
+
+        if max_iter == None:
+            max_iter = np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask)
+
+        # for controlled variance
+        if self.controlled_var:
+            self.var_X = np.ones_like(X) * self.unobs_var
+            self.var_X[obs_mask == 1] = self.obs_var
 
         if self.gibbs_init:
             cur_obs = np.zeros_like(X)
@@ -152,17 +169,6 @@ class PFBayesianRescal:
             for p in range(self.n_particles):
                 self.E.append(np.random.random([self.n_entities, self.n_dim]))
                 self.R.append(np.random.random([self.n_relations, self.n_dim, self.n_dim]))
-
-        if type(obs_mask) == type(None):
-            obs_mask = np.zeros_like(X)
-
-        if max_iter == None:
-            max_iter = np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask)
-
-        # for controlled variance
-        if self.controlled_var:
-            self.var_X = np.ones_like(X) * self.unobs_var
-            self.var_X[obs_mask == 1] = self.obs_var
 
         seq = self.particle_filter(X, obs_mask, max_iter)
 
