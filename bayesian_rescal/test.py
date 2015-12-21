@@ -47,7 +47,7 @@ if __name__ == '__main__':
     n_dim = 10
     n_particle = 5
     n_test = 10
-    max_iter = 1
+    max_iter = 20000
     obs_var = 0.01
     unobs_var = 0.1
     p = 0.1
@@ -81,10 +81,11 @@ if __name__ == '__main__':
                 with open(file_name, 'wb') as f:
                     pickle.dump([model, seq], f)
 
-            file_name = os.path.join(dest,
-                                     'sRESCAL_p_%.2f_dim_%d_par_%d_test_%d_convar_%r.pkl' % (
-                                         p, n_dim, n_particle, nt, True))
         elif s_model == 'csRESCAL':
+            file_name = os.path.join(dest,
+                         'sRESCAL_p_%.2f_dim_%d_par_%d_test_%d_convar_%r.pkl' % (
+                             p, n_dim, n_particle, nt, True))
+
             if not os.path.exists(file_name):
                 model = PFBayesianRescal(n_dim, controlled_var=True, obs_var=obs_var, unobs_var=unobs_var,
                                          n_particles=n_particle, compute_score=False)
