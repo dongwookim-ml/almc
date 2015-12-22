@@ -4,6 +4,7 @@ import time
 import numpy as np
 import concurrent.futures
 from numpy.random import multivariate_normal, gamma, multinomial
+from scipy.stats import multivariate_normal as mn
 from sklearn.metrics import mean_squared_error
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -35,7 +36,7 @@ tau = -0.55
 class PFBayesianRescal:
     def __init__(self, n_dim, compute_score=True, sample_prior=False, rbp=False,
                  controlled_var=False, obs_var=.01, unobs_var=10., n_particles=5, selection='Thompson',
-                 eval_fn=mean_squared_error, **kwargs):
+                 eval_fn=mean_squared_error, log="", **kwargs):
         """
 
         Parameters
@@ -112,14 +113,19 @@ class PFBayesianRescal:
         if not len(kwargs) == 0:
             raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
 
-        self.controlled_var = controlled_var
-        self.obs_var = obs_var
-        self.unobs_var = unobs_var
-
         self.n_particles = n_particles
         self.p_weights = np.ones(n_particles) / n_particles
         self.selection = selection
         self.eval_fn = eval_fn
+
+        self.controlled_var = controlled_var
+        self.obs_var = obs_var
+        self.unobs_var = unobs_var
+
+        self.var_e = np.ones(self.n_particles) * self._var_e
+        self.var_r = np.ones(self.n_particles) * self._var_r
+
+        self.log = log
 
     def __getstate__(self):
         d = dict(self.__dict__)
@@ -127,7 +133,7 @@ class PFBayesianRescal:
             del d['var_X']
         return d
 
-    def fit(self, X, obs_mask=None, max_iter=None):
+    def fit(self, X, obs_mask=None, max_iter=0):
         if not self.parallelize:
             self.max_thread = 1
 
@@ -137,13 +143,10 @@ class PFBayesianRescal:
         self.E = list()
         self.R = list()
 
-        self.var_e = np.ones(self.n_particles) * self._var_e
-        self.var_r = np.ones(self.n_particles) * self._var_r
-
         if type(obs_mask) == type(None):
             obs_mask = np.zeros_like(X)
 
-        if max_iter == None:
+        if max_iter == 0:
             max_iter = np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask)
 
         # for controlled variance
@@ -152,6 +155,7 @@ class PFBayesianRescal:
             self.var_X[obs_mask == 1] = self.obs_var
 
         if self.gibbs_init:
+            # initialize latent variables with gibbs sampling
             cur_obs = np.zeros_like(X)
             cur_obs[obs_mask == 1] = X[obs_mask == 1]
 
@@ -159,33 +163,41 @@ class PFBayesianRescal:
             R = np.random.random([self.n_relations, self.n_dim, self.n_dim])
 
             for i in range(5):
-                E = self._sample_entities(cur_obs, E, R, self._var_e)
-                R = self._sample_relations(cur_obs, E, R, self._var_r)
+                self._sample_entities(cur_obs, obs_mask, E, R, self._var_e)
+                self._sample_relations(cur_obs, obs_mask, E, R, self._var_r)
 
             for p in range(self.n_particles):
                 self.E.append(E.copy())
                 self.R.append(R.copy())
         else:
+            # random initialization
             for p in range(self.n_particles):
                 self.E.append(np.random.random([self.n_entities, self.n_dim]))
                 self.R.append(np.random.random([self.n_relations, self.n_dim, self.n_dim]))
 
-        seq = self.particle_filter(X, obs_mask, max_iter)
-
-        return seq
+        if len(self.log) > 0:
+            seq = list()
+            for idx in self.particle_filter(X, obs_mask, max_iter):
+                with open(self.log, 'a') as f:
+                    f.write('%d,%d,%d\n' % (idx[0], idx[1], idx[2]))
+                seq.append(idx)
+            return seq
+        else:
+            return [idx for idx in self.particle_filter(X, obs_mask, max_iter)]
 
     def particle_filter(self, X, mask, max_iter):
         cur_obs = np.zeros_like(X)
         cur_obs[mask == 1] = X[mask == 1]
 
-        seq = list()
-
         pop = 0
+
+        EXE = np.kron(self.E[0], self.E[0])
 
         for i in range(max_iter):
             tic = time.time()
 
             next_idx = self.get_next_sample(mask, cur_obs)
+            yield next_idx
             cur_obs[next_idx] = X[next_idx]
             mask[next_idx] = 1
 
@@ -198,11 +210,9 @@ class PFBayesianRescal:
             if self.sample_prior and i != 0 and i % self.prior_sample_gap == 0:
                 self._sample_prior()
 
-            seq.append(next_idx)
-
             logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop, (i + 1))
 
-            self.p_weights *= self.compute_particle_weight(next_idx, cur_obs)
+            self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
             self.p_weights /= np.sum(self.p_weights)
 
             ESS = 1. / np.sum((self.p_weights ** 2))
@@ -213,7 +223,6 @@ class PFBayesianRescal:
             if self.is_sgld:
                 epsilon = a * (b + i) ** tau
 
-                print(epsilon)
                 if self.parallelize:
                     with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
                         fs = [executor.submit(self.stochastic_gradient, cur_obs, self.E[p], self.R[p], self.n_minibatch,
@@ -229,33 +238,227 @@ class PFBayesianRescal:
                 for m in range(self.mc_move):
                     if self.parallelize:
                         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                            fs = [executor.submit(self._sample_entities, cur_obs, self.E[p], self.R[p], self.var_e[p])
-                                  for p
-                                  in range(self.n_particles)]
+                            fs = [executor.submit(self._sample_entities, cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
+                                  for p in range(self.n_particles)]
                         concurrent.futures.wait(fs)
                         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                            fs = [executor.submit(self._sample_relations, cur_obs, self.E[p], self.R[p], self.var_r[p])
-                                  for
-                                  p in range(self.n_particles)]
+                            fs = [executor.submit(self._sample_relations, cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
+                                  for p in range(self.n_particles)]
                         concurrent.futures.wait(fs)
                     else:
                         for p in range(self.n_particles):
-                            # self._sample_entity(cur_obs,self.E[p],self.R[p],next_idx[1], self.var_e[p])
-                            # self._sample_entity(cur_obs,self.E[p],self.R[p],next_idx[2], self.var_e[p])
-                            self._sample_entities(cur_obs, self.E[p], self.R[p], self.var_e[p])
-                            self._sample_relations(cur_obs, self.E[p], self.R[p], self.var_r[p])
+                            self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
+                            self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
 
             toc = time.time()
             if self.compute_score:
-                # compute training log-likelihood and erorr
-                _score = self.score(cur_obs)
-                _fit = self._compute_fit(cur_obs)
+                # compute training log-likelihood and error on observed data points
+                _score = self.score(cur_obs, mask)
+                _fit = self._compute_fit(cur_obs, mask)
                 logger.info("[%3d] LL: %.3f | fit(%s): %0.5f |  sec: %.3f", i, _score, self.eval_fn.__name__, _fit,
                             (toc - tic))
             else:
                 logger.info("[%3d] sec: %.3f", i, (toc - tic))
 
-        return seq
+    def compute_particle_weight(self, next_idx, X, mask):
+        from scipy.stats import norm
+        r_k, e_i, e_j = next_idx
+
+        log_weight = np.zeros(self.n_particles)
+        for p in range(self.n_particles):
+            if self.rbp:
+                if not self.controlled_var:
+                    EXE = np.kron(self.E[p], self.E[p])
+                    _lambda = np.identity(self.n_dim ** 2) / self.var_r[p]
+                    xi = np.zeros(self.n_dim ** 2)
+
+                    kron = EXE[mask[r_k].flatten() == 1]
+                    if kron.shape[0] != 0:
+                        _lambda += np.dot(kron.T, kron)
+                        xi += np.sum(X[r_k, mask[r_k] == 1].flatten()[:, np.newaxis] * kron, 0)
+
+                    _lambda /= self.var_x
+                    inv_lambda = np.linalg.inv(_lambda)
+                    mu = np.dot(inv_lambda, xi) / self.var_x
+
+                    ###################
+                    # EXE = np.kron(self.E[p], self.E[p])
+                    # _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
+                    # _lambda /= self.var_x
+                    # _lambda += (1. / self.var_r[p]) * np.identity(self.n_dim ** 2)
+                    # inv_lambda = np.linalg.inv(_lambda)
+                    # xi = np.sum(EXE * X[r_k].flatten()[:, np.newaxis], 0)
+                    # mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
+                    ###################
+
+                    exe = np.kron(self.E[p][e_i], self.E[p][e_j])
+                    log_weight[p] = norm.logpdf(X[next_idx], np.dot(exe, mu), np.dot(np.dot(exe.T, _lambda), exe))
+                else:
+                    raise Exception('Rao-blackwellized PF for controlled var is implemented!')
+
+            else:
+                mean = np.dot(np.dot(self.E[p][e_i], self.R[p][r_k]), self.E[p][e_j])
+                if self.controlled_var:
+                    log_weight[p] = norm.logpdf(X[next_idx], mean, self.unobs_var)
+                else:
+                    log_weight[p] = norm.logpdf(X[next_idx], mean, self.var_x)
+
+        log_weight -= np.max(log_weight)
+        weight = np.exp(log_weight)
+        weight += 1e-10
+        return weight / np.sum(weight)
+
+    def resample(self):
+        count = multinomial(self.n_particles, self.p_weights)
+
+        logger.debug("[RESAMPLE] %s", str(count))
+
+        new_E = list()
+        new_R = list()
+
+        for p in range(self.n_particles):
+            for i in range(count[p]):
+                new_E.append(self.E[p].copy())
+                new_R.append(self.R[p].copy())
+
+        self.E = new_E
+        self.R = new_R
+        self.p_weights = np.ones(self.n_particles) / self.n_particles
+
+    def get_next_sample(self, mask, X=None):
+        if self.selection == 'Thompson':
+            p = multinomial(1, self.p_weights).argmax()
+            _X = self._reconstruct(self.E[p], self.R[p])
+            _X *= (1 - mask)
+            return np.unravel_index(_X.argmax(), _X.shape)
+
+        elif self.selection == 'Random':
+            correct = False
+
+            while not correct:
+                sample = (np.random.randint(self.n_relations), np.random.randint(self.n_entities),
+                          np.random.randint(self.n_entities))
+                if mask[sample] == 0:
+                    correct = True
+            return sample
+
+    def _sample_prior(self):
+        self._sample_var_r()
+        self._sample_var_e()
+
+    def _sample_var_r(self):
+        for p in range(self.n_particles):
+            self.var_r[p] = 1. / gamma(0.5 * self.n_relations * self.n_dim * self.n_dim + self.r_alpha,
+                                       1. / (0.5 * np.sum(self.R[p] ** 2) + self.r_beta))
+        logger.debug("Sampled var_r %.3f", np.mean(self.var_r))
+
+    def _sample_var_e(self):
+        for p in range(self.n_particles):
+            self.var_e[p] = 1. / gamma(0.5 * self.n_entities * self.n_dim + self.e_alpha,
+                                       1. / (0.5 * np.sum(self.E[p] ** 2) + self.e_beta))
+        logger.debug("Sampled var_e %.3f", np.mean(self.var_e))
+
+    def _sample_entities(self, X, mask, E, R, var_e):
+        if self.controlled_var:
+            for i in range(self.n_entities):
+                self._sample_entity(X, mask, E, R, i, var_e)
+        else:
+            RE = list()
+            RTE = list()
+            for k in range(self.n_relations):
+                RE.append(np.dot(R[k], E.T).T)
+                RTE.append(np.dot(R[k].T, E.T).T)
+
+            for i in range(self.n_entities):
+                self._sample_entity(X, mask, E, R, i, var_e, RE, RTE)
+                for k in range(self.n_relations):
+                    RE[k][i] = np.dot(R[k], E[i])
+                    RTE[k][i] = np.dot(R[k].T, E[i])
+
+    def _sample_entity(self, X, mask, E, R, i, var_e, RE=None, RTE=None):
+        _lambda = np.identity(self.n_dim) / var_e
+        xi = np.zeros(self.n_dim)
+
+        if self.controlled_var:
+            E[i] *= 0
+            for k in range(self.n_relations):
+                tmp = np.dot(R[k], E.T)  # D x E
+                tmp2 = np.dot(R[k].T, E.T)
+                _lambda += np.dot(tmp * (1. / self.var_X[k, i, :]), tmp.T)
+                _lambda += np.dot(tmp2 * (1. / self.var_X[k, :, i]), tmp2.T)
+
+                xi += np.sum((1. / self.var_X[k, i, :]) * X[k, i, :] * tmp, 1)
+                xi += np.sum((1. / self.var_X[k, :, i]) * X[k, :, i] * tmp2, 1)
+
+            inv_lambda = np.linalg.inv(_lambda)
+            mu = np.dot(inv_lambda, xi)
+
+        else:
+            for k in range(self.n_relations):
+                tmp = RE[k][mask[k, i, :] == 1]  # ExD
+                tmp2 = RTE[k][mask[k, :, i] == 1]
+                # tmp = np.dot(R[k], E[mask[k, i, :] == 1].T)  # D x E
+                # tmp2 = np.dot(R[k].T, E[mask[k, :, i] == 1].T)
+                if tmp.shape[0] != 0:
+                    _lambda += np.dot(tmp.T, tmp)
+                    xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1)
+                if tmp2.shape[0] != 0:
+                    _lambda += np.dot(tmp2.T, tmp2)
+                    xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1)
+
+            xi /= self.var_x
+            _lambda /= self.var_x
+
+            inv_lambda = np.linalg.inv(_lambda)
+            mu = np.dot(inv_lambda, xi)
+
+        E[i] = multivariate_normal(mu, inv_lambda)
+
+    def _sample_relations(self, X, mask, E, R, var_r):
+        EXE = np.kron(E, E)
+
+        if self.controlled_var:
+            # if self.parallelize:
+            #     with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
+            #         fs = [executor.submit(self._sample_relation, X, mask, E, R, k, EXE, var_r)
+            #               for k in range(self.n_relations)]
+            #     concurrent.futures.wait(fs)
+            # else:
+            for k in range(self.n_relations):
+                self._sample_relation(X, mask, E, R, k, EXE, var_r)
+        else:
+            # if self.parallelize:
+            #     with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
+            #         fs = [executor.submit(self._sample_relation, X, mask, E, R, k, EXE, var_r)
+            #               for k in range(self.n_relations)]
+            #     concurrent.futures.wait(fs)
+            # else:
+            for k in range(self.n_relations):
+                self._sample_relation(X, mask, E, R, k, EXE, var_r)
+
+    def _sample_relation(self, X, mask, E, R, k, EXE, var_r):
+        if self.controlled_var:
+            tmp = EXE / self.var_X[k, :, :].flatten()[:, np.newaxis]
+            _lambda = np.dot(tmp.T, EXE)
+            _lambda += np.identity(self.n_dim ** 2) / var_r
+            inv_lambda = np.linalg.inv(_lambda)
+
+            xi = np.sum(EXE * X[k].flatten()[:, np.newaxis] / self.var_X[k, :, :].flatten()[:, np.newaxis], 0)
+            mu = np.dot(inv_lambda, xi)
+        else:
+            _lambda = np.identity(self.n_dim ** 2) / var_r
+            xi = np.zeros(self.n_dim ** 2)
+
+            kron = EXE[mask[k].flatten() == 1]
+            if kron.shape[0] != 0:
+                _lambda += np.dot(kron.T, kron)
+                xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1)
+
+            _lambda /= self.var_x
+            inv_lambda = np.linalg.inv(_lambda)
+            mu = np.dot(inv_lambda, xi) / self.var_x
+
+        R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
 
     def stochastic_gradient(self, X, E, R, n_minibatch, epsilon, var_e, var_r):
         for i in range(self.n_entities):
@@ -295,221 +498,15 @@ class PFBayesianRescal:
 
             R[k] += (0.5 * epsilon * gradR + nu).reshape([self.n_dim, self.n_dim])
 
-    def compute_particle_weight(self, next_idx, X):
-        from scipy.stats import norm
-        r_k, e_i, e_j = next_idx
-
-        log_weight = np.zeros(self.n_particles)
-        for p in range(self.n_particles):
-            if self.rbp:
-                if not self.controlled_var:
-                    EXE = np.kron(self.E[p], self.E[p])
-                    _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
-                    _lambda *= (1. / self.var_x)
-                    _lambda += (1. / self.var_r[p]) * np.identity(self.n_dim ** 2)
-                    inv_lambda = np.linalg.inv(_lambda)
-                    xi = np.sum(EXE * X[r_k].flatten()[:, np.newaxis], 0)
-                    mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
-                    exe = np.kron(self.E[p][e_i], self.E[p][e_j])
-                    log_weight[p] = norm.logpdf(X[next_idx], np.dot(exe, mu), np.dot(np.dot(exe.T, _lambda), exe))
-                else:
-                    raise Exception('Rao-blackwellized PF for controlled var is implemented!')
-
-            else:
-                mean = np.dot(np.dot(self.E[p][e_i], self.R[p][r_k]), self.E[p][e_j])
-                if self.controlled_var:
-                    log_weight[p] = norm.logpdf(X[next_idx], mean, self.unobs_var)
-                else:
-                    log_weight[p] = norm.logpdf(X[next_idx], mean, self.var_x)
-                    # score = 0
-                    # for k in range(self.n_relations):
-                    #     mean = np.dot(np.dot(self.E[p], self.R[p][k]), self.E[p].T)
-                    #     if self.controlled_var:
-                    #         score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_X[k].flatten())))
-                    #     else:
-                    #         score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)))
-                    # log_weight[p] = score
-
-        log_weight -= np.max(log_weight)
-        weight = np.exp(log_weight)
-        weight += 1e-10
-        return weight / np.sum(weight)
-
-    def resample(self):
-        count = multinomial(self.n_particles, self.p_weights)
-
-        logger.debug("[RESAMPLE] %s: %s", self.p_weights, str(count))
-
-        new_E = list()
-        new_R = list()
-
-        for p in range(self.n_particles):
-            for i in range(count[p]):
-                new_E.append(self.E[p].copy())
-                new_R.append(self.R[p].copy())
-
-        self.E = new_E
-        self.R = new_R
-        self.p_weights = np.ones(self.n_particles) / self.n_particles
-
-    def get_next_sample(self, mask, X=None):
-        if self.selection == 'Thompson':
-            p = multinomial(1, self.p_weights).argmax()
-            _X = self._reconstruct(self.E[p], self.R[p], self.var_r[p], X)
-            _X *= (1 - mask)
-            return np.unravel_index(_X.argmax(), _X.shape)
-
-        elif self.selection == 'Random':
-            correct = False
-
-            while not correct:
-                sample = (np.random.randint(self.n_relations), np.random.randint(self.n_entities),
-                          np.random.randint(self.n_entities))
-                if mask[sample] == 0:
-                    correct = True
-            return sample
-
-    def _sample_prior(self):
-        self._sample_var_r()
-        self._sample_var_e()
-
-    def _sample_var_r(self):
-        for p in range(self.n_particles):
-            self.var_r[p] = 1. / gamma(0.5 * self.n_relations * self.n_dim * self.n_dim + self.r_alpha,
-                                       1. / (0.5 * np.sum(self.R[p] ** 2) + self.r_beta))
-        logger.debug("Sampled var_r %.3f", np.mean(self.var_r))
-
-    def _sample_var_e(self):
-        for p in range(self.n_particles):
-            self.var_e[p] = 1. / gamma(0.5 * self.n_entities * self.n_dim + self.e_alpha,
-                                       1. / (0.5 * np.sum(self.E[p] ** 2) + self.e_beta))
-        logger.debug("Sampled var_e %.3f", np.mean(self.var_e))
-
-    def _sample_entity(self, X, E, R, i, var_e):
-        E[i] *= 0
-        _lambda = np.zeros([self.n_dim, self.n_dim])
-        xi = np.zeros(self.n_dim)
-
-        if self.controlled_var:
-            for k in range(self.n_relations):
-                tmp = np.dot(R[k], E.T)  # D x E
-                tmp2 = np.dot(R[k].T, E.T)
-                _lambda += np.dot(tmp * (1. / self.var_X[k, i, :]), tmp.T) + np.dot(tmp2 * (1. / self.var_X[k, :, i]),
-                                                                                    tmp2.T)
-
-                xi += np.sum((1. / self.var_X[k, i, :]) * X[k, i, :] * tmp, 1) \
-                      + np.sum((1. / self.var_X[k, :, i]) * X[k, :, i] * tmp2, 1)
-
-            _lambda += (1. / var_e) * np.identity(self.n_dim)
-            inv_lambda = np.linalg.inv(_lambda)
-            mu = np.dot(inv_lambda, xi)
-
-        else:
-            for k in range(self.n_relations):
-                tmp = np.dot(R[k], E.T)  # D x E
-                tmp2 = np.dot(R[k].T, E.T)
-                _lambda += np.dot(tmp, tmp.T) + np.dot(tmp2, tmp2.T)
-                xi += np.sum(X[k, i, :] * tmp, 1) + np.sum(X[k, :, i] * tmp2, 1)
-
-            xi *= (1. / self.var_x)
-            _lambda *= 1. / self.var_x
-            _lambda += (1. / var_e) * np.identity(self.n_dim)
-            inv_lambda = np.linalg.inv(_lambda)
-            mu = np.dot(inv_lambda, xi)
-
-        E[i] = multivariate_normal(mu, inv_lambda)
-        return E[i]
-
-    def _sample_entities(self, X, E, R, var_e):
-        for i in range(self.n_entities):
-            self._sample_entity(X, E, R, i, var_e)
-
-        return E
-
-    def _sample_relation(self, X, E, R, k, EXE, var_r, inv_lambda=None):
-        if not self.controlled_var:
-            if type(inv_lambda) == type(None):
-                _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
-                _lambda *= (1. / self.var_x)
-                _lambda += (1. / var_r) * np.identity(self.n_dim ** 2)
-                inv_lambda = np.linalg.inv(_lambda)
-
-            xi = np.sum(EXE * X[k].flatten()[:, np.newaxis], 0)
-            mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
-            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
-
-        else:
-            tmp = EXE * (1. / self.var_X[k, :, :].flatten()[:, np.newaxis])
-            _lambda = np.dot(tmp.T, EXE)
-            _lambda += (1. / var_r) * np.identity(self.n_dim ** 2)
-            inv_lambda = np.linalg.inv(_lambda)
-
-            xi = np.sum(EXE * X[k].flatten()[:, np.newaxis] * (1. / self.var_X[k, :, :].flatten()[:, np.newaxis]), 0)
-            mu = np.dot(inv_lambda, xi)
-            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
-
-        return R[k]
-
-    def _sample_relations(self, X, E, R, var_r):
-        EXE = np.kron(E, E)
-
-        if not self.controlled_var:
-            _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
-            _lambda *= (1. / self.var_x)
-            _lambda += (1. / var_r) * np.identity(self.n_dim ** 2)
-            inv_lambda = np.linalg.inv(_lambda)
-
-            if self.parallelize:
-                with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                    fs = [executor.submit(self._sample_relation, X, E, R, k, EXE, var_r, inv_lambda) for k in
-                          range(self.n_relations)]
-                concurrent.futures.wait(fs)
-            else:
-                [self._sample_relation(X, E, R, k, EXE, var_r, inv_lambda) for k in range(self.n_relations)]
-
-        else:
-            if self.parallelize:
-                with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                    fs = [executor.submit(self._sample_relation, X, E, R, k, EXE, var_r) for k in
-                          range(self.n_relations)]
-                concurrent.futures.wait(fs)
-
-            else:
-                [self._sample_relation(X, E, R, k, EXE, var_r) for k in range(self.n_relations)]
-
-        return R
-
-    def _reconstruct(self, E, R, var_r, X=None):
+    def _reconstruct(self, E, R):
         _X = np.zeros([self.n_relations, self.n_entities, self.n_entities])
 
-        if self.rbp:
-            EXE = np.kron(E, E)
-            _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
-            _lambda *= (1. / self.var_x)
-            _lambda += (1. / var_r) * np.identity(self.n_dim ** 2)
-            inv_lambda = np.linalg.inv(_lambda)
-            for k in range(self.n_relations):
-                xi = np.sum(EXE * X[k].flatten()[:, np.newaxis], 0)
-                mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
-                _X[k] = np.dot(EXE, mu).reshape([self.n_entities, self.n_entities])
-        else:
-            for k in range(self.n_relations):
-                _X[k] = np.dot(np.dot(E, R[k]), E.T)
+        for k in range(self.n_relations):
+            _X[k] = np.dot(np.dot(E, R[k]), E.T)
 
         return _X
 
-    # noinspection PyTypeChecker
-    def score(self, X):
-        """
-
-        Compute the log-likelihood of the model
-        -------
-
-        Parameters
-        ----------
-        X
-
-        """
+    def score(self, X, mask):
         from scipy.stats import norm, multivariate_normal, gamma
 
         if not hasattr(self, 'n_relations'):
@@ -523,7 +520,7 @@ class PFBayesianRescal:
             if self.controlled_var:
                 score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_X[k].flatten())))
             else:
-                score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)))
+                score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)) * mask[k].flatten())
             score += np.sum(norm.logpdf(self.R[p][k].flatten(), 0, np.sqrt(self.var_r[p])))
 
         for i in range(self.n_entities):
@@ -534,11 +531,9 @@ class PFBayesianRescal:
             score += gamma.logpdf(self.var_e[p], loc=self.e_alpha, shape=self.e_beta)
             score += gamma.logpdf(self.var_r[p], loc=self.r_alpha, shape=self.r_beta)
 
-        return score / self.n_particles
+        return score
 
-    def _compute_fit(self, X):
+    def _compute_fit(self, X, mask):
         p = self.p_weights.argmax()
-        _X = self._reconstruct(self.E[p], self.R[p], self.var_r[p], X)
-        _fit = self.eval_fn(X.flatten(), _X.flatten())
-
-        return _fit
+        _X = self._reconstruct(self.E[p], self.R[p])
+        return self.eval_fn(X[mask == 1].flatten(), _X[mask == 1].flatten())

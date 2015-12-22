@@ -1,16 +1,11 @@
 import os
 import sys
 import pickle
-import logging
 import itertools
 import numpy as np
 from scipy.io.matlab import loadmat
 from scipy.sparse import csr_matrix
-import matplotlib
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_auc_score
 import rescal
-from brescal import BayesianRescal
 from seq_brescal import PFBayesianRescal
 
 
@@ -26,7 +21,6 @@ def read_train(fname, T):
 
 def gen_train(T, p):
     idx = set()
-    p = 0.1
     for k in range(n_relation):
         for i, j in itertools.product(range(n_entity), repeat=2):
             if T[k, i, j] and np.random.binomial(1, p):
@@ -35,6 +29,8 @@ def gen_train(T, p):
 
 
 if __name__ == '__main__':
+    if len(sys.argv) != 4:
+        print('usage: python kinship_test.py model_name n_dim n_particle')
     """
     Test with Kinship dataset
     """
@@ -44,15 +40,14 @@ if __name__ == '__main__':
     T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
 
     n_relation, n_entity, _ = T.shape
-    n_dim = 10
-    n_particle = 5
+    s_model = sys.argv[1]
+    n_dim = int(sys.argv[2])
+    n_particle = int(sys.argv[3])
     n_test = 10
-    max_iter = 20000
+    p = 0
+    max_iter = 30000
     obs_var = 0.01
     unobs_var = 0.1
-    p = 0.1
-
-    s_model = sys.argv[1]
 
     dest = '../result/kinship/'
     if not os.path.exists(dest):
@@ -69,26 +64,30 @@ if __name__ == '__main__':
         train_file = os.path.join(dest, 'train_%.2f_%d' % (p, nt))
         maskT = read_train(train_file, T)
 
+        maskT = np.zeros_like(T)
+
         if s_model == 'sRESCAL':
             file_name = os.path.join(dest,
                                      'sRESCAL_p_%.2f_dim_%d_par_%d_test_%d_convar_%r.pkl' % (
                                          p, n_dim, n_particle, nt, False))
 
             if not os.path.exists(file_name):
+                log = os.path.splitext(file_name)[0] + ".txt"
                 model = PFBayesianRescal(n_dim, controlled_var=False, n_particles=n_particle,
-                                         compute_score=False)
+                                         compute_score=False, parallel=False, log=log)
                 seq = model.fit(T, obs_mask=maskT.copy(), max_iter=max_iter)
                 with open(file_name, 'wb') as f:
                     pickle.dump([model, seq], f)
 
         elif s_model == 'csRESCAL':
             file_name = os.path.join(dest,
-                         'sRESCAL_p_%.2f_dim_%d_par_%d_test_%d_convar_%r.pkl' % (
-                             p, n_dim, n_particle, nt, True))
+                                     'csRESCAL_p_%.2f_dim_%d_par_%d_test_%d_convar_%r.pkl' % (
+                                         p, n_dim, n_particle, nt, True))
 
             if not os.path.exists(file_name):
+                log = os.path.splitext(file_name)[0] + ".txt"
                 model = PFBayesianRescal(n_dim, controlled_var=True, obs_var=obs_var, unobs_var=unobs_var,
-                                         n_particles=n_particle, compute_score=False)
+                                         n_particles=n_particle, compute_score=True, log=log)
             seq = model.fit(T, obs_mask=maskT.copy(), max_iter=max_iter)
             with open(file_name, 'wb') as f:
                 pickle.dump([model, seq], f)
