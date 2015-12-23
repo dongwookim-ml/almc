@@ -64,8 +64,6 @@ if __name__ == '__main__':
         train_file = os.path.join(dest, 'train_%.2f_%d' % (p, nt))
         maskT = read_train(train_file, T)
 
-        maskT = np.zeros_like(T)
-
         if s_model == 'sRESCAL':
             file_name = os.path.join(dest,
                                      'sRESCAL_p_%.2f_dim_%d_par_%d_test_%d_convar_%r.pkl' % (
@@ -75,6 +73,19 @@ if __name__ == '__main__':
                 log = os.path.splitext(file_name)[0] + ".txt"
                 model = PFBayesianRescal(n_dim, controlled_var=False, n_particles=n_particle,
                                          compute_score=False, parallel=False, log=log)
+                seq = model.fit(T, obs_mask=maskT.copy(), max_iter=max_iter)
+                with open(file_name, 'wb') as f:
+                    pickle.dump([model, seq], f)
+
+        elif s_model == 'rbsRESCAL':
+            file_name = os.path.join(dest,
+                                     'rbsRESCAL_p_%.2f_dim_%d_par_%d_test_%d_convar_%r.pkl' % (
+                                         p, n_dim, n_particle, nt, False))
+
+            if not os.path.exists(file_name):
+                log = os.path.splitext(file_name)[0] + ".txt"
+                model = PFBayesianRescal(n_dim, controlled_var=False, n_particles=n_particle,
+                                         compute_score=False, parallel=False, log=log, rbp=True)
                 seq = model.fit(T, obs_mask=maskT.copy(), max_iter=max_iter)
                 with open(file_name, 'wb') as f:
                     pickle.dump([model, seq], f)

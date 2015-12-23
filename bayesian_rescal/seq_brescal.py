@@ -32,6 +32,8 @@ a = 0.001
 b = 0.01
 tau = -0.55
 
+MIN_VAL = np.iinfo(np.int32).min
+
 
 class PFBayesianRescal:
     def __init__(self, n_dim, compute_score=True, sample_prior=False, rbp=False,
@@ -147,7 +149,7 @@ class PFBayesianRescal:
             obs_mask = np.zeros_like(X)
 
         if max_iter == 0:
-            max_iter = np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask)
+            max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask))
 
         # for controlled variance
         if self.controlled_var:
@@ -238,11 +240,13 @@ class PFBayesianRescal:
                 for m in range(self.mc_move):
                     if self.parallelize:
                         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                            fs = [executor.submit(self._sample_entities, cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
+                            fs = [executor.submit(self._sample_entities, cur_obs, mask, self.E[p], self.R[p],
+                                                  self.var_e[p])
                                   for p in range(self.n_particles)]
                         concurrent.futures.wait(fs)
                         with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                            fs = [executor.submit(self._sample_relations, cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
+                            fs = [executor.submit(self._sample_relations, cur_obs, mask, self.E[p], self.R[p],
+                                                  self.var_r[p])
                                   for p in range(self.n_particles)]
                         concurrent.futures.wait(fs)
                     else:
@@ -329,7 +333,7 @@ class PFBayesianRescal:
         if self.selection == 'Thompson':
             p = multinomial(1, self.p_weights).argmax()
             _X = self._reconstruct(self.E[p], self.R[p])
-            _X *= (1 - mask)
+            _X[mask == 1] = MIN_VAL
             return np.unravel_index(_X.argmax(), _X.shape)
 
         elif self.selection == 'Random':
