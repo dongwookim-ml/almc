@@ -370,7 +370,7 @@ class PFBayesianRescal:
             RE = list()
             RTE = list()
             for k in range(self.n_relations):
-                RE.append(np.dot(R[k], E.T).T)
+                RE.append(np.dot(R[k], E.T).T)      #
                 RTE.append(np.dot(R[k].T, E.T).T)
 
             for i in range(self.n_entities):
@@ -383,8 +383,9 @@ class PFBayesianRescal:
         _lambda = np.identity(self.n_dim) / var_e
         xi = np.zeros(self.n_dim)
 
+        E[i] *= 0
+
         if self.controlled_var:
-            E[i] *= 0
             for k in range(self.n_relations):
                 tmp = np.dot(R[k], E.T)  # D x E
                 tmp2 = np.dot(R[k].T, E.T)
@@ -399,6 +400,8 @@ class PFBayesianRescal:
 
         else:
             for k in range(self.n_relations):
+                RE[k][i] *= 0
+                RTE[k][i] *= 0
                 tmp = RE[k][mask[k, i, :] == 1]  # ExD
                 tmp2 = RTE[k][mask[k, :, i] == 1]
                 # tmp = np.dot(R[k], E[mask[k, i, :] == 1].T)  # D x E
@@ -415,6 +418,24 @@ class PFBayesianRescal:
 
             inv_lambda = np.linalg.inv(_lambda)
             mu = np.dot(inv_lambda, xi)
+
+            ################### sanity check
+            # _lambda = np.zeros([self.n_dim, self.n_dim])
+            # xi = np.zeros(self.n_dim)
+            # for k in range(self.n_relations):
+            #     tmp = np.dot(R[k], E.T)  # D x E
+            #     tmp2 = np.dot(R[k].T, E.T)
+            #     _lambda += np.dot(tmp, tmp.T) + np.dot(tmp2, tmp2.T)
+            #     xi += np.sum(X[k, i, :] * tmp, 1) + np.sum(X[k, :, i] * tmp2, 1)
+            #
+            # xi *= (1. / self.var_x)
+            # _lambda *= 1. / self.var_x
+            # _lambda += (1. / self.var_e) * np.identity(self.n_dim)
+            # _inv_lambda = np.linalg.inv(_lambda)
+            # _mu = np.dot(_inv_lambda, xi)
+            #
+            # assert np.allclose(_inv_lambda, inv_lambda)
+            # assert np.allclose(_mu, mu)
 
         E[i] = multivariate_normal(mu, inv_lambda)
 
