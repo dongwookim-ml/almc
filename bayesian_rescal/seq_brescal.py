@@ -35,6 +35,16 @@ tau = -0.55
 MIN_VAL = np.iinfo(np.int32).min
 
 
+def compute_regret(T, seq):
+    mask = np.ones_like(T)
+    regret = list()
+    for s in seq:
+        best = np.max(T[mask == 1])
+        regret.append(best - T[s])
+        mask[s] = 0
+    return regret
+
+
 class PFBayesianRescal:
     def __init__(self, n_dim, compute_score=True, sample_prior=False, rbp=False,
                  controlled_var=False, obs_var=.01, unobs_var=10., n_particles=5, selection='Thompson',
@@ -370,7 +380,7 @@ class PFBayesianRescal:
             RE = list()
             RTE = list()
             for k in range(self.n_relations):
-                RE.append(np.dot(R[k], E.T).T)      #
+                RE.append(np.dot(R[k], E.T).T)  #
                 RTE.append(np.dot(R[k].T, E.T).T)
 
             for i in range(self.n_entities):

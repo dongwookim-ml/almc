@@ -1,5 +1,6 @@
 import logging
 import time
+import itertools
 import numpy as np
 import concurrent.futures
 from numpy.random import multivariate_normal, gamma
@@ -21,9 +22,25 @@ _VAR_E = 1.
 _VAR_R = 1.
 _VAR_X = 0.01
 
+
+def gen_random_tensor(n_dim, n_entity, n_relation, var_e=1., var_r=1, var_x=0.01):
+    e_mean = np.zeros(n_dim)
+    r_mean = np.zeros(n_dim ** 2)
+    E = np.random.multivariate_normal(e_mean, np.identity(n_dim) * var_e, size=n_entity)
+    R = np.zeros([n_relation, n_dim, n_dim])
+    T = np.zeros([n_relation, n_entity, n_entity])
+    for k in range(n_relation):
+        R[k] = np.random.multivariate_normal(r_mean, np.identity(n_dim ** 2) * var_r).reshape(n_dim, n_dim)
+    for k in range(n_relation):
+        ERET = np.dot(np.dot(E, R[k]), E.T)
+        for i, j in itertools.product(range(n_entity), repeat=2):
+            T[k, i, j] = np.random.normal(ERET[i, j], var_x)
+    return T
+
+
 class BayesianRescal:
-    def __init__(self, n_dim, var_e=1., var_x=0.01, var_r=1., compute_score=True, sample_prior=False,
-                 controlled_var=False, obs_var=0.01, unobs_var=10., eval_fn=mean_squared_error, **kwargs):
+    def __init__(self, n_dim, compute_score=True, controlled_var=False, obs_var=0.01, unobs_var=10.,
+                 eval_fn=mean_squared_error, **kwargs):
         self.n_dim = n_dim
 
         self.var_e = kwargs.pop('var_e', _VAR_E)
@@ -53,7 +70,7 @@ class BayesianRescal:
         self.n_relations = X.shape[0]
         self.n_entities = X.shape[1]
 
-        self.E = np.random.random([self.n_entities,self.n_dim])
+        self.E = np.random.random([self.n_entities, self.n_dim])
         self.R = np.random.random([self.n_relations, self.n_dim, self.n_dim])
 
         # for controlled variance
@@ -106,11 +123,11 @@ class BayesianRescal:
             for k in range(self.n_relations):
                 tmp = np.dot(R[k], E.T)  # D x E
                 tmp2 = np.dot(R[k].T, E.T)
-                _lambda += np.dot(tmp * (1./self.var_X[k,i,:]), tmp.T) + np.dot(tmp2 * (1./self.var_X[k,:,i]), tmp2.T)
+                _lambda += np.dot(tmp * (1. / self.var_X[k, i, :]), tmp.T) \
+                           + np.dot(tmp2 * (1. / self.var_X[k, :, i]), tmp2.T)
 
                 xi += np.sum((1. / self.var_X[k, i, :]) * X[k, i, :] * tmp, 1) \
                       + np.sum((1. / self.var_X[k, :, i]) * X[k, :, i] * tmp2, 1)
-
 
             _lambda += (1. / self.var_e) * np.identity(self.n_dim)
             inv_lambda = np.linalg.inv(_lambda)
@@ -144,7 +161,7 @@ class BayesianRescal:
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
 
         else:
-            tmp = EXE * (1./self.var_X[k, :, :].flatten()[:,np.newaxis])
+            tmp = EXE * (1. / self.var_X[k, :, :].flatten()[:, np.newaxis])
             _lambda = np.dot(tmp.T, EXE)
             _lambda += (1. / self.var_r) * np.identity(self.n_dim ** 2)
             inv_lambda = np.linalg.inv(_lambda)
@@ -166,7 +183,8 @@ class BayesianRescal:
 
             if self.parallelize:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                    fs = [executor.submit(self._sample_relation, X, E, R, k, EXE, inv_lambda) for k in range(self.n_relations)]
+                    fs = [executor.submit(self._sample_relation, X, E, R, k, EXE, inv_lambda) for k in
+                          range(self.n_relations)]
                 concurrent.futures.wait(fs)
             else:
                 [self._sample_relation(X, E, R, k, EXE, inv_lambda) for k in range(self.n_relations)]
@@ -218,7 +236,7 @@ class BayesianRescal:
             score += np.sum(norm.logpdf(self.R[k].flatten(), 0, np.sqrt(self.var_r)))
 
         for i in range(self.n_entities):
-            score += multivariate_normal.logpdf(self.E[i], np.zeros(self.n_dim), np.identity(self.n_dim)*self.var_e)
+            score += multivariate_normal.logpdf(self.E[i], np.zeros(self.n_dim), np.identity(self.n_dim) * self.var_e)
 
         if self.sample_prior:
             score += (self.e_alpha - 1.) * np.log(self.var_e) - self.e_beta * self.var_e
