@@ -1,10 +1,8 @@
-import itertools
 import logging
 import time
 import numpy as np
 import concurrent.futures
 from numpy.random import multivariate_normal, gamma, multinomial
-from scipy.stats import multivariate_normal as mn
 from sklearn.metrics import mean_squared_error
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -27,6 +25,8 @@ _GIBBS_INIT = True
 _VAR_E = 1.
 _VAR_R = 1.
 _VAR_X = 0.01
+
+_DEST = ''
 
 a = 0.001
 b = 0.01
@@ -121,6 +121,7 @@ class PFBayesianRescal:
         self.mc_move = kwargs.pop('mc_move', _MC_MOVE)
 
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
+        self.dest = kwargs.pop('dest', _DEST)
 
         if not len(kwargs) == 0:
             raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
@@ -193,9 +194,13 @@ class PFBayesianRescal:
                 with open(self.log, 'a') as f:
                     f.write('%d,%d,%d\n' % (idx[0], idx[1], idx[2]))
                 seq.append(idx)
-            return seq
         else:
-            return [idx for idx in self.particle_filter(X, obs_mask, max_iter)]
+            seq = [idx for idx in self.particle_filter(X, obs_mask, max_iter)]
+
+        if len(self.dest) > 0:
+            self._save_model(seq)
+
+        return seq
 
     def particle_filter(self, X, mask, max_iter):
         cur_obs = np.zeros_like(X)
@@ -572,3 +577,9 @@ class PFBayesianRescal:
         p = self.p_weights.argmax()
         _X = self._reconstruct(self.E[p], self.R[p])
         return self.eval_fn(X[mask == 1].flatten(), _X[mask == 1].flatten())
+
+    def _save_model(self, seq):
+        import pickle
+
+        with open(self.dest, 'wb') as f:
+            pickle.dump([self, seq], f)

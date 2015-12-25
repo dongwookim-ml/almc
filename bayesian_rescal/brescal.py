@@ -22,6 +22,8 @@ _VAR_E = 1.
 _VAR_R = 1.
 _VAR_X = 0.01
 
+_DEST = ''
+
 
 def gen_random_tensor(n_dim, n_entity, n_relation, var_e=1., var_r=1, var_x=0.01):
     e_mean = np.zeros(n_dim)
@@ -60,11 +62,19 @@ class BayesianRescal:
         self.parallelize = kwargs.pop('parallel', _PARALLEL)
         self.max_thread = kwargs.pop('max_thread', _MAX_THREAD)
 
+        self.dest = kwargs.pop('dest', _DEST)
+
         self.controlled_var = controlled_var
         self.obs_var = obs_var
         self.unobs_var = unobs_var
 
         self.eval_fn = eval_fn
+
+    def __getstate__(self):
+        d = dict(self.__dict__)
+        if self.controlled_var:
+            del d['var_X']
+        return d
 
     def fit(self, X, max_iter=100):
         self.n_relations = X.shape[0]
@@ -79,6 +89,9 @@ class BayesianRescal:
             self.var_X[X == 0] = self.unobs_var
 
         self._gibbs(X, max_iter)
+
+        if len(self.dest) > 0:
+            self._save_model()
 
     def _gibbs(self, X, max_iter):
         logger.info("[INIT] LL: %.3f | fit: %0.5f", self.score(X), self._compute_fit(X))
@@ -247,5 +260,11 @@ class BayesianRescal:
     def _compute_fit(self, X):
         _X = self._reconstruct()
         _fit = self.eval_fn(X.flatten(), _X.flatten())
-
         return _fit
+
+    def _save_model(self):
+        import os
+        import pickle
+
+        with open(self.dest, 'wb') as f:
+            pickle.dump(self, f)
