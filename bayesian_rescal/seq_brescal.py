@@ -45,6 +45,37 @@ def compute_regret(T, seq):
     return regret
 
 
+def load_and_run(path, T, max_iter):
+    import pickle
+    import os
+    with open(path, 'rb') as f:
+        model, seq = pickle.load(f)
+        log = os.path.splitext(path)[0] + ".txt"
+        obs_mask = np.zeros_like(T)
+        for s in seq:
+            obs_mask[s] = 1
+
+        if model.controlled_var:
+            model.var_X = np.ones_like(T) * model.unobs_var
+            model.var_X[obs_mask == 1] = model.obs_var
+
+        if os.path.exists(log):
+            model.log = log
+            for idx in model.particle_filter(T, obs_mask, max_iter):
+                with open(model.log, 'a') as f:
+                    f.write('%d,%d,%d\n' % (idx[0], idx[1], idx[2]))
+                seq.append(idx)
+        else:
+            _seq = [idx for idx in model.particle_filter(T, obs_mask, max_iter)]
+            for s in _seq:
+                seq.append(s)
+
+        if len(model.dest) > 0:
+            model._save_model(seq)
+
+        return seq
+
+
 class PFBayesianRescal:
     def __init__(self, n_dim, compute_score=True, sample_prior=False, rbp=False,
                  controlled_var=False, obs_var=.01, unobs_var=10., n_particles=5, selection='Thompson',
