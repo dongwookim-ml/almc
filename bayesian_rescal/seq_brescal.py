@@ -21,6 +21,7 @@ _MC_MOVE = 1
 _SGLD = False
 _NMINI = 1
 _GIBBS_INIT = True
+_PULL_SIZE = 1
 
 _VAR_E = 1.
 _VAR_R = 1.
@@ -154,6 +155,8 @@ class PFBayesianRescal:
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
         self.dest = kwargs.pop('dest', _DEST)
 
+        self.pull_size = kwargs.pop('pull_size', _PULL_SIZE)
+
         if not len(kwargs) == 0:
             raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
 
@@ -244,24 +247,23 @@ class PFBayesianRescal:
         for i in range(max_iter):
             tic = time.time()
 
-            next_idx = self.get_next_sample(mask, cur_obs)
-            yield next_idx
-            cur_obs[next_idx] = X[next_idx]
-            mask[next_idx] = 1
+            for pn in range(self.pull_size):
+                next_idx = self.get_next_sample(mask, cur_obs)
+                yield next_idx
+                cur_obs[next_idx] = X[next_idx]
+                mask[next_idx] = 1
 
-            if X[next_idx] == self.pos_val:
-                pop += 1
+                if X[next_idx] == self.pos_val:
+                    pop += 1
 
-            if self.controlled_var:
-                self.var_X[next_idx] = self.obs_var
+                if self.controlled_var:
+                    self.var_X[next_idx] = self.obs_var
 
-            if self.sample_prior and i != 0 and i % self.prior_sample_gap == 0:
-                self._sample_prior()
+                logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop,
+                            (i * self.pull_size + pn))
 
-            logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop, (i + 1))
-
-            self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
-            self.p_weights /= np.sum(self.p_weights)
+                self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
+                self.p_weights /= np.sum(self.p_weights)
 
             ESS = 1. / np.sum((self.p_weights ** 2))
 
@@ -299,6 +301,9 @@ class PFBayesianRescal:
                         for p in range(self.n_particles):
                             self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
                             self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
+
+            if self.sample_prior and i != 0 and i % self.prior_sample_gap == 0:
+                self._sample_prior()
 
             toc = time.time()
             if self.compute_score:

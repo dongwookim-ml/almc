@@ -67,3 +67,4 @@ logs/
 *.pdf
 *.fdb_latexmk
 *.out
+result
