@@ -50,7 +50,7 @@ if __name__ == '__main__':
     obs_var = 0.01
     unobs_var = 0.1
 
-    dest = '../result/kinship/'
+    dest = '../result/kinship_test/'
     if not os.path.exists(dest):
         os.makedirs(dest)
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         if not os.path.exists(file_name):
             log = os.path.splitext(file_name)[0] + ".txt"
             model = PFBayesianRescal(n_dim, controlled_var=False, n_particles=n_particle,
-                                     compute_score=False, parallel=False, log=log, dest=file_name)
+                                     compute_score=False, parallel=False, log=log, dest=file_name, compositional=True)
             seq = model.fit(T, obs_mask=maskT.copy(), max_iter=max_iter)
 
     elif s_model == 'rbsRESCAL':

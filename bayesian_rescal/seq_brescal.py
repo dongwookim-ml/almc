@@ -218,6 +218,8 @@ class PFBayesianRescal:
             tmp = np.zeros_like(X)
             obs_mask = self.expand_tensor(obs_mask, tmp)
 
+        self.r_sum = np.sum(np.sum(obs_mask, 1), 1)
+
         if max_iter == 0:
             max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask))
 
@@ -266,20 +268,17 @@ class PFBayesianRescal:
         cur_obs[mask == 1] = X[mask == 1]
 
         pop = 0
-
-        EXE = np.kron(self.E[0], self.E[0])
-
         for i in range(max_iter):
             tic = time.time()
 
             for pn in range(self.pull_size):
-                next_idx = self.get_next_sample(mask, cur_obs)
+                next_idx = self.get_next_sample(mask)
                 yield next_idx
                 cur_obs[next_idx] = X[next_idx]
                 mask[next_idx] = 1
                 if self.compositional:
-                    mask = self.expand_tensor(mask[:self.n_pure_relations], mask)
-                    cur_obs[mask==1] = X[mask==1]
+                    mask = self.expand_tensor(mask[:self.n_pure_relations], mask, next_idx[0])
+                    cur_obs[mask == 1] = X[mask == 1]
 
                 if X[next_idx] == self.pos_val:
                     pop += 1
@@ -292,6 +291,8 @@ class PFBayesianRescal:
 
                 self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
                 self.p_weights /= np.sum(self.p_weights)
+
+            self.r_sum = np.sum(np.sum(mask, 1), 1)
 
             ESS = 1. / np.sum((self.p_weights ** 2))
 
@@ -343,7 +344,7 @@ class PFBayesianRescal:
             else:
                 logger.info("[%3d] sec: %.3f", i, (toc - tic))
 
-    def expand_tensor(self, T, T_expanded):
+    def expand_tensor(self, T, T_expanded, target=-1):
         """
 
         Parameters
@@ -360,7 +361,10 @@ class PFBayesianRescal:
         """
         T_expanded[:self.n_pure_relations] = T
         for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
-            T_expanded[self.n_pure_relations + k] = np.dot(T[k1], T[k2])
+            if target == -1:
+                T_expanded[self.n_pure_relations + k] = np.dot(T[k1], T[k2])
+            elif k1 == target or k2 == target:
+                T_expanded[self.n_pure_relations + k] = np.dot(T[k1], T[k2])
         return T_expanded
 
     def compute_particle_weight(self, next_idx, X, mask):
@@ -501,18 +505,19 @@ class PFBayesianRescal:
 
         else:
             for k in range(self.n_relations):
-                RE[k][i] *= 0
-                RTE[k][i] *= 0
-                tmp = RE[k][mask[k, i, :] == 1]  # ExD
-                tmp2 = RTE[k][mask[k, :, i] == 1]
-                # tmp = np.dot(R[k], E[mask[k, i, :] == 1].T)  # D x E
-                # tmp2 = np.dot(R[k].T, E[mask[k, :, i] == 1].T)
-                if tmp.shape[0] != 0:
-                    _lambda += np.dot(tmp.T, tmp)
-                    xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1)
-                if tmp2.shape[0] != 0:
-                    _lambda += np.dot(tmp2.T, tmp2)
-                    xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1)
+                if self.r_sum[k] != 0:
+                    RE[k][i] *= 0
+                    RTE[k][i] *= 0
+                    tmp = RE[k][mask[k, i, :] == 1]  # ExD
+                    tmp2 = RTE[k][mask[k, :, i] == 1]
+                    # tmp = np.dot(R[k], E[mask[k, i, :] == 1].T)  # D x E
+                    # tmp2 = np.dot(R[k].T, E[mask[k, :, i] == 1].T)
+                    if tmp.shape[0] != 0:
+                        _lambda += np.dot(tmp.T, tmp)
+                        xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1)
+                    if tmp2.shape[0] != 0:
+                        _lambda += np.dot(tmp2.T, tmp2)
+                        xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1)
 
             xi /= self.var_x
             _lambda /= self.var_x
@@ -543,24 +548,17 @@ class PFBayesianRescal:
     def _sample_relations(self, X, mask, E, R, var_r):
         EXE = np.kron(E, E)
 
-        if self.controlled_var:
-            # if self.parallelize:
-            #     with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-            #         fs = [executor.submit(self._sample_relation, X, mask, E, R, k, EXE, var_r)
-            #               for k in range(self.n_relations)]
-            #     concurrent.futures.wait(fs)
-            # else:
-            for k in range(self.n_relations):
+        # if self.parallelize:
+        #     with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
+        #         fs = [executor.submit(self._sample_relation, X, mask, E, R, k, EXE, var_r)
+        #               for k in range(self.n_relations)]
+        #     concurrent.futures.wait(fs)
+        # else:
+        for k in range(self.n_relations):
+            if self.r_sum[k] != 0:
                 self._sample_relation(X, mask, E, R, k, EXE, var_r)
-        else:
-            # if self.parallelize:
-            #     with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-            #         fs = [executor.submit(self._sample_relation, X, mask, E, R, k, EXE, var_r)
-            #               for k in range(self.n_relations)]
-            #     concurrent.futures.wait(fs)
-            # else:
-            for k in range(self.n_relations):
-                self._sample_relation(X, mask, E, R, k, EXE, var_r)
+            else:
+                R[k] = np.random.random([self.n_dim, self.n_dim])
 
     def _sample_relation(self, X, mask, E, R, k, EXE, var_r):
         if self.controlled_var:
