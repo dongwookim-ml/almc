@@ -1,5 +1,6 @@
 import logging
 import time
+import itertools
 import numpy as np
 import concurrent.futures
 from numpy.random import multivariate_normal, gamma, multinomial
@@ -22,6 +23,7 @@ _SGLD = False
 _NMINI = 1
 _GIBBS_INIT = True
 _PULL_SIZE = 1
+_COMP = False
 
 _VAR_E = 1.
 _VAR_R = 1.
@@ -157,6 +159,8 @@ class PFBayesianRescal:
 
         self.pull_size = kwargs.pop('pull_size', _PULL_SIZE)
 
+        self.compositional = kwargs.pop('compositional', _COMP)
+
         if not len(kwargs) == 0:
             raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
 
@@ -181,9 +185,22 @@ class PFBayesianRescal:
         return d
 
     def fit(self, X, obs_mask=None, max_iter=0):
-        if not self.parallelize:
-            self.max_thread = 1
+        """
+        Running the particle Thompson sampling with predefined parameters.
 
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Fully observed tensor with shape (n_relations, n_entities, n_entities)
+        obs_mask : numpy.ndarray, default=None
+            Mask tensor of observed triples
+        max_iter : int, default=0
+            Maximum number of iterations for particle Thompson sampling
+        Returns
+        -------
+        seq : numpy.ndarray
+            Returns a sequence of selected triples over iterations.
+        """
         self.n_relations = X.shape[0]
         self.n_entities = X.shape[1]
 
@@ -314,6 +331,14 @@ class PFBayesianRescal:
                             (toc - tic))
             else:
                 logger.info("[%3d] sec: %.3f", i, (toc - tic))
+
+    def expand_tensor(X):
+        n_relations, n_entities, _ = X.shape
+        X_expanded = np.zeros([n_relations + n_relations**2, n_entities, n_entities])
+        X_expanded[:n_relations] = X
+        for k, k1, k2 in enumerate(itertools.product(range(n_relations), repeat=2)):
+            X_expanded[n_relations+k] = np.dot(X[k1], X[k2])
+        return X_expanded
 
     def compute_particle_weight(self, next_idx, X, mask):
         from scipy.stats import norm
