@@ -203,12 +203,20 @@ class PFBayesianRescal:
         """
         self.n_relations = X.shape[0]
         self.n_entities = X.shape[1]
+        if self.compositional:
+            self.n_relations = X.shape[0] + X.shape[0] ** 2
+            self.n_pure_relations = X.shape[0]
+            tmp = np.zeros([self.n_relations, self.n_entities, self.n_entities])
+            X = self.expand_tensor(X, tmp)
 
         self.E = list()
         self.R = list()
 
         if type(obs_mask) == type(None):
             obs_mask = np.zeros_like(X)
+        elif self.compositional:
+            tmp = np.zeros_like(X)
+            obs_mask = self.expand_tensor(obs_mask, tmp)
 
         if max_iter == 0:
             max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask))
@@ -269,6 +277,9 @@ class PFBayesianRescal:
                 yield next_idx
                 cur_obs[next_idx] = X[next_idx]
                 mask[next_idx] = 1
+                if self.compositional:
+                    mask = self.expand_tensor(mask[:self.n_pure_relations], mask)
+                    cur_obs[mask==1] = X[mask==1]
 
                 if X[next_idx] == self.pos_val:
                     pop += 1
@@ -332,13 +343,25 @@ class PFBayesianRescal:
             else:
                 logger.info("[%3d] sec: %.3f", i, (toc - tic))
 
-    def expand_tensor(X):
-        n_relations, n_entities, _ = X.shape
-        X_expanded = np.zeros([n_relations + n_relations**2, n_entities, n_entities])
-        X_expanded[:n_relations] = X
-        for k, k1, k2 in enumerate(itertools.product(range(n_relations), repeat=2)):
-            X_expanded[n_relations+k] = np.dot(X[k1], X[k2])
-        return X_expanded
+    def expand_tensor(self, T, T_expanded):
+        """
+
+        Parameters
+        ----------
+        T : numpy.ndarray
+            Tensor with size of (n_relations, n_entities, n_entities)
+        T_expanded : numpy.ndarray
+            Tensor with size of (n_relations+n_relations**2, n_entities, n_entities)
+
+        Returns
+        -------
+        T_expanded : numpy.ndarray
+            2-step expanded tensor of T
+        """
+        T_expanded[:self.n_pure_relations] = T
+        for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
+            T_expanded[self.n_pure_relations + k] = np.dot(T[k1], T[k2])
+        return T_expanded
 
     def compute_particle_weight(self, next_idx, X, mask):
         from scipy.stats import norm
@@ -405,11 +428,13 @@ class PFBayesianRescal:
         self.R = new_R
         self.p_weights = np.ones(self.n_particles) / self.n_particles
 
-    def get_next_sample(self, mask, X=None):
+    def get_next_sample(self, mask):
         if self.selection == 'Thompson':
             p = multinomial(1, self.p_weights).argmax()
             _X = self._reconstruct(self.E[p], self.R[p])
             _X[mask == 1] = MIN_VAL
+            if self.compositional:
+                _X[self.n_pure_relations:] = MIN_VAL
             return np.unravel_index(_X.argmax(), _X.shape)
 
         elif self.selection == 'Random':
