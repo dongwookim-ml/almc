@@ -216,9 +216,12 @@ class PFBayesianRescal:
             obs_mask = np.zeros_like(X)
         elif self.compositional:
             tmp = np.zeros_like(X)
-            obs_mask = self.expand_tensor(obs_mask, tmp)
+            cur_obs = np.zeros_like(X)
+            tmp[:self.n_pure_relations] == obs_mask
+            cur_obs[tmp == 1] = X[tmp == 1]
+            obs_mask = self.expand_obsmask(tmp, cur_obs)
 
-        self.r_sum = np.sum(np.sum(obs_mask, 1), 1)
+        self.obs_sum = np.sum(np.sum(obs_mask, 1), 1)
 
         if max_iter == 0:
             max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask))
@@ -228,7 +231,7 @@ class PFBayesianRescal:
             self.var_X = np.ones_like(X) * self.unobs_var
             self.var_X[obs_mask == 1] = self.obs_var
 
-        if self.gibbs_init:
+        if self.gibbs_init and np.sum(self.obs_sum) != 0:
             # initialize latent variables with gibbs sampling
             cur_obs = np.zeros_like(X)
             cur_obs[obs_mask == 1] = X[obs_mask == 1]
@@ -276,10 +279,8 @@ class PFBayesianRescal:
                 yield next_idx
                 cur_obs[next_idx] = X[next_idx]
                 mask[next_idx] = 1
-                if self.compositional:
-                    mask = self.expand_tensor(mask[:self.n_pure_relations], mask, next_idx[0])
-                    cur_obs[mask == 1] = X[mask == 1]
-
+                if self.compositional and cur_obs[next_idx] == self.pos_val:
+                    mask = self.expand_obsmask(mask, cur_obs, next_idx[0])
                 if X[next_idx] == self.pos_val:
                     pop += 1
 
@@ -292,7 +293,10 @@ class PFBayesianRescal:
                 self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
                 self.p_weights /= np.sum(self.p_weights)
 
-            self.r_sum = np.sum(np.sum(mask, 1), 1)
+            self.obs_sum = np.sum(np.sum(mask, 1), 1)
+
+            if self.compositional:
+                logger.debug('[Additional Points] %d', np.sum(self.obs_sum[self.n_pure_relations:]))
 
             ESS = 1. / np.sum((self.p_weights ** 2))
 
@@ -330,6 +334,8 @@ class PFBayesianRescal:
                         for p in range(self.n_particles):
                             self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
                             self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
+                            if self.rbp:
+                                self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
 
             if self.sample_prior and i != 0 and i % self.prior_sample_gap == 0:
                 self._sample_prior()
@@ -344,7 +350,7 @@ class PFBayesianRescal:
             else:
                 logger.info("[%3d] sec: %.3f", i, (toc - tic))
 
-    def expand_tensor(self, T, T_expanded, target=-1):
+    def expand_tensor(self, T, T_expanded):
         """
 
         Parameters
@@ -357,15 +363,23 @@ class PFBayesianRescal:
         Returns
         -------
         T_expanded : numpy.ndarray
-            2-step expanded tensor of T
+            returns two-step expanded tensor of T where each entry count the number of path from entity to entity
+            with combination of two relations
         """
         T_expanded[:self.n_pure_relations] = T
         for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
-            if target == -1:
-                T_expanded[self.n_pure_relations + k] = np.dot(T[k1], T[k2])
-            elif k1 == target or k2 == target:
-                T_expanded[self.n_pure_relations + k] = np.dot(T[k1], T[k2])
+            T_expanded[self.n_pure_relations + k] = np.dot(T[k1], T[k2])
         return T_expanded
+
+    def expand_obsmask(self, mask, cur_obs, next_idx=-1):
+        for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
+            if next_idx != -1 and (next_idx == k1 or next_idx == k2):
+                cur_obs[self.n_pure_relations + k] = np.dot(cur_obs[k1], cur_obs[k2])
+                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
+            elif next_idx == -1:
+                cur_obs[self.n_pure_relations + k] = np.dot(cur_obs[k1], cur_obs[k2])
+                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
+        return mask
 
     def compute_particle_weight(self, next_idx, X, mask):
         from scipy.stats import norm
@@ -504,20 +518,21 @@ class PFBayesianRescal:
             mu = np.dot(inv_lambda, xi)
 
         else:
-            for k in range(self.n_relations):
-                if self.r_sum[k] != 0:
-                    RE[k][i] *= 0
-                    RTE[k][i] *= 0
-                    tmp = RE[k][mask[k, i, :] == 1]  # ExD
-                    tmp2 = RTE[k][mask[k, :, i] == 1]
-                    # tmp = np.dot(R[k], E[mask[k, i, :] == 1].T)  # D x E
-                    # tmp2 = np.dot(R[k].T, E[mask[k, :, i] == 1].T)
-                    if tmp.shape[0] != 0:
-                        _lambda += np.dot(tmp.T, tmp)
-                        xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1)
-                    if tmp2.shape[0] != 0:
-                        _lambda += np.dot(tmp2.T, tmp2)
-                        xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1)
+            # for k in range(self.n_relations):
+            #     if self.r_sum[k] != 0:
+            for k in self.obs_sum.nonzero()[0]:
+                RE[k][i] *= 0
+                RTE[k][i] *= 0
+                tmp = RE[k][mask[k, i, :] == 1]  # ExD
+                tmp2 = RTE[k][mask[k, :, i] == 1]
+                # tmp = np.dot(R[k], E[mask[k, i, :] == 1].T)  # D x E
+                # tmp2 = np.dot(R[k].T, E[mask[k, :, i] == 1].T)
+                if tmp.shape[0] != 0:
+                    _lambda += np.dot(tmp.T, tmp)
+                    xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1)
+                if tmp2.shape[0] != 0:
+                    _lambda += np.dot(tmp2.T, tmp2)
+                    xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1)
 
             xi /= self.var_x
             _lambda /= self.var_x
@@ -555,10 +570,10 @@ class PFBayesianRescal:
         #     concurrent.futures.wait(fs)
         # else:
         for k in range(self.n_relations):
-            if self.r_sum[k] != 0:
+            if self.obs_sum[k] != 0:
                 self._sample_relation(X, mask, E, R, k, EXE, var_r)
             else:
-                R[k] = np.random.random([self.n_dim, self.n_dim])
+                R[k] = np.random.normal(0, var_r, size=[self.n_dim, self.n_dim])
 
     def _sample_relation(self, X, mask, E, R, k, EXE, var_r):
         if self.controlled_var:

@@ -50,7 +50,7 @@ if __name__ == '__main__':
     obs_var = 0.01
     unobs_var = 0.1
 
-    dest = '../result/kinship_test/'
+    dest = '../result/kinship_compositional/'
     if not os.path.exists(dest):
         os.makedirs(dest)
 
@@ -74,6 +74,8 @@ if __name__ == '__main__':
 
         if not os.path.exists(file_name):
             log = os.path.splitext(file_name)[0] + ".txt"
+            if os.path.exists(log):
+                os.remove(log)
             model = PFBayesianRescal(n_dim, controlled_var=False, n_particles=n_particle,
                                      compute_score=False, parallel=False, log=log, dest=file_name, compositional=True)
             seq = model.fit(T, obs_mask=maskT.copy(), max_iter=max_iter)
@@ -85,6 +87,8 @@ if __name__ == '__main__':
 
         if not os.path.exists(file_name):
             log = os.path.splitext(file_name)[0] + ".txt"
+            if os.path.exists(log):
+                os.remove(log)
             model = PFBayesianRescal(n_dim, controlled_var=False, n_particles=n_particle,
                                      compute_score=False, parallel=False, log=log, rbp=True)
             seq = model.fit(T, obs_mask=maskT.copy(), max_iter=max_iter)
@@ -98,6 +102,8 @@ if __name__ == '__main__':
 
         if not os.path.exists(file_name):
             log = os.path.splitext(file_name)[0] + ".txt"
+            if os.path.exists(log):
+                os.remove(log)
             model = PFBayesianRescal(n_dim, controlled_var=True, obs_var=obs_var, unobs_var=unobs_var,
                                      n_particles=n_particle, compute_score=True, log=log)
         seq = model.fit(T, obs_mask=maskT.copy(), max_iter=max_iter)
