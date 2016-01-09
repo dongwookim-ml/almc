@@ -176,6 +176,8 @@ class PFBayesianRescal:
         self.var_e = np.ones(self.n_particles) * self._var_e
         self.var_r = np.ones(self.n_particles) * self._var_r
 
+        self.var_x_expanded = 1.0
+
         self.log = log
 
     def __getstate__(self):
@@ -208,6 +210,9 @@ class PFBayesianRescal:
             self.n_pure_relations = X.shape[0]
             tmp = np.zeros([self.n_relations, self.n_entities, self.n_entities])
             X = self.expand_tensor(X, tmp)
+
+        logger.info('Original size: %d', np.sum(X[:self.n_pure_relations]))
+        logger.info('Expanded size %d', np.sum(X[self.n_pure_relations:]))
 
         self.E = list()
         self.R = list()
@@ -528,14 +533,22 @@ class PFBayesianRescal:
                 # tmp = np.dot(R[k], E[mask[k, i, :] == 1].T)  # D x E
                 # tmp2 = np.dot(R[k].T, E[mask[k, :, i] == 1].T)
                 if tmp.shape[0] != 0:
-                    _lambda += np.dot(tmp.T, tmp)
-                    xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1)
+                    if k < self.n_pure_relations:
+                        xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x
+                        _lambda += np.dot(tmp.T, tmp) / self.var_x
+                    else:
+                        xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x_expanded
+                        _lambda += np.dot(tmp.T, tmp) / self.var_x_expanded
                 if tmp2.shape[0] != 0:
-                    _lambda += np.dot(tmp2.T, tmp2)
-                    xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1)
+                    if k < self.n_pure_relations:
+                        xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_x
+                        _lambda += np.dot(tmp2.T, tmp2) / self.var_x
+                    else:
+                        xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_x_expanded
+                        _lambda += np.dot(tmp2.T, tmp2) / self.var_x_expanded
 
-            xi /= self.var_x
-            _lambda /= self.var_x
+            # xi /= self.var_x
+            #_lambda /= self.var_x
 
             inv_lambda = np.linalg.inv(_lambda)
             mu = np.dot(inv_lambda, xi)
@@ -593,9 +606,15 @@ class PFBayesianRescal:
                 _lambda += np.dot(kron.T, kron)
                 xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1)
 
-            _lambda /= self.var_x
+            if k < self.n_pure_relations:
+                _lambda /= self.var_x
+            else:
+                _lambda /= self.var_x_expanded
             inv_lambda = np.linalg.inv(_lambda)
-            mu = np.dot(inv_lambda, xi) / self.var_x
+            if k < self.n_pure_relations:
+                mu = np.dot(inv_lambda, xi) / self.var_x
+            else:
+                mu = np.dot(inv_lambda, xi) / self.var_x_expanded
 
         R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
 
