@@ -14,7 +14,7 @@
 % For figures
 \usepackage{graphicx} % more modern
 %\usepackage{epsfig} % less modern
-\usepackage{subfigure} 
+\usepackage{subfigure}
 
 % For citations
 \usepackage{natbib}
@@ -36,7 +36,7 @@
 % Employ the following version of the ``usepackage'' statement for
 % submitting the draft version of the paper for review.  This will set
 % the note in the first column to ``Under review.  Do not distribute.''
-\usepackage{icml2016} 
+\usepackage{icml2016}
 
 % Employ this version of the ``usepackage'' statement after the paper has
 % been accepted, when creating the final version.  This will set the
@@ -52,10 +52,10 @@
 % Therefore, a short form for the running title is supplied here:
 \icmltitlerunning{Submission and Formatting Instructions for ICML 2016}
 
-\begin{document} 
+\begin{document}
 
 \twocolumn[
-\icmltitle{Submission and Formatting Instructions for \\ 
+\icmltitle{Submission and Formatting Instructions for \\
            International Conference on Machine Learning (ICML 2016)}
 
 % It is OKAY to include author information, even for blind
@@ -69,17 +69,17 @@
 \icmladdress{Their Fantastic Institute,
             27182 Exp St., Toronto, ON M6H 2T1 CANADA}
 
-% You may provide any keywords that you 
-% find helpful for describing your paper; these are used to populate 
+% You may provide any keywords that you
+% find helpful for describing your paper; these are used to populate
 % the "keywords" metadata in the PDF but will not be shown in the document
 \icmlkeywords{boring formatting information, machine learning, ICML}
 
 \vskip 0.3in
 ]
 
-\begin{abstract} 
+\begin{abstract}
 %Abstracts should be a single paragraph, between 4--6 sentences long, ideally.  Gross violations will trigger corrections at the camera-ready phase.
-\end{abstract} 
+\end{abstract}
 
 \section{Introduction}
 
@@ -95,7 +95,7 @@ For each relation $k$, we draw matrix $R_k \in \mathbb{R}^{D\times D}$ from zero
 R_k \sim \mathcal{N}_{D \times D}(\mathbf{0}, \sigma_r^2{I}_D, {I}_D) \\
 \text{vec}(R_k) \sim N(\mathbf{0}, \sigma_r^2 I_{D^2})
 \end{align}
-For each triple $(i,k,j)$, we draw $x_{ikj}$ 
+For each triple $(i,k,j)$, we draw $x_{ikj}$
 \begin{align}
 x_{ikj} |e_i, e_j, R_k &\sim \mathcal{MN}(e_i^{\top} R_k e_j, \sigma_x^2)\\
 & = \mathcal{N}(\text{vec}(R_k)^{\top} e_i \otimes e_j, \sigma_x^2)
@@ -158,8 +158,8 @@ where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
    \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
    \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t}, \mathcal{R}^{h_t})$
    \STATE Observe $x_{ikj}$ and update $\mathcal{X}$
-   
-   \STATE \textit{Particle Filtering}:   
+
+   \STATE \textit{Particle Filtering}:
    \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighting
    \IF{ESS$(\mathbf{w}^{t+1}) \leq N$}
    \STATE resample particles
@@ -170,7 +170,7 @@ where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
    \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}, E^{h})$   \hfill $\triangleright$ see Eq. (\ref{eqn:sample_r})
    \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
    \ENDFOR
-   
+
    \ENDFOR
 \end{algorithmic}
 \end{algorithm}
@@ -185,8 +185,8 @@ where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
    \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
    \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t})$    \hfill $\triangleright$ see Eq. (\ref{eqn:marginal_predict})
    \STATE Observe $x_{ikj}$ and update $\mathcal{X}$
-   
-   \STATE \textit{Particle Filtering}:   
+
+   \STATE \textit{Particle Filtering}:
    \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h})$   \hfill $\triangleright$ Reweighting, Eq. (\ref{eqn:marginal_predict})
    \IF{ESS$(\mathbf{w}^{t+1}) \leq N$}
    \STATE resample particles
@@ -197,11 +197,46 @@ where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
    \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}, E^{h})$   \hfill $\triangleright$ Auxiliary sampling, see Eq. (\ref{eqn:sample_r})
    \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
    \ENDFOR
-   
+
    \ENDFOR
 \end{algorithmic}
 \end{algorithm}
 
+
+\section{Unstructured thoughts}
+
+\begin{description}
+  \item[Not useful theorem] In \cite{kawale2015efficient}, the theorem does not really give
+  a setting that is used in the paper.
+  \item[Logistic regression] For outputs which are binary, instead of a Gaussian assumption on
+  $x$, we can use logistic regression. See
+   \url{http://people.csail.mit.edu/romer/papers/TISTRespPredAds.pdf}
+  \item[Choosing triples] For entity $e_i$ related via relation $R_k$ to entity $e_j$, we want
+  an active learning algorithm that will choose triples $e_i R_k e_j$ that corresponds to
+  $x_{ikj}$. This will not have a bandit regret bound, since we only choose each triple once.
+  \item[Contextual Bandits] There are two groups of three possible assumptions for contextual
+  bandits:
+  \begin{enumerate}
+    \item Two elements of the tuple as context, choose only one element
+    \begin{itemize}
+      \item $e_iR_k$ context, $e_j$ arms
+      \item $e_i, e_j$ context, $R_k$ arms
+      \item $R_ke_j$ context, $e_i$ arms
+    \end{itemize}
+    \item One element of the tuple as context, choose two elements
+    \begin{itemize}
+      \item $e_i$ context, $R_k e_j$ arms
+      \item $R_k$ context, $e_i, e_j$ arms
+      \item $e_j$ context, $e_iR_k$ arms
+    \end{itemize}
+  \end{enumerate}
+  \item[Bayesian Tensor Factorisation] Some other related work
+  \begin{itemize}
+    \item \url{http://www.autonlab.org/autonweb/19394/version/4/part/5/data/225_Xiong.pdf}
+    \item \url{http://www.shakirm.com/papers/ntfmcmc_paper.pdf}
+    \item \url{http://www.sciencedirect.com/science/article/pii/S0165168411003537}
+  \end{itemize}
+\end{description}
 
 % In the unusual situation where you want a paper to appear in the
 % references without citing it in the main text, use \nocite
@@ -210,16 +245,16 @@ where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
 \bibliography{icml2016}
 \bibliographystyle{icml2016}
 
-\end{document} 
+\end{document}
 
 
 % This document was modified from the file originally made available by
 % Pat Langley and Andrea Danyluk for ICML-2K. This version was
-% created by Lise Getoor and Tobias Scheffer, it was slightly modified  
-% from the 2010 version by Thorsten Joachims & Johannes Fuernkranz, 
-% slightly modified from the 2009 version by Kiri Wagstaff and 
-% Sam Roweis's 2008 version, which is slightly modified from 
-% Prasad Tadepalli's 2007 version which is a lightly 
-% changed version of the previous year's version by Andrew Moore, 
-% which was in turn edited from those of Kristian Kersting and 
-% Codrina Lauth. Alex Smola contributed to the algorithmic style files.  
+% created by Lise Getoor and Tobias Scheffer, it was slightly modified
+% from the 2010 version by Thorsten Joachims & Johannes Fuernkranz,
+% slightly modified from the 2009 version by Kiri Wagstaff and
+% Sam Roweis's 2008 version, which is slightly modified from
+% Prasad Tadepalli's 2007 version which is a lightly
+% changed version of the previous year's version by Andrew Moore,
+% which was in turn edited from those of Kristian Kersting and
+% Codrina Lauth. Alex Smola contributed to the algorithmic style files.
