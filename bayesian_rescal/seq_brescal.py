@@ -204,6 +204,7 @@ class PFBayesianRescal:
             Returns a sequence of selected triples over iterations.
         """
         self.n_relations = X.shape[0]
+        self.n_pure_relations = X.shape[0]
         self.n_entities = X.shape[1]
         if self.compositional:
             self.n_relations = X.shape[0] + X.shape[0] ** 2
@@ -211,8 +212,8 @@ class PFBayesianRescal:
             tmp = np.zeros([self.n_relations, self.n_entities, self.n_entities])
             X = self.expand_tensor(X, tmp)
 
-        logger.info('Original size: %d', np.sum(X[:self.n_pure_relations]))
-        logger.info('Expanded size %d', np.sum(X[self.n_pure_relations:]))
+            logger.info('Original size: %d', np.sum(X[:self.n_pure_relations]))
+            logger.info('Expanded size %d', np.sum(X[self.n_pure_relations:]))
 
         self.E = list()
         self.R = list()
