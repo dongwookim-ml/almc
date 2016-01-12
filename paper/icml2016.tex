@@ -92,7 +92,7 @@ e_i \sim {N}(\mathbf{0}, \sigma_e^2{I}_D)
 \end{align}
 For each relation $k$, we draw matrix $R_k \in \mathbb{R}^{D\times D}$ from zero-mean matrix normal distribution.
 \begin{align}
-R_k \sim \mathcal{N}_{D \times D}(\mathbf{0}, \sigma_r^2{I}_D, {I}_D) \\
+R_k \sim \mathcal{N}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
 \text{vec}(R_k) \sim N(\mathbf{0}, \sigma_r^2 I_{D^2})
 \end{align}
 For each triple $(i,k,j)$, we draw $x_{ikj}$
@@ -101,7 +101,7 @@ x_{ikj} |e_i, e_j, R_k &\sim \mathcal{MN}(e_i^{\top} R_k e_j, \sigma_x^2)\\
 & = \mathcal{N}(\text{vec}(R_k)^{\top} e_i \otimes e_j, \sigma_x^2)
 \end{align}
 
-\section{Inference}
+\section{Particle Thompson Sampling}
 %We use Gibbs sampling to infer the posterior distribution of $e_i$ and $R_k$ \cite{Salakhutdinov2008}.
 
 Conditional distribution of $e_i$ given $\mathcal{R}$ and other entities $E_{-i}$
@@ -136,44 +136,44 @@ The posterior marginal predictive distribution of $x_{ikj}$ given $\mathcal{X}$ 
 
 \subsection{Particle Thompson sampling with MCMC kernel}
 Let $H$ be the number of particles.
-Algorithm \ref{alg:smc} describes basic particle Thompson sampling for the tensor factorisation.
+%Algorithm \ref{alg:smc} describes basic particle Thompson sampling for the tensor factorisation.
 Algorithm \ref{alg:rbsmc} describes Rao-Blackwellized particle Thompson sampling where relation matrix $R_k$ is marginalized out.
 
-\subsection{(?)Particle Thompson sampling with SGLD kernel}
-Above two algorithms are not well suitable for large scale dataset because the sample requires quantities estimated over all possible triples.
+%\subsection{(?)Particle Thompson sampling with SGLD kernel}
+%Above two algorithms are not well suitable for large scale dataset because the sample requires quantities estimated over all possible triples.
+%
+%Is it possible to use the stochastic gradient Langevin dynamics (SGLD) \cite{welling2011bayesian} kernel $K(E' | E)$ to sample $E'$ given $E$ with or without auxiliary variable $R_k$?
+%\begin{align}
+%e_i' \leftarrow e_i + \frac{\epsilon_t}{2}\Bigg\{\nabla \log p(\mathcal{X}|e_i) + \nabla \log p(e_i|\sigma_e)\Bigg\} + \nu_t
+%\end{align}
+%where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
 
-Is it possible to use the stochastic gradient Langevin dynamics (SGLD) \cite{welling2011bayesian} kernel $K(E' | E)$ to sample $E'$ given $E$ with or without auxiliary variable $R_k$?
-\begin{align}
-e_i' \leftarrow e_i + \frac{\epsilon_t}{2}\Bigg\{\nabla \log p(\mathcal{X}|e_i) + \nabla \log p(e_i|\sigma_e)\Bigg\} + \nu_t
-\end{align}
-where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
-
-\begin{algorithm}[t!]
-   \caption{Particle Thompson Sampling for Tensor Factorisation}
-   \label{alg:smc}
-\begin{algorithmic}
-   \STATE {\bfseries Input:} $\mathcal{X}, \sigma_x, \sigma_e, \sigma_r$.
-   \FOR{$t=1,2, \dots$}
-   \STATE \textit{Thompson Sampling}:
-   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
-   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t}, \mathcal{R}^{h_t})$
-   \STATE Observe $x_{ikj}$ and update $\mathcal{X}$
-
-   \STATE \textit{Particle Filtering}:
-   \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighting
-   \IF{ESS$(\mathbf{w}^{t+1}) \leq N$}
-   \STATE resample particles
-   \STATE $w_h^{t+1} \leftarrow 1/H$
-   \ENDIF
-
-   \FOR{$h=1$ {\bfseries to} $H$}
-   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}, E^{h})$   \hfill $\triangleright$ see Eq. (\ref{eqn:sample_r})
-   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
-   \ENDFOR
-
-   \ENDFOR
-\end{algorithmic}
-\end{algorithm}
+%\begin{algorithm}[t!]
+%   \caption{Particle Thompson Sampling for Tensor Factorisation}
+%   \label{alg:smc}
+%\begin{algorithmic}
+%   \STATE {\bfseries Input:} $\mathcal{X}, \sigma_x, \sigma_e, \sigma_r$.
+%   \FOR{$t=1,2, \dots$}
+%   \STATE \textit{Thompson Sampling}:
+%   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
+%   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t}, \mathcal{R}^{h_t})$
+%   \STATE Observe $x_{ikj}$ and update $\mathcal{X}$
+%
+%   \STATE \textit{Particle Filtering}:
+%   \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighting
+%   \IF{ESS$(\mathbf{w}^{t+1}) \leq N$}
+%   \STATE resample particles
+%   \STATE $w_h^{t+1} \leftarrow 1/H$
+%   \ENDIF
+%
+%   \FOR{$h=1$ {\bfseries to} $H$}
+%   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}, E^{h})$   \hfill $\triangleright$ see Eq. (\ref{eqn:sample_r})
+%   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
+%   \ENDFOR
+%
+%   \ENDFOR
+%\end{algorithmic}
+%\end{algorithm}
 
 \begin{algorithm}[t!]
    \caption{Rao-Blackwallized Particle Thompson Sampling for Tensor Factorisation}
@@ -202,6 +202,19 @@ where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
 \end{algorithmic}
 \end{algorithm}
 
+\section{Compositional Relations}
+
+From two triples:
+$(i, k_1 ,j)$,  $(j, k_2, l)$
+
+Compositional triple:
+$(i, k_{\text{comp}(k_1, k_2)}, l)$
+
+This compositional triple may have multiple path over the knowledge graph.
+
+Let $x_{(i, k_{\text{comp}(k_1, k_2)}, l)}$ bs a number of path from entity node $i$ to entity node $j$ through relation edges $k_1$ and $k_2$.
+
+We model $x_{(i, k_{\text{comp}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{\text{comp}(k_1,k_2)} e_j, \sigma_\text{comp}^2)$ where $R_{\text{comp}(k_1,k_2)} \in \mathbb{R}^{D\times D}$.
 
 \section{Unstructured thoughts}
 
