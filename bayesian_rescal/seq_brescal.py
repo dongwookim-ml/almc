@@ -27,7 +27,7 @@ _COMP = False
 
 _VAR_E = 1.
 _VAR_R = 1.
-_VAR_X = 0.01
+_VAR_X = 0.1
 
 _DEST = ''
 

@@ -20,6 +20,7 @@ _POS_VAL = 1
 _MC_MOVE = 1
 _GIBBS_INIT = True
 _PULL_SIZE = 1
+_DEST = ''
 
 _VAR_E = 1.
 _VAR_R = 1.
@@ -32,11 +33,11 @@ tau = -0.55
 MIN_VAL = np.iinfo(np.int32).min
 
 
-def _sigmoid(self, x):
+def _sigmoid(x):
     return 1. / (1 + np.exp(-x))
 
 
-class PFLogitBayesianRescal:
+class PFBayesianLogitRescal:
     def __init__(self, n_dim, compute_score=True, sample_prior=False, rbp=False,
                  controlled_var=False, obs_var=.01, unobs_var=10., n_particles=5, selection='Thompson',
                  eval_fn=mean_squared_error, log="", **kwargs):
@@ -381,8 +382,8 @@ if __name__ == '__main__':
     n_entity = 10
     n_particle = 10
 
-    E = np.random.random([n_entity, n_dim]) - 0.5
-    R = np.random.random([n_relation, n_dim, n_dim]) - 0.5
+    E = np.random.normal(0, 1.0, size = [n_entity, n_dim])
+    R = np.random.normal(0, 1.0, size = [n_relation, n_dim, n_dim])
 
     X = np.zeros([n_relation, n_entity, n_entity])
     for k, i, j in itertools.product(range(n_relation), range(n_entity), range(n_entity)):
@@ -391,4 +392,5 @@ if __name__ == '__main__':
         X[k, i, j] = np.random.binomial(1, p)
 
     model = PFLogitBayesianRescal(n_dim, controlled_var=False, n_particles=n_particle)
-    model.fit(X, np.zeros_like(X))
+    seq = model.fit(X, np.zeros_like(X))
+
