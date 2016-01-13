@@ -83,7 +83,26 @@
 
 \section{Introduction}
 
+\section{Related Work}
+RESCAL \cite{nickel2011three}
 
+\textbf{Bayesian tensor factorisation}:
+\begin{itemize}
+\item \cite{xiong2010temporal,schmidt2009probabilistic}:CANDECOMP/PARAFAC (CP) decomposition
+\item \cite{yilmaz2012algorithms}: CP and TUCKER3
+\end{itemize}
+
+\textbf{Thompson Sampling}:
+\begin{itemize}
+\item \cite{kawale2015efficient}: Matrix factorisation recommendation
+\item \cite{gopalan2014thompson}: Thompson Sampling for Complex Online Problems
+\item \cite{kocak2014spectral}: Spectral Thompson sampling
+\end{itemize}
+
+\textbf{Knowledge Graph}:
+\begin{itemize}
+\item \cite{kajino2015active}: Active learning for KG (populating KG)
+\end{itemize}
 \section{Model}
 
 For each entity $i$, $e_i \in \mathbb{R}^{D}$ is drawn from multivariate-normal distribution. Let $E$ be a $I \times D$ matrix representation of entities.
@@ -101,19 +120,25 @@ x_{ikj} |e_i, e_j, R_k &\sim \mathcal{MN}(e_i^{\top} R_k e_j, \sigma_x^2)\\
 & = \mathcal{N}(\text{vec}(R_k)^{\top} e_i \otimes e_j, \sigma_x^2)
 \end{align}
 
+For binary valued triples:
+\begin{align}
+p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j, \sigma_x^2)
+\end{align}
+
+
 \section{Particle Thompson Sampling}
-%We use Gibbs sampling to infer the posterior distribution of $e_i$ and $R_k$ \cite{Salakhutdinov2008}.
+Let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$.
 
 Conditional distribution of $e_i$ given $\mathcal{R}$ and other entities $E_{-i}$
 \begin{align} \label{eqn:sample_e}
-p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}, \sigma_e, \sigma_x) &= \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1}),
+p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1}),
 \end{align}
 where
 \begin{align*}
 \mu_i &= \frac{1}{\sigma_x^2}(\Lambda_i)^{-1}\xi_i \\
-\Lambda_i &= \frac{1}{\sigma_x^2} \sum_{j,k} (R_k e_j)(R_k e_j)^\top \\
-&\quad+ \frac{1}{\sigma_x^2} \sum_{j,k} (R_k^\top e_j)(R_k^\top e_j)^\top+ \frac{1}{\sigma_e^2} {I}_D \\
-\xi_i &= \sum_{j,k} x_{ikj} R_{k} e_{j} + x_{jki} R_{k}^\top e_{j}.
+\Lambda_i &= \frac{1}{\sigma_x^2} \sum_{jk : x_{ikj \in \mathcal{X}^{t}}} (R_k e_j)(R_k e_j)^\top \\
+&\quad+ \frac{1}{\sigma_x^2} \sum_{jk : x_{jki \in \mathcal{X}^{t}}} (R_k^\top e_j)(R_k^\top e_j)^\top+ \frac{1}{\sigma_e^2} {I}_D \\
+\xi_i &= \sum_{jk : x_{ikj \in \mathcal{X}^{t}}}  x_{ikj} R_{k} e_{j} + \sum_{jk : x_{jki \in \mathcal{X}^{t}}} x_{jki} R_{k}^\top e_{j}.
 \end{align*}
 Conditional distribution of $R_k$ given $E$
 \begin{align}
@@ -123,21 +148,27 @@ p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(R_k | \mu_k, \Lambda_k
 where
 \begin{align*}
 \mu_k &= \frac{1}{\sigma_x^2}(\Lambda_k)^{-1}\xi_k \\
-\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{i,j} (e_i \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
-\xi_k &= \sum_{ij} x_{ikj} (e_{i} \otimes e_{j}).
+\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
+\xi_k &= \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{i} \otimes e_{j}).
 \end{align*}
 
 The posterior marginal predictive distribution of $x_{ikj}$ given $\mathcal{X}$ and $E$.
 \begin{align}
 \label{eqn:marginal_predict}
-&p(x_{ikj}| E, \mathcal{X}, \sigma_x, \sigma_r) \\
+&p(x_{ikj}| E, \mathcal{X}^{t}, \sigma_x, \sigma_r) \\
 &= \mathcal{N}(x_{ikj}| \mu_k ^\top (e_i \otimes e_j), \frac{1}{\sigma_x^2} +  (e_i \otimes e_j)^\top \Lambda_k (e_i \otimes e_j)) \notag
 \end{align}
 
 \subsection{Particle Thompson sampling with MCMC kernel}
-Let $H$ be the number of particles.
+Let $H$ be the number of particles, and $\Theta= \{E, \mathcal{R}\}$ be a set of latent features.
 %Algorithm \ref{alg:smc} describes basic particle Thompson sampling for the tensor factorisation.
 Algorithm \ref{alg:rbsmc} describes Rao-Blackwellized particle Thompson sampling where relation matrix $R_k$ is marginalized out.
+
+Under the mild assumption where $p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$, the weight of each particle at time $t$ can be computed as follows \cite{del2006sequential,chopin2002sequential}:
+\begin{align}
+w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)} = p(x^{t} | \Theta, \mathcal{X}^{t-1})
+\end{align}
+
 
 %\subsection{(?)Particle Thompson sampling with SGLD kernel}
 %Above two algorithms are not well suitable for large scale dataset because the sample requires quantities estimated over all possible triples.
@@ -179,12 +210,12 @@ Algorithm \ref{alg:rbsmc} describes Rao-Blackwellized particle Thompson sampling
    \caption{Rao-Blackwallized Particle Thompson Sampling for Tensor Factorisation}
    \label{alg:rbsmc}
 \begin{algorithmic}
-   \STATE {\bfseries Input:} $\mathcal{X}, \sigma_x, \sigma_e, \sigma_r$.
+   \STATE {\bfseries Input:} $\sigma_x, \sigma_e, \sigma_r$.
    \FOR{$t=1,2, \dots$}
    \STATE \textit{Thompson Sampling}:
    \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
    \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t})$    \hfill $\triangleright$ see Eq. (\ref{eqn:marginal_predict})
-   \STATE Observe $x_{ikj}$ and update $\mathcal{X}$
+   \STATE Observe $x_{ikj}$ and update $\mathcal{X}^{t}$
 
    \STATE \textit{Particle Filtering}:
    \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h})$   \hfill $\triangleright$ Reweighting, Eq. (\ref{eqn:marginal_predict})
@@ -194,8 +225,8 @@ Algorithm \ref{alg:rbsmc} describes Rao-Blackwellized particle Thompson sampling
    \ENDIF
 
    \FOR{$h=1$ {\bfseries to} $H$}
-   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}, E^{h})$   \hfill $\triangleright$ Auxiliary sampling, see Eq. (\ref{eqn:sample_r})
-   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
+   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}^{t}, E^{h})$   \hfill $\triangleright$ Auxiliary sampling, see Eq. (\ref{eqn:sample_r})
+   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}^{t}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
    \ENDFOR
 
    \ENDFOR
@@ -211,10 +242,15 @@ Compositional triple:
 $(i, k_{\text{comp}(k_1, k_2)}, l)$
 
 This compositional triple may have multiple path over the knowledge graph.
+Both pairs of triples $(i, k_1 ,j)$,  $(j, k_2, l)$ and $(i, k_1 ,m)$,  $(m, k_2, l)$ can be represented as $(i, k_{\text{comp}(k_1, k_2)}, l)$.
 
-Let $x_{(i, k_{\text{comp}(k_1, k_2)}, l)}$ bs a number of path from entity node $i$ to entity node $j$ through relation edges $k_1$ and $k_2$.
+Let $x_{(i, k_{\text{comp}(k_1, k_2)}, l)}$ be the number of path from entity $i$ to entity $j$ through relation edges $k_1$ and $k_2$.
 
-We model $x_{(i, k_{\text{comp}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{\text{comp}(k_1,k_2)} e_j, \sigma_\text{comp}^2)$ where $R_{\text{comp}(k_1,k_2)} \in \mathbb{R}^{D\times D}$.
+We model the degree of the compositional relation as
+\begin{align}
+x_{(i, k_{\text{comp}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{\text{comp}(k_1,k_2)} e_j, \sigma_\text{comp}^2),
+\end{align}
+where $R_{\text{comp}(k_1,k_2)} \in \mathbb{R}^{D\times D}$.
 
 \section{Unstructured thoughts}
 
@@ -243,17 +279,10 @@ We model $x_{(i, k_{\text{comp}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{\te
       \item $e_j$ context, $e_iR_k$ arms
     \end{itemize}
   \end{enumerate}
-  \item[Bayesian Tensor Factorisation] Some other related work
-  \begin{itemize}
-    \item \url{http://www.autonlab.org/autonweb/19394/version/4/part/5/data/225_Xiong.pdf}
-    \item \url{http://www.shakirm.com/papers/ntfmcmc_paper.pdf}
-    \item \url{http://www.sciencedirect.com/science/article/pii/S0165168411003537}
-  \end{itemize}
 \end{description}
 
 % In the unusual situation where you want a paper to appear in the
 % references without citing it in the main text, use \nocite
-\nocite{*}
 
 \bibliography{icml2016}
 \bibliographystyle{icml2016}
