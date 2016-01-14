@@ -5,7 +5,7 @@ import numpy as np
 import concurrent.futures
 from numpy.random import multivariate_normal, gamma, multinomial
 from sklearn.metrics import mean_squared_error
-from scipy.sparse import csr_matrix as sparse_matrix
+from scipy.sparse import csr_matrix, csc_matrix
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -99,7 +99,6 @@ class PFSparseBayesianRescal:
 
         self.parallelize = kwargs.pop('parallel', _PARALLEL)
         self.max_thread = kwargs.pop('max_thread', _MAX_THREAD)
-        self.mc_move = kwargs.pop('mc_move', _MC_MOVE)
 
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
         self.dest = kwargs.pop('dest', _DEST)
@@ -127,7 +126,7 @@ class PFSparseBayesianRescal:
         d = dict(self.__dict__)
         return d
 
-    def fit(self, X, obs_mask=None, max_iter=0):
+    def fit(self, X, obs_mask_csr=None, max_iter=0):
         """
         Running the particle Thompson sampling with predefined parameters.
 
@@ -135,7 +134,7 @@ class PFSparseBayesianRescal:
         ----------
         X : scipy.sparse
             List of sparse matrix with shape (n_relations) (n_entities, n_entities)
-        obs_mask : numpy.ndarray, default=None
+        obs_mask_csr : numpy.ndarray, default=None
             Mask tensor of observed triples
         max_iter : int, default=0
             Maximum number of iterations for particle Thompson sampling
@@ -158,18 +157,21 @@ class PFSparseBayesianRescal:
         self.E = list()
         self.R = list()
 
-        if type(obs_mask) == type(None):
-            obs_mask = [sparse_matrix((self.n_entities, self.n_entities)) for i in range(self.n_pure_relations)]
+        if type(obs_mask_csr) == type(None):
+            obs_mask_csr = [csr_matrix((self.n_entities, self.n_entities)) for i in range(self.n_pure_relations)]
+
+        cur_obs_csr = [csr_matrix((self.n_entities, self.n_entities)) for i in range(self.n_relations)]
+        for k in range(self.n_pure_relations):
+            cur_obs_csr[k][obs_mask_csr[k].nonzero()] = X[k][obs_mask_csr[k].nonzero()]
 
         if self.compositional:
-            cur_obs = [sparse_matrix((self.n_entities, self.n_entities)) for i in range(self.n_relations)]
-            for k in range(self.n_pure_relations):
-                cur_obs[k][obs_mask[k].nonzero()] = X[k][obs_mask[k].nonzero()]
             for (k1, k2) in itertools.product(range(self.n_pure_relations), repeat=2):
-                obs_mask.append(sparse_matrix((self.n_entities, self.n_entities)))
-            self.expand_obsmask(obs_mask, cur_obs)
+                obs_mask_csr.append(csr_matrix((self.n_entities, self.n_entities)))
+            self.expand_obsmask(obs_mask_csr, cur_obs_csr)
 
-        self.obs_sum = np.array([obs_mask[i].sum() for i in range(self.n_relations)])
+        self.obs_sum = np.array([obs_mask_csr[i].sum() for i in range(self.n_relations)])
+        obs_mask_csc = [obs_mask_csr[i].tocsc() for i in range(self.n_relations)]
+        cur_obs_csc = [cur_obs_csr[i].tocsc() for i in range(self.n_relations)]
 
         if max_iter == 0:
             max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(self.obs_sum))
@@ -178,50 +180,92 @@ class PFSparseBayesianRescal:
             self.E.append(np.random.normal(0, 1, size=[self.n_entities, self.n_dim]))
             self.R.append(np.random.normal(0, 1, size=[self.n_relations, self.n_dim, self.n_dim]))
 
+        tic = time.time()
+        for p in range(self.n_particles):
+            obs_idx = self.get_nonzero_idx(obs_mask_csr)
+            np.random.shuffle(obs_idx)
+
+            RE = list()
+            RTE = list()
+            for k in range(self.n_relations):
+                RE.append(np.dot(self.R[p][k], self.E[p].T).T)
+                RTE.append(np.dot(self.R[p][k].T, self.E[p].T).T)
+
+            for r_k, e_i, e_j in obs_idx:
+                if self.obs_sum[k] != 0:
+                    self._sample_relation(cur_obs_csr, obs_mask_csr, self.E[p], self.R[p], r_k, self.var_r[p])
+                    RE[r_k] = np.dot(self.R[p][r_k], self.E[p].T).T
+                    RTE[r_k] = np.dot(self.R[p][r_k].T, self.E[p].T).T
+
+                self._sample_entity(cur_obs_csr, cur_obs_csc, obs_mask_csr, obs_mask_csc, self.E[p], e_i, self.var_e[p], RE, RTE)
+                for k in range(self.n_relations):
+                    RE[r_k][e_i] = np.dot(self.R[p][r_k], self.E[p][e_i])
+                    RTE[r_k][e_i] = np.dot(self.R[p][r_k].T, self.E[p][e_i])
+
+                self._sample_entity(cur_obs_csr, cur_obs_csc, obs_mask_csr, obs_mask_csc, self.E[p], e_j, self.var_e[p], RE, RTE)
+                for k in range(self.n_relations):
+                    RE[r_k][e_j] = np.dot(self.R[p][r_k], self.E[p][e_i])
+                    RTE[r_k][e_j] = np.dot(self.R[p][r_k].T, self.E[p][e_i])
+
         if len(self.log) > 0:
             seq = list()
-            for idx in self.particle_filter(X, obs_mask, max_iter):
+            for idx in self.particle_filter(X, obs_mask_csr, cur_obs_csr, max_iter):
                 with open(self.log, 'a') as f:
                     f.write('%d,%d,%d\n' % (idx[0], idx[1], idx[2]))
                 seq.append(idx)
         else:
-            seq = [idx for idx in self.particle_filter(X, obs_mask, max_iter)]
+            seq = [idx for idx in self.particle_filter(X, obs_mask_csr, cur_obs_csr, max_iter)]
 
         if len(self.dest) > 0:
             self._save_model(seq)
 
         return seq
 
-    def particle_filter(self, X, mask, max_iter):
-        cur_obs = [sparse_matrix((self.n_entities, self.n_entities)) for i in range(self.n_relations)]
+    def get_nonzero_idx(self, obs_mask_csr):
+        idx = list()
         for k in range(self.n_relations):
-            cur_obs[k][mask[k].nonzero()] = X[k][mask[k].nonzero()]
+            nz = np.array(obs_mask_csr[k].nonzero())
+            for i in range(nz.shape[1]):
+                idx.append((int(k), int(nz[0, i]), int(nz[1, i])))
+        return idx
 
+    def particle_filter(self, X, mask_csr, obs_csr, max_iter):
         pop = 0
+        mask_csc = [mask_csr[k].tocsc() for k in range(self.n_relations)]
+        obs_csc = [obs_csr[k].tocsc() for k in range(self.n_relations)]
+
         for i in range(max_iter):
             tic = time.time()
 
-            n_i = np.random.randint(self.n_entities)
-            n_k = np.random.randint(self.n_pure_relations)
-            n_j = self.get_next_sample(mask, n_i, n_k)
-            # n_k, n_i, n_j = next_idx
+            n_i = int(np.random.randint(self.n_entities))
+            n_k = int(np.random.randint(self.n_pure_relations))
+            n_j = int(self.get_next_sample(mask_csr, n_i, n_k))
             next_idx = (n_k, n_i, n_j)
             yield next_idx
 
             if X[n_k][n_i, n_j] != 0:
-                cur_obs[n_k][n_i, n_j] = X[n_k][n_i, n_j]
-            mask[n_k][n_i, n_j] = 1
-            if self.compositional and cur_obs[n_k][n_i, n_j] == self.pos_val:
-                self.expand_obsmask(mask, cur_obs, n_k)
+                obs_csr[n_k][n_i, n_j] = X[n_k][n_i, n_j]
+                obs_csc[n_k][n_i, n_j] = X[n_k][n_i, n_j]
+
+            mask_csr[n_k][n_i, n_j] = 1
+
+            if self.compositional and obs_csr[n_k][n_i, n_j] == self.pos_val:
+                self.expand_obsmask(mask_csr, obs_csr, n_k)
+
+            if self.compositional:
+                mask_csc = [mask_csr[k].tocsc() for k in range(self.n_relations)]
+            else:
+                mask_csc[n_k][n_i, n_j] = 1
+
             if X[n_k][n_i, n_j] == self.pos_val:
                 pop += 1
 
             logger.info('[NEXT] %s: %.3f, population: %d/%d', str((n_k, n_i, n_j)), X[n_k][n_i, n_j], pop, i)
 
-            self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
+            self.p_weights *= self.compute_particle_weight(next_idx, obs_csr, mask_csr)
             self.p_weights /= np.sum(self.p_weights)
 
-            self.obs_sum = np.array([mask[i].sum() for i in range(self.n_relations)])
+            self.obs_sum = np.array([mask_csr[i].sum() for i in range(self.n_relations)])
 
             if self.compositional:
                 logger.debug('[Additional Points] %d', np.sum(self.obs_sum[self.n_pure_relations:]))
@@ -231,12 +275,11 @@ class PFSparseBayesianRescal:
             if ESS < self.n_particles / 2.:
                 self.resample()
 
-            for m in range(self.mc_move):
-                for p in range(self.n_particles):
-                    self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
-                    self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p], n_i, n_j)
-                    if self.rbp:
-                        self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
+            for p in range(self.n_particles):
+                self._sample_relations(obs_csr, mask_csr, self.E[p], self.R[p], self.var_r[p])
+                self._sample_entities(obs_csr, mask_csc, mask_csr, mask_csc, self.E[p], self.R[p], self.var_e[p], n_i, n_j, 100)
+                if self.rbp:
+                    self._sample_relations(obs_csr, mask_csr, self.E[p], self.R[p], self.var_r[p])
 
             if self.sample_prior and i != 0 and i % self.prior_sample_gap == 0:
                 self._sample_prior()
@@ -244,8 +287,8 @@ class PFSparseBayesianRescal:
             toc = time.time()
             if self.compute_score:
                 # compute training log-likelihood and error on observed data points
-                _score = self.score(cur_obs, mask)
-                _fit = self._compute_fit(cur_obs, mask)
+                _score = self.score(obs_csr, mask_csr)
+                _fit = self._compute_fit(obs_csr, mask_csr)
                 logger.info("[%3d] LL: %.3f | fit(%s): %0.5f |  sec: %.3f", i, _score, self.eval_fn.__name__, _fit,
                             (toc - tic))
             else:
@@ -273,10 +316,10 @@ class PFSparseBayesianRescal:
         for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
             if next_idx != -1 and (next_idx == k1 or next_idx == k2):
                 cur_obs[self.n_pure_relations + k] = cur_obs[k1].dot(cur_obs[k2])
-                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
+                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k].nonzero()] = 1
             elif next_idx == -1:
                 cur_obs[self.n_pure_relations + k] = cur_obs[k1].dot(cur_obs[k2])
-                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
+                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k].nonzero()] = 1
         return mask
 
     def compute_particle_weight(self, next_idx, X, mask):
@@ -315,9 +358,7 @@ class PFSparseBayesianRescal:
         _X = np.dot(np.dot(self.E[p][i], self.R[p][k]), self.E[p].T)
         nz = mask[k].getrow(i).nonzero()
         if len(nz[0]) > 0:
-            print(nz)
-            print(len(nz))
-            _X[mask[k].getrow(i).nonzero()] = MIN_VAL
+            _X[mask[k].getrow(i).nonzero()[1]] = MIN_VAL
         return _X.argmax()
 
     def _sample_prior(self):
@@ -336,34 +377,34 @@ class PFSparseBayesianRescal:
                                        1. / (0.5 * np.sum(self.E[p] ** 2) + self.e_beta))
         logger.debug("Sampled var_e %.3f", np.mean(self.var_e))
 
-    def _sample_entities(self, X, mask, E, R, var_e, n_i, n_j):
-        sampled_entities = np.arange(self.n_entities)
+    def _sample_entities(self, X_csr, X_csc, mask_csr, mask_csc, E, R, var_e, n_i, n_j, samples):
+        sampled_entities = [i for i in range(self.n_entities)]  #np.arange yields error
         np.random.shuffle(sampled_entities)
 
         RE = list()
         RTE = list()
         for k in range(self.n_relations):
-            RE.append(np.dot(R[k], E.T).T)  #
+            RE.append(np.dot(R[k], E.T).T)
             RTE.append(np.dot(R[k].T, E.T).T)
 
-        self._sample_entity(X, mask, E, R, n_i, var_e, RE, RTE)
+        self._sample_entity(X_csr, X_csc, mask_csr, mask_csc, E, n_i, var_e, RE, RTE)
         for k in range(self.n_relations):
             RE[k][n_i] = np.dot(R[k], E[n_i])
             RTE[k][n_i] = np.dot(R[k].T, E[n_i])
 
-        self._sample_entity(X, mask, E, R, n_j, var_e, RE, RTE)
+        self._sample_entity(X_csr, X_csc, mask_csr, mask_csc, E, n_j, var_e, RE, RTE)
         for k in range(self.n_relations):
             RE[k][n_j] = np.dot(R[k], E[n_j])
             RTE[k][n_j] = np.dot(R[k].T, E[n_j])
 
         # for i in range(self.n_entities):
-        for i in sampled_entities[:100]:
-            self._sample_entity(X, mask, E, R, i, var_e, RE, RTE)
+        for i in sampled_entities[:samples]:
+            self._sample_entity(X_csr, X_csc, mask_csr, mask_csc, E, int(i), var_e, RE, RTE)
             for k in range(self.n_relations):
                 RE[k][i] = np.dot(R[k], E[i])
                 RTE[k][i] = np.dot(R[k].T, E[i])
 
-    def _sample_entity(self, X, mask, E, R, i, var_e, RE=None, RTE=None):
+    def _sample_entity(self, X_csr, X_csc, mask_csr, mask_csc, E, i, var_e, RE, RTE):
         _lambda = np.identity(self.n_dim) / var_e
         xi = np.zeros(self.n_dim)
 
@@ -372,28 +413,26 @@ class PFSparseBayesianRescal:
         for k in self.obs_sum.nonzero()[0]:
             RE[k][i] *= 0
             RTE[k][i] *= 0
-            tmp = RE[k][mask[k].getrow(i).nonzero()[1]]  # ExD
-            tmp2 = RTE[k][mask[k].getcol(i).nonzero()[0]]
-            # tmp = np.dot(R[k], E[mask[k, i, :] == 1].T)  # D x E
-            # tmp2 = np.dot(R[k].T, E[mask[k, :, i] == 1].T)
+            tmp_mask = mask_csr[k].getrow(i).nonzero()
+            tmp2_mask = mask_csc[k].getcol(i).nonzero()
+            tmp = RE[k][tmp_mask[1]]  # ExD
+            tmp2 = RTE[k][tmp2_mask[0]]
             if tmp.shape[0] != 0:
                 if k < self.n_pure_relations:
-                    # xi += np.sum(X[k][i, mask[k][i, :] == 1] * tmp.T, 1) / self.var_x
-                    xi += np.sum(np.squeeze(np.array(X[k].getrow(i)[mask[k].getrow(i).nonzero()])) * tmp.T,
+                    xi += np.sum(np.squeeze(np.array(X_csr[k].getrow(i)[tmp_mask])) * tmp.T,
                                  1) / self.var_x
                     _lambda += np.dot(tmp.T, tmp) / self.var_x
                 else:
-                    # xi += np.sum(X[k][i, mask[k][i, :] == 1] * tmp.T, 1) / self.var_x_expanded
-                    xi += np.sum(np.squeeze(np.array(X[k].getrow(i)[mask[k].getrow(i).nonzero()])) * tmp.T,
+                    xi += np.sum(np.squeeze(np.array(X_csr[k].getrow(i)[tmp_mask])) * tmp.T,
                                  1) / self.var_x_expanded
                     _lambda += np.dot(tmp.T, tmp) / self.var_x_expanded
             if tmp2.shape[0] != 0:
                 if k < self.n_pure_relations:
-                    xi += np.sum(np.squeeze(np.array(X[k].getcol(i)[mask[k].getcol(i).nonzero()])) * tmp2.T,
+                    xi += np.sum(np.squeeze(np.array(X_csc[k].getcol(i)[tmp2_mask])) * tmp2.T,
                                  1) / self.var_x
                     _lambda += np.dot(tmp2.T, tmp2) / self.var_x
                 else:
-                    xi += np.sum(np.squeeze(np.array(X[k].getcol(i)[mask[k].getcol(i).nonzero()])) * tmp2.T,
+                    xi += np.sum(np.squeeze(np.array(X_csc[k].getcol(i)[tmp2_mask])) * tmp2.T,
                                  1) / self.var_x_expanded
                     _lambda += np.dot(tmp2.T, tmp2) / self.var_x_expanded
 
@@ -402,22 +441,20 @@ class PFSparseBayesianRescal:
 
         E[i] = multivariate_normal(mu, inv_lambda)
 
-    def _sample_relations(self, X, mask, E, R, var_r):
+    def _sample_relations(self, X, mask_csr, E, R, var_r):
         for k in range(self.n_relations):
             if self.obs_sum[k] != 0:
-                self._sample_relation(X, mask, E, R, k, var_r)
+                self._sample_relation(X, mask_csr, E, R, k, var_r)
             else:
                 R[k] = np.random.normal(0, var_r, size=[self.n_dim, self.n_dim])
 
-    def _sample_relation(self, X, mask, E, R, k, var_r):
+    def _sample_relation(self, X, mask_csr, E, R, k, var_r):
 
         _lambda = np.identity(self.n_dim ** 2) / var_r
         xi = np.zeros(self.n_dim ** 2)
 
-        nz = mask[k].nonzero()
+        nz = mask_csr[k].nonzero()
         anz = np.array(nz)
-        # idx = [_idx[0] * self.n_entities + _idx[1] for _idx in nz]
-        # kron = EXE[idx]
         kron = np.zeros([anz.shape[1], self.n_dim ** 2])
         for e in range(anz.shape[1]):
             kron[e] = np.kron(E[anz[0, e]], E[anz[1, e]])
@@ -437,7 +474,10 @@ class PFSparseBayesianRescal:
         else:
             mu = np.dot(inv_lambda, xi) / self.var_x_expanded
 
-        R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+        try:
+            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+        except:
+            pass
 
     def _reconstruct(self, E, R, k):
         return np.dot(np.dot(E, R[k]), E.T)
