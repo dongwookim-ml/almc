@@ -220,11 +220,13 @@ class PFBayesianRescal:
 
         if type(obs_mask) == type(None):
             obs_mask = np.zeros_like(X)
-        elif self.compositional:
+
+        cur_obs = np.zeros_like(X)
+        cur_obs[obs_mask == 1] = X[obs_mask == 1]
+
+        if self.compositional:
             tmp = np.zeros_like(X)
-            cur_obs = np.zeros_like(X)
             tmp[:self.n_pure_relations] == obs_mask
-            cur_obs[tmp == 1] = X[tmp == 1]
             obs_mask = self.expand_obsmask(tmp, cur_obs)
 
         self.obs_sum = np.sum(np.sum(obs_mask, 1), 1)
@@ -260,21 +262,19 @@ class PFBayesianRescal:
 
         if len(self.log) > 0:
             seq = list()
-            for idx in self.particle_filter(X, obs_mask, max_iter):
+            for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter):
                 with open(self.log, 'a') as f:
                     f.write('%d,%d,%d\n' % (idx[0], idx[1], idx[2]))
                 seq.append(idx)
         else:
-            seq = [idx for idx in self.particle_filter(X, obs_mask, max_iter)]
+            seq = [idx for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter)]
 
         if len(self.dest) > 0:
             self._save_model(seq)
 
         return seq
 
-    def particle_filter(self, X, mask, max_iter):
-        cur_obs = np.zeros_like(X)
-        cur_obs[mask == 1] = X[mask == 1]
+    def particle_filter(self, X, cur_obs, mask, max_iter):
 
         pop = 0
         for i in range(max_iter):
@@ -549,7 +549,7 @@ class PFBayesianRescal:
                         _lambda += np.dot(tmp2.T, tmp2) / self.var_x_expanded
 
             # xi /= self.var_x
-            #_lambda /= self.var_x
+            # _lambda /= self.var_x
 
             inv_lambda = np.linalg.inv(_lambda)
             mu = np.dot(inv_lambda, xi)
@@ -617,7 +617,10 @@ class PFBayesianRescal:
             else:
                 mu = np.dot(inv_lambda, xi) / self.var_x_expanded
 
-        R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+        try:
+            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+        except:
+            pass
 
     def stochastic_gradient(self, X, E, R, n_minibatch, epsilon, var_e, var_r):
         for i in range(self.n_entities):

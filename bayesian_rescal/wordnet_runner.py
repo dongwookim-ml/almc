@@ -6,6 +6,7 @@ import numpy as np
 import rescal
 from seq_sparse_brescal import PFSparseBayesianRescal
 from scipy.sparse import csr_matrix as sparse_matrix
+from sklearn.metrics import mean_squared_error
 
 if __name__ == '__main__':
     if len(sys.argv) != 7:
@@ -23,7 +24,7 @@ if __name__ == '__main__':
     max_iter = int(sys.argv[6])
 
     p = 0.1
-    compositional = False
+    compositional = True
 
     if compositional:
         dest = '../result/wordnet/compositional/'
@@ -56,10 +57,12 @@ if __name__ == '__main__':
                                  'sRESCAL_varx_%.2f_dim_%d_par_%d_test_%d_convar_%r.pkl' % (
                                      var_x, n_dim, n_particle, nt, False))
 
+        #A, R, _, _, _ = rescal.rescal_als(T, n_dim)
+
         if not os.path.exists(file_name):
             log = os.path.splitext(file_name)[0] + ".txt"
             if os.path.exists(log):
                 os.remove(log)
             model = PFSparseBayesianRescal(n_dim, n_particles=n_particle, compute_score=False, parallel=False, log=log,
-                                           dest=file_name, compositional=compositional)
+                                           dest=file_name, compositional=compositional, gibbs_init=True)
             seq = model.fit(T, obs_mask_csr=maskT, max_iter=max_iter)
