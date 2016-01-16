@@ -4,18 +4,31 @@ from scipy.io.matlab import loadmat
 from scipy.sparse import csr_matrix
 import rescal
 
-mat = loadmat('../data/alyawarradata.mat')
-T = np.array(mat['Rs'], np.float32)
+dataset = 'kinship'
+
+
+if dataset == 'umls':
+    mat = loadmat('../data/%s/uml.mat' % (dataset))
+    T = np.array(mat['Rs'], np.float32)
+elif dataset == 'nation':
+    mat = loadmat('../data/%s/uml.mat' % (dataset))
+    T = np.array(mat['R'], np.float32)
+elif dataset == 'kinship':
+    mat = loadmat('../data/%s/uml.mat' % (dataset))
+    T = np.array(mat['Rs'], np.float32)
+
 T = np.swapaxes(T, 1, 2)
 T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
-n_relation, n_entity, _ = T.shape
-n_test = 10
-n_dim = 10
+T[np.isnan(T)] = 0
 
 budget = 30000
 init_obs = 500
+n_test = 10
+n_relation, n_entity, _ = T.shape
+n_dim = 10
 
-dest = '../result/kinship/rescal/'
+dest = '../result/%s/rescal/' % (dataset)
+
 if not os.path.exists(dest):
     os.makedirs(dest, exist_ok=True)
 
