@@ -24,10 +24,10 @@ if __name__ == '__main__':
         mat = loadmat('../data/%s/uml.mat' % (dataset))
         T = np.array(mat['Rs'], np.float32)
     elif dataset == 'nation':
-        mat = loadmat('../data/%s/uml.mat' % (dataset))
+        mat = loadmat('../data/%s/dnations.mat' % (dataset))
         T = np.array(mat['R'], np.float32)
     elif dataset == 'kinship':
-        mat = loadmat('../data/%s/uml.mat' % (dataset))
+        mat = loadmat('../data/%s/alyawarradata.mat' % (dataset))
         T = np.array(mat['Rs'], np.float32)
 
     T = np.swapaxes(T, 1, 2)

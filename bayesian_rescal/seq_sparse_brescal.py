@@ -126,7 +126,7 @@ class PFSparseBayesianRescal:
         d = dict(self.__dict__)
         return d
 
-    def fit(self, X, obs_mask_csr=None, max_iter=0):
+    def fit(self, X, obs_mask=None, max_iter=0):
         """
         Running the particle Thompson sampling with predefined parameters.
 
@@ -143,7 +143,7 @@ class PFSparseBayesianRescal:
         seq : numpy.ndarray
             Returns a sequence of selected triples over iterations.
         """
-
+        obs_mask_csr = obs_mask
         self.n_relations = len(X)
         self.n_pure_relations = len(X)
         self.n_entities = X[0].shape[0]
