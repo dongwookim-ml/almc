@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy as np
+import pickle
 from scipy.io.matlab import loadmat
 from scipy.sparse import csr_matrix
 from seq_brescal import PFBayesianRescal
@@ -21,6 +22,8 @@ if __name__ == '__main__':
     if sys.argv[7] == 'True':
         compositional = True
 
+    p_obs = 0.05
+
     if dataset == 'umls':
         mat = loadmat('../data/%s/uml.mat' % (dataset))
         T = np.array(mat['Rs'], np.float32)
@@ -37,15 +40,16 @@ if __name__ == '__main__':
 
     n_relation, n_entity, _ = T.shape
 
-    sparse_model = False
+    with open('../data/%s/train_%.3f.pkl' % (dataset, p_obs), 'rb') as f:
+        mask = pickle.load(f)
 
     if max_iter == 0:
         max_iter = np.prod(T.shape)
 
     if compositional:
-        dest = '../result/%s/compositional/' % (dataset)
+        dest = '../result/%s/compositional_%.3f/' % (dataset, p_obs)
     else:
-        dest = '../result/%s/normal/' % (dataset)
+        dest = '../result/%s/normal_%.3f/' % (dataset, p_obs)
 
     if not os.path.exists(dest):
         os.makedirs(dest)
@@ -58,12 +62,7 @@ if __name__ == '__main__':
         log = os.path.splitext(file_name)[0] + ".txt"
         if os.path.exists(log):
             os.remove(log)
-        if sparse_model:
-            T = [csr_matrix(T[k]) for k in range(n_relation)]
-            model = PFSparseBayesianRescal(n_dim, n_particles=n_particle, compute_score=False, parallel=False,
-                                           log=log, dest=file_name, compositional=compositional)
-        else:
-            model = PFBayesianRescal(n_dim, n_particles=n_particle, compute_score=False, parallel=False,
-                                     log=log, dest=file_name, compositional=compositional)
+        model = PFBayesianRescal(n_dim, n_particles=n_particle, compute_score=False, parallel=False,
+                                 log=log, dest=file_name, compositional=compositional, gibbs_init=True)
 
-        seq = model.fit(T, max_iter=max_iter)
+        seq = model.fit(T, obs_mask=mask, max_iter=max_iter)

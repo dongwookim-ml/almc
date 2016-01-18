@@ -24,6 +24,7 @@ _NMINI = 1
 _GIBBS_INIT = True
 _PULL_SIZE = 1
 _COMP = False
+_SAMPLE_ALL = False
 
 _VAR_E = 1.
 _VAR_R = 1.
@@ -138,27 +139,21 @@ class PFBayesianRescal:
         self.is_sgld = kwargs.pop('sgld', _SGLD)
         self.n_minibatch = kwargs.pop('n_mini', _NMINI)
         self.rbp = rbp
-
         self.gibbs_init = kwargs.pop('gibbs_init', _GIBBS_INIT)
-
+        self.sample_all = kwargs.pop('sample_all', _SAMPLE_ALL)
         self.compute_score = compute_score
-
         self.sample_prior = kwargs.pop('sample_prior', _P_SAMPLE)
         self.prior_sample_gap = kwargs.pop('prior_sample_gap', _P_SAMPLE_GAP)
         self.e_alpha = kwargs.pop('e_alpha', _E_ALPHA)
         self.e_beta = kwargs.pop('e_beta', _E_BETA)
         self.r_alpha = kwargs.pop('r_alpha', _R_ALPHA)
         self.r_beta = kwargs.pop('r_beta', _R_BETA)
-
         self.parallelize = kwargs.pop('parallel', _PARALLEL)
         self.max_thread = kwargs.pop('max_thread', _MAX_THREAD)
         self.mc_move = kwargs.pop('mc_move', _MC_MOVE)
-
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
         self.dest = kwargs.pop('dest', _DEST)
-
         self.pull_size = kwargs.pop('pull_size', _PULL_SIZE)
-
         self.compositional = kwargs.pop('compositional', _COMP)
 
         if not len(kwargs) == 0:
@@ -214,6 +209,7 @@ class PFBayesianRescal:
 
             logger.info('Original size: %d', np.sum(X[:self.n_pure_relations]))
             logger.info('Expanded size %d', np.sum(X[self.n_pure_relations:]))
+            logger.info('Expanded shape: %s', X.shape)
 
         self.E = list()
         self.R = list()
@@ -230,6 +226,7 @@ class PFBayesianRescal:
             obs_mask = self.expand_obsmask(tmp, cur_obs)
 
         self.obs_sum = np.sum(np.sum(obs_mask, 1), 1)
+        self.valid_relations = np.nonzero(np.sum(np.sum(X, 1), 1))[0]
 
         if max_iter == 0:
             max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask))
@@ -299,6 +296,8 @@ class PFBayesianRescal:
                 self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
                 self.p_weights /= np.sum(self.p_weights)
 
+            if self.compositional:
+                prev_sum = self.obs_sum
             self.obs_sum = np.sum(np.sum(mask, 1), 1)
 
             if self.compositional:
@@ -325,23 +324,27 @@ class PFBayesianRescal:
 
             else:
                 for m in range(self.mc_move):
-                    if self.parallelize:
-                        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                            fs = [executor.submit(self._sample_entities, cur_obs, mask, self.E[p], self.R[p],
-                                                  self.var_e[p])
-                                  for p in range(self.n_particles)]
-                        concurrent.futures.wait(fs)
-                        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                            fs = [executor.submit(self._sample_relations, cur_obs, mask, self.E[p], self.R[p],
-                                                  self.var_r[p])
-                                  for p in range(self.n_particles)]
-                        concurrent.futures.wait(fs)
-                    else:
-                        for p in range(self.n_particles):
+                    for p in range(self.n_particles):
+                        if self.sample_all:
                             self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
                             self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
-                            if self.rbp:
-                                self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
+                        else:
+                            self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
+
+                            RE = list()
+                            RTE = list()
+                            for k in range(self.n_relations):
+                                RE.append(np.dot(self.R[p][k], self.E[p].T).T)  #
+                                RTE.append(np.dot(self.R[p][k].T, self.E[p].T).T)
+
+                            for ni in [next_idx[1], next_idx[2]]:
+                                self._sample_entity(X, mask, self.E[p], self.R[p], ni, self.var_e[p], RE, RTE)
+                                for k in range(self.n_relations):
+                                    RE[k][ni] = np.dot(self.R[p][k], self.E[p][ni])
+                                    RTE[k][ni] = np.dot(self.R[p][k].T, self.E[p][ni])
+
+                        if self.rbp:
+                            self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
 
             if self.sample_prior and i != 0 and i % self.prior_sample_gap == 0:
                 self._sample_prior()
@@ -456,9 +459,7 @@ class PFBayesianRescal:
         if self.selection == 'Thompson':
             p = multinomial(1, self.p_weights).argmax()
             _X = self._reconstruct(self.E[p], self.R[p])
-            _X[mask == 1] = MIN_VAL
-            if self.compositional:
-                _X[self.n_pure_relations:] = MIN_VAL
+            _X[mask[:self.n_pure_relations] == 1] = MIN_VAL
             return np.unravel_index(_X.argmax(), _X.shape)
 
         elif self.selection == 'Random':
@@ -524,15 +525,11 @@ class PFBayesianRescal:
             mu = np.dot(inv_lambda, xi)
 
         else:
-            # for k in range(self.n_relations):
-            #     if self.r_sum[k] != 0:
             for k in self.obs_sum.nonzero()[0]:
                 RE[k][i] *= 0
                 RTE[k][i] *= 0
                 tmp = RE[k][mask[k, i, :] == 1]  # ExD
                 tmp2 = RTE[k][mask[k, :, i] == 1]
-                # tmp = np.dot(R[k], E[mask[k, i, :] == 1].T)  # D x E
-                # tmp2 = np.dot(R[k].T, E[mask[k, :, i] == 1].T)
                 if tmp.shape[0] != 0:
                     if k < self.n_pure_relations:
                         xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x
@@ -577,13 +574,7 @@ class PFBayesianRescal:
     def _sample_relations(self, X, mask, E, R, var_r):
         EXE = np.kron(E, E)
 
-        # if self.parallelize:
-        #     with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-        #         fs = [executor.submit(self._sample_relation, X, mask, E, R, k, EXE, var_r)
-        #               for k in range(self.n_relations)]
-        #     concurrent.futures.wait(fs)
-        # else:
-        for k in range(self.n_relations):
+        for k in self.valid_relations:
             if self.obs_sum[k] != 0:
                 self._sample_relation(X, mask, E, R, k, EXE, var_r)
             else:
@@ -661,9 +652,9 @@ class PFBayesianRescal:
             R[k] += (0.5 * epsilon * gradR + nu).reshape([self.n_dim, self.n_dim])
 
     def _reconstruct(self, E, R):
-        _X = np.zeros([self.n_relations, self.n_entities, self.n_entities])
+        _X = np.zeros([self.n_pure_relations, self.n_entities, self.n_entities])
 
-        for k in range(self.n_relations):
+        for k in range(self.n_pure_relations):
             _X[k] = np.dot(np.dot(E, R[k]), E.T)
 
         return _X
