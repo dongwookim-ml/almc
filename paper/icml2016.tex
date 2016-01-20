@@ -82,32 +82,32 @@
 \end{abstract}
 
 \section{Introduction}
+Goal of this paper 1: Populating knowledge graph with an active label acquisition process corresponding to 2[B,C,A] in Figure \ref{fig:related3d}.
+
+3[B,C,P] could be an alternative direction (or both).
 
 \section{Related Work}
-\textbf{Stiatistical relational learning}:
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.9\linewidth]{images/3d_plot.pdf}			
+	\caption{\label{fig:related3d}Scope of our work}
+\end{figure}
+
 \begin{itemize}
-\item RESCAL \cite{nickel2011three}
-\item \cite{kemp2006learning}: Infinite relational model based on entity clustering.
+\item 0[B,T,A] Thompson sampling. Recommendation with matrix factorisation (not for tensor) \cite{kawale2015efficient}
+\item 1[B,T,P] Bayesian Tensor Factorisation models. CANDECOMP/PARAFAC (CP) decomposition \cite{xiong2010temporal,schmidt2009probabilistic}, CP and TUCKER3 \cite{yilmaz2012algorithms}
+\item 4[N,T,A] Populating knowledge graph with active learning (IBM) \cite{kajino2015active}
+\item 5[N,T,P] Rescal \cite{nickel2011three}, TransE \cite{bordes2013translating}, and many others.
+\item 7[N,C,P] Compositional vector space model \cite{Neelakantan2015}, Path ranking algorithm (graph feature model) \cite{Lao2010}
 \end{itemize}
 
-\textbf{Bayesian tensor factorisation}:
+Might be relevant, but not positioned in the figure.
 \begin{itemize}
-\item \cite{xiong2010temporal,schmidt2009probabilistic}:CANDECOMP/PARAFAC (CP) decomposition
-\item \cite{yilmaz2012algorithms}: CP and TUCKER3
+\item Clustering based Bayesian approach for learning relations: Infinite relational model based on entity clustering \cite{kemp2006learning}.
 \end{itemize}
 
-\textbf{Thompson Sampling}:
-\begin{itemize}
-\item \cite{kawale2015efficient}: Matrix factorisation recommendation
-\item \cite{gopalan2014thompson}: Thompson Sampling for Complex Online Problems
-\item \cite{kocak2014spectral}: Spectral Thompson sampling
-\end{itemize}
-
-\textbf{Knowledge Graph}:
-\begin{itemize}
-\item \cite{kajino2015active}: Active learning for KG (populating KG)
-\end{itemize}
-\section{Model}
+\section{Bayesian RESCAL}
 
 For each entity $i$, $e_i \in \mathbb{R}^{D}$ is drawn from multivariate-normal distribution. Let $E$ be a $I \times D$ matrix representation of entities.
 \begin{align}

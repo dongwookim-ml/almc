@@ -32,11 +32,12 @@ if __name__ == '__main__':
         mat = loadmat('../data/%s/alyawarradata.mat' % (dataset))
         T = np.array(mat['Rs'], np.float32)
     elif dataset == 'wordnet':
-        T = pickle.load(open('../data/%s/reduced_wordnet.pkl' % (dataset)))
+        T = pickle.load(open('../data/%s/reduced_wordnet.pkl' % (dataset), 'rb'))
 
-    T = np.swapaxes(T, 1, 2)
-    T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
-    T[np.isnan(T)] = 0
+    if dataset != 'wordnet':
+        T = np.swapaxes(T, 1, 2)
+        T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
+        T[np.isnan(T)] = 0
 
     n_relation, n_entity, _ = T.shape
 
