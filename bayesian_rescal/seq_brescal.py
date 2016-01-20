@@ -171,7 +171,7 @@ class PFBayesianRescal:
         self.var_e = np.ones(self.n_particles) * self._var_e
         self.var_r = np.ones(self.n_particles) * self._var_r
 
-        self.var_x_expanded = 1.0
+        self.var_x_expanded = 10.
 
         self.log = log
 
@@ -218,7 +218,8 @@ class PFBayesianRescal:
             obs_mask = np.zeros_like(X)
 
         cur_obs = np.zeros_like(X)
-        cur_obs[obs_mask == 1] = X[obs_mask == 1]
+        for k in range(self.n_pure_relations):
+            cur_obs[k][obs_mask[k] == 1] = X[k][obs_mask[k] == 1]
 
         if self.compositional:
             tmp = np.zeros_like(X)
@@ -236,17 +237,17 @@ class PFBayesianRescal:
             self.var_X = np.ones_like(X) * self.unobs_var
             self.var_X[obs_mask == 1] = self.obs_var
 
+        cur_obs[cur_obs.nonzero()] = 1
         if self.gibbs_init and np.sum(self.obs_sum) != 0:
             # initialize latent variables with gibbs sampling
-            cur_obs = np.zeros_like(X)
-            cur_obs[obs_mask == 1] = X[obs_mask == 1]
-
             E = np.random.random([self.n_entities, self.n_dim])
             R = np.random.random([self.n_relations, self.n_dim, self.n_dim])
 
-            for i in range(5):
+            for gi in range(20):
+                tic = time.time()
                 self._sample_entities(cur_obs, obs_mask, E, R, self._var_e)
                 self._sample_relations(cur_obs, obs_mask, E, R, self._var_r)
+                logger.info("Gibbs Init %d: %f", gi, time.time()-tic)
 
             for p in range(self.n_particles):
                 self.E.append(E.copy())
@@ -287,6 +288,8 @@ class PFBayesianRescal:
                 if X[next_idx] == self.pos_val:
                     pop += 1
 
+                cur_obs[cur_obs.nonzero()] = 1
+
                 if self.controlled_var:
                     self.var_X[next_idx] = self.obs_var
 
@@ -296,8 +299,7 @@ class PFBayesianRescal:
                 self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
                 self.p_weights /= np.sum(self.p_weights)
 
-            if self.compositional:
-                prev_sum = self.obs_sum
+            cur_obs[cur_obs.nonzero()] = 1
             self.obs_sum = np.sum(np.sum(mask, 1), 1)
 
             if self.compositional:

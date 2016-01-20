@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy as np
+import pickle
 from scipy.io.matlab import loadmat
 from scipy.sparse import csr_matrix
 from seq_brescal import PFBayesianRescal
@@ -30,6 +31,8 @@ if __name__ == '__main__':
     elif dataset == 'kinship':
         mat = loadmat('../data/%s/alyawarradata.mat' % (dataset))
         T = np.array(mat['Rs'], np.float32)
+    elif dataset == 'wordnet':
+        T = pickle.load(open('../data/%s/reduced_wordnet.pkl' % (dataset)))
 
     T = np.swapaxes(T, 1, 2)
     T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
@@ -64,6 +67,6 @@ if __name__ == '__main__':
                                            log=log, dest=file_name, compositional=compositional)
         else:
             model = PFBayesianRescal(n_dim, n_particles=n_particle, compute_score=False, parallel=False,
-                                     log=log, dest=file_name, compositional=compositional)
+                                     log=log, dest=file_name, compositional=compositional, sample_all=True)
 
         seq = model.fit(T, max_iter=max_iter)

@@ -180,7 +180,7 @@ class PFSparseBayesianRescal:
             self.E.append(np.random.normal(0, 1, size=[self.n_entities, self.n_dim]))
             self.R.append(np.random.normal(0, 1, size=[self.n_relations, self.n_dim, self.n_dim]))
 
-        if self.gibbs_init:
+        if self.gibbs_init and np.sum(self.obs_sum) != 0:
             for p in range(self.n_particles):
                 obs_idx = self.get_nonzero_idx(obs_mask_csr)
                 np.random.shuffle(obs_idx)
@@ -277,7 +277,23 @@ class PFSparseBayesianRescal:
 
             for p in range(self.n_particles):
                 self._sample_relations(obs_csr, mask_csr, self.E[p], self.R[p], self.var_r[p])
-                self._sample_entities(obs_csr, mask_csc, mask_csr, mask_csc, self.E[p], self.R[p], self.var_e[p])
+                R = self.R[p]
+                E = self.E[p]
+                var_e = self.var_e[p]
+
+                RE = list()
+                RTE = list()
+                for k in range(self.n_relations):
+                    RE.append(np.dot(R[k], E.T).T)
+                    RTE.append(np.dot(R[k].T, E.T).T)
+
+                for ni in [next_idx[1], next_idx[2]]:
+                    self._sample_entity(obs_csr, obs_csc, mask_csr, mask_csc, E, int(ni), var_e, RE, RTE)
+                    for k in range(self.n_relations):
+                        RE[k][i] = np.dot(R[k], E[i])
+                        RTE[k][i] = np.dot(R[k].T, E[i])
+
+                #self._sample_entities(obs_csr, obs_csc, mask_csr, mask_csc, self.E[p], self.R[p], self.var_e[p])
                 if self.rbp:
                     self._sample_relations(obs_csr, mask_csr, self.E[p], self.R[p], self.var_r[p])
 
@@ -354,18 +370,21 @@ class PFSparseBayesianRescal:
         self.p_weights = np.ones(self.n_particles) / self.n_particles
 
     def get_next_sample(self, mask):
+        tic = time.time()
         p = multinomial(1, self.p_weights).argmax()
         max_k = -1
         max_val = MIN_VAL
 
         for k in range(self.n_pure_relations):
-            _X = np.dot(np.dot(self.E[p], self.R[p][k]), self.E[p].T)
-            _X[mask[k].nonzero()] = MIN_VAL
-            next_idx = np.unravel_index(_X.argmax(), _X.shape)
-            if _X[next_idx] > max_val:
-                max_idx = next_idx
-                max_k = k
-                max_val = _X[next_idx]
+            for i in range(self.n_entities):
+                _X = np.dot(np.dot(self.E[p][i], self.R[p][k]), self.E[p].T)
+                _X[mask[k][i].nonzero()[0]] = MIN_VAL
+                next_idx = _X.argmax()
+                if _X[next_idx] > max_val:
+                    max_idx = (i, next_idx)
+                    max_k = k
+                    max_val = _X[next_idx]
+        print(time.time()-tic)
 
         return int(max_k), int(max_idx[0]), int(max_idx[1])
 

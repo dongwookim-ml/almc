@@ -1,20 +1,20 @@
+import pickle
 import os
 import numpy as np
 from scipy.io.matlab import loadmat
 from scipy.sparse import csr_matrix
 import rescal
 
-dataset = 'kinship'
-
+dataset = 'umls'
 
 if dataset == 'umls':
     mat = loadmat('../data/%s/uml.mat' % (dataset))
     T = np.array(mat['Rs'], np.float32)
 elif dataset == 'nation':
-    mat = loadmat('../data/%s/uml.mat' % (dataset))
+    mat = loadmat('../data/%s/dnations.mat' % (dataset))
     T = np.array(mat['R'], np.float32)
 elif dataset == 'kinship':
-    mat = loadmat('../data/%s/uml.mat' % (dataset))
+    mat = loadmat('../data/%s/alyawarradata.mat' % (dataset))
     T = np.array(mat['Rs'], np.float32)
 
 T = np.swapaxes(T, 1, 2)
@@ -22,7 +22,7 @@ T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
 T[np.isnan(T)] = 0
 
 budget = 30000
-init_obs = 500
+p_obs = 0.05
 n_test = 10
 n_relation, n_entity, _ = T.shape
 n_dim = 10
@@ -33,16 +33,19 @@ if not os.path.exists(dest):
     os.makedirs(dest, exist_ok=True)
 
 for nt in range(n_test):
-    file_name = os.path.join(dest, 'init%d_rescal_n_dim_%d_%d.txt' % (init_obs, n_dim, nt))
+    print(nt)
+    file_name = os.path.join(dest, 'init_%.3f_rescal_n_dim_%d_%d.txt' % (p_obs, n_dim, nt))
     if not os.path.exists(file_name):
         seq = list()
-        mask = np.zeros_like(T)
-        X = [csr_matrix(np.zeros_like(T[k])) for k in range(n_relation)]
+        with open('../data/%s/train_%.3f.pkl' % (dataset, p_obs), 'rb') as f:
+            mask = pickle.load(f)
+
+        X = [csr_matrix(mask[k]) for k in range(n_relation)]
 
         for i in range(budget):
-            if i > init_obs:
+            try:
                 A, R, f, itr, exectimes = rescal.rescal_als(X, n_dim)
-            else:
+            except:
                 A = np.random.random([n_entity, n_dim])
                 R = np.random.random([n_relation, n_dim, n_dim])
 

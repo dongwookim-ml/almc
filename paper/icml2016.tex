@@ -84,7 +84,11 @@
 \section{Introduction}
 
 \section{Related Work}
-RESCAL \cite{nickel2011three}
+\textbf{Stiatistical relational learning}:
+\begin{itemize}
+\item RESCAL \cite{nickel2011three}
+\item \cite{kemp2006learning}: Infinite relational model based on entity clustering.
+\end{itemize}
 
 \textbf{Bayesian tensor factorisation}:
 \begin{itemize}
@@ -280,6 +284,19 @@ where $R_{\text{comp}(k_1,k_2)} \in \mathbb{R}^{D\times D}$.
     \end{itemize}
   \end{enumerate}
 \end{description}
+
+\begin{table}
+\centering
+\caption{\label{tbl:dataset}Description of datasets}
+\begin{tabular}{l | r | r | r | r}
+Dataset &  \# rel & \# entities & \# triples & sparsity \\ \hline
+Kinship & 26 & 104  & 10,790 & 0.038 \\
+UMLS & 49 &135  & 6,752 & 0.008 \\
+Nation & 56 & 14  & 2,024 & 0.184 \\
+Wordnet & 11 & 38,696  &123,429 & 7.5e-06\\
+Wordnet(N) & 10 & 836 & 1,766 & 2.5e-04\\
+\end{tabular}
+\end{table}
 
 % In the unusual situation where you want a paper to appear in the
 % references without citing it in the main text, use \nocite
