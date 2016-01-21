@@ -9,7 +9,7 @@ from seq_sparse_brescal import PFSparseBayesianRescal
 
 if __name__ == '__main__':
     if len(sys.argv) != 8:
-        print('usage: python runner.py dataset n_dim n_particle var_x trial_num max_iter')
+        print('usage: python runner.py dataset n_dim n_particle var_x trial_num max_iter is_comp')
         raise Exception()
 
     dataset = sys.argv[1]
