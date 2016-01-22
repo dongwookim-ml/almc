@@ -283,7 +283,7 @@ The degree of compositional path is represented with a decomposition as follows:
 x_{(i, c, l)} \sim \mathcal{N}(e_i^\top (\frac{1}{|c|} R_k + \frac{|c|-1}{|c|}R_{c/k}) e_j, \sigma_{c}^2).
 \end{align}
 
-The, the conditional distribution $R_k$ given $R_{-k}, E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
+Then, the conditional distribution $R_k$ given $R_{-k}, E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
 \begin{align}
 p(R_k|E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_k, \Lambda_k^{-1}),
 \end{align}
@@ -291,9 +291,9 @@ where
 \begin{align*}
 \mu_k &=(\Lambda_k)^{-1}\xi_k \\
 \Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} e_{ij}e_{ij}^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
-& +\frac{1}{|c|^2 \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}} e_{ij} e_{ij}^\top \\
+& +\frac{1}{|c|^2 \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)},\text{ }k \in c} e_{ij} e_{ij}^\top \\
 \xi_k &=  \frac{1}{\sigma_x^2}\sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} e_{ij}\\
-& +\frac{1}{|c| \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}} x_{icj} e_{ij} - \frac{|c|-1}{|c|} e_{ij} r_{c/k}^\top e_{ij}\\
+& +\frac{1}{|c| \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)},\text{ }k \in c} x_{icj} e_{ij} - \frac{|c|-1}{|c|} e_{ij} r_{c/k}^\top e_{ij}\\
 e_{ij} &= e_{i} \otimes e_{j}.
 \end{align*}
 
