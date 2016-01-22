@@ -116,12 +116,12 @@ e_i \sim {N}(\mathbf{0}, \sigma_e^2{I}_D)
 For each relation $k$, we draw matrix $R_k \in \mathbb{R}^{D\times D}$ from zero-mean matrix normal distribution.
 \begin{align}
 R_k \sim \mathcal{N}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
-\text{vec}(R_k) \sim N(\mathbf{0}, \sigma_r^2 I_{D^2})
+\text{vec}(R_k) = r_k \sim N(\mathbf{0}, \sigma_r^2 I_{D^2})
 \end{align}
 For each triple $(i,k,j)$, we draw $x_{ikj}$
 \begin{align}
 x_{ikj} |e_i, e_j, R_k &\sim \mathcal{MN}(e_i^{\top} R_k e_j, \sigma_x^2)\\
-& = \mathcal{N}(\text{vec}(R_k)^{\top} e_i \otimes e_j, \sigma_x^2)
+& = \mathcal{N}(r_k^{\top} e_i \otimes e_j, \sigma_x^2)
 \end{align}
 
 For binary valued triples:
@@ -140,14 +140,14 @@ p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}(
 where
 \begin{align*}
 \mu_i &= \frac{1}{\sigma_x^2}(\Lambda_i)^{-1}\xi_i \\
-\Lambda_i &= \frac{1}{\sigma_x^2} \sum_{jk : x_{ikj \in \mathcal{X}^{t}}} (R_k e_j)(R_k e_j)^\top \\
-&\quad+ \frac{1}{\sigma_x^2} \sum_{jk : x_{jki \in \mathcal{X}^{t}}} (R_k^\top e_j)(R_k^\top e_j)^\top+ \frac{1}{\sigma_e^2} {I}_D \\
-\xi_i &= \sum_{jk : x_{ikj \in \mathcal{X}^{t}}}  x_{ikj} R_{k} e_{j} + \sum_{jk : x_{jki \in \mathcal{X}^{t}}} x_{jki} R_{k}^\top e_{j}.
+\Lambda_i &= \frac{1}{\sigma_x^2} \sum_{jk : x_{ikj} \in \mathcal{X}^{t}} (R_k e_j)(R_k e_j)^\top \\
+&\quad+ \frac{1}{\sigma_x^2} \sum_{jk : x_{jki} \in \mathcal{X}^{t}} (R_k^\top e_j)(R_k^\top e_j)^\top+ \frac{1}{\sigma_e^2} {I}_D \\
+\xi_i &= \sum_{jk : x_{ikj} \in \mathcal{X}^{t}}  x_{ikj} R_{k} e_{j} + \sum_{jk : x_{jki} \in \mathcal{X}^{t}} x_{jki} R_{k}^\top e_{j}.
 \end{align*}
 Conditional distribution of $R_k$ given $E$
 \begin{align}
 \label{eqn:sample_r}
-p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(R_k | \mu_k, \Lambda_k^{-1}),
+p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_k, \Lambda_k^{-1}),
 \end{align}
 where
 \begin{align*}
@@ -243,18 +243,59 @@ From two triples:
 $(i, k_1 ,j)$,  $(j, k_2, l)$
 
 Compositional triple:
-$(i, k_{\text{comp}(k_1, k_2)}, l)$
+$(i, {c}(k_1, k_2), l)$
 
-This compositional triple may have multiple path over the knowledge graph.
-Both pairs of triples $(i, k_1 ,j)$,  $(j, k_2, l)$ and $(i, k_1 ,m)$,  $(m, k_2, l)$ can be represented as $(i, k_{\text{comp}(k_1, k_2)}, l)$.
+This compositional triple may have multiple path over the knowledge graph. For example, both pairs of triples $(i, k_1 ,j)$,  $(j, k_2, l)$ and $(i, k_1 ,m)$,  $(m, k_2, l)$ can be represented as $(i, {c}(k_1, k_2), l)$. To include the compositionality of the knowledge graph, we set  $x_{(i, {{c}(k_1, k_2)}, l)}$ be the number of path from entity $i$ to entity $j$ through relation $k_1$ and $k_2$.
 
-Let $x_{(i, k_{\text{comp}(k_1, k_2)}, l)}$ be the number of path from entity $i$ to entity $j$ through relation edges $k_1$ and $k_2$.
-
-We model the degree of the compositional relation as
+We model a degree of the compositional relation as
 \begin{align}
-x_{(i, k_{\text{comp}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{\text{comp}(k_1,k_2)} e_j, \sigma_\text{comp}^2),
+x_{(i, {{c}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{{c}(k_1,k_2)} e_j, \sigma_{c}^2),
 \end{align}
-where $R_{\text{comp}(k_1,k_2)} \in \mathbb{R}^{D\times D}$.
+where $R_{{c}(k_1,k_2)} \in \mathbb{R}^{D\times D}$.
+
+Let $\mathcal{C}^{L}$ be a set of all possible compositions of which length is up to length $L$, $c \in \mathcal{C}$ be a sequence of compositions, and $c(i)$ be $i$th index of a relation in sequence $c$. With the set of compositions $\mathcal{C}^{L}$, we can expand set of observed triples $\mathcal{X}^{t}$ to set of observed compositional triple $\mathcal{X}^{\mathcal{C}^{L}(t)}$ of which element $x_{icj}$ is a number of path from entity $i$ to entity $j$ through sequence of relations $c$ in $\mathcal{X}^{t}$.
+
+\subsection{Additive Compositionality}
+Let $R_{{c}} = \frac{1}{|c|}(R_{c(1)} + R_{c(2)} + .. + R_{c(|c|)})$, then
+\begin{align}
+x_{(i, k_{{c}}, l)} \sim \mathcal{N}(e_i^\top R_c e_j, \sigma_{c}^2).
+\end{align}
+
+The conditional distribution of $e_i$ given $E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is 
+\begin{align} \label{eqn:sample_e}
+p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}) &= \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1}),
+\end{align}
+where
+\begin{align*}
+\mu_i &= (\Lambda_i)^{-1}\xi_i \\
+\Lambda_i &= \frac{1}{\sigma_x^2} \sum_{jk : x_{ikj} \in \mathcal{X}^{t}} (R_k e_j)(R_k e_j)^\top \\
+&\quad+ \frac{1}{\sigma_x^2} \sum_{jk : x_{jki} \in \mathcal{X}^{t}} (R_k^\top e_j)(R_k^\top e_j)^\top \\
+&\quad + \frac{1}{\sigma_c^2} \sum_{jc : x_{icj} \in \mathcal{X}^{L(t)}} (R_c e_j)(R_c e_j)^\top \\
+&\quad+ \frac{1}{\sigma_c^2} \sum_{jc : x_{jci} \in \mathcal{X}^{L(t)}} (R_c^\top e_j)(R_c^\top e_j)^\top + \frac{1}{\sigma_e^2} {I}_D \\
+\xi_i &= \frac{1}{\sigma_x^2}\sum_{jk : x_{ikj} \in \mathcal{X}^{t}}  x_{ikj} R_{k} e_{j} + \frac{1}{\sigma_x^2}\sum_{jk : x_{jki} \in \mathcal{X}^{t}} x_{jki} R_{k}^\top e_{j} \\
+& + \frac{1}{\sigma_c^2}\sum_{jc : x_{icj} \in \mathcal{X}^{L(t)}}  x_{icj} R_{c} e_{j} + \frac{1}{\sigma_c^2}\sum_{jc : x_{jci} \in \mathcal{X}^{L(t)}} x_{jci} R_{c}^\top e_{j}
+\end{align*}
+
+To compute the conditional distribution of $R_k$, we first decompose $R_c$ into two part where $R_c = \frac{1}{|c|} R_k + \frac{|c|-1}{|c|}R_{c/k}$, where $R_{c/k} = \sum_{k' \in c/k} R_{k'}$, if compositional sequence $c$ contains relation $k$. Vectorisation of $R_c$ and $R_{c/k}$ are represented as $r_c$ and $r_{c/k}$, respectively.
+
+The degree of compositional path is represented with a decomposition as follows:
+\begin{align}
+x_{(i, c, l)} \sim \mathcal{N}(e_i^\top (\frac{1}{|c|} R_k + \frac{|c|-1}{|c|}R_{c/k}) e_j, \sigma_{c}^2).
+\end{align}
+
+The, the conditional distribution $R_k$ given $R_{-k}, E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
+\begin{align}
+p(R_k|E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_k, \Lambda_k^{-1}),
+\end{align}
+where
+\begin{align*}
+\mu_k &=(\Lambda_k)^{-1}\xi_k \\
+\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} e_{ij}e_{ij}^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
+& +\frac{1}{|c|^2 \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}} e_{ij} e_{ij}^\top \\
+\xi_k &=  \frac{1}{\sigma_x^2}\sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} e_{ij}\\
+& +\frac{1}{|c| \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}} x_{icj} e_{ij} - \frac{|c|-1}{|c|} e_{ij} r_{c/k}^\top e_{ij}\\
+e_{ij} &= e_{i} \otimes e_{j}.
+\end{align*}
 
 \section{Unstructured thoughts}
 
