@@ -24,7 +24,7 @@ _NMINI = 1
 _GIBBS_INIT = True
 _PULL_SIZE = 1
 _COMP = False
-_SAMPLE_ALL = False
+_SAMPLE_ALL = True
 
 _VAR_E = 1.
 _VAR_R = 1.
