@@ -121,7 +121,7 @@ R_k \sim \mathcal{N}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
 For each triple $(i,k,j)$, we draw $x_{ikj}$
 \begin{align}
 x_{ikj} |e_i, e_j, R_k &\sim \mathcal{MN}(e_i^{\top} R_k e_j, \sigma_x^2)\\
-& = \mathcal{N}(r_k^{\top} e_j \otimes e_i, \sigma_x^2)
+& = \mathcal{N}(r_k^{\top} e_i \otimes e_j, \sigma_x^2)
 \end{align}
 
 %For binary valued triples (Logistic regression):
@@ -151,15 +151,15 @@ p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_
 where
 \begin{align*}
 \mu_k &= \frac{1}{\sigma_x^2}\Lambda_k^{-1}\xi_k \\
-\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_j \otimes e_i)(e_j \otimes e_i)^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
-\xi_k &= \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{j} \otimes e_{i}).
+\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
+\xi_k &= \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{i} \otimes e_{j}).
 \end{align*}
 
 The posterior marginal predictive distribution of $x_{ikj}$ given $\mathcal{X}$ and $E$.
 \begin{align}
 \label{eqn:marginal_predict}
 &p(x_{ikj}| E, \mathcal{X}^{t}, \sigma_x, \sigma_r) \\
-&= \mathcal{N}(x_{ikj}| \mu_k ^\top (e_j \otimes e_i), \frac{1}{\sigma_x^2} +  (e_j \otimes e_i)^\top \Lambda_k (e_i \otimes e_j)) \notag
+&= \mathcal{N}(x_{ikj}| \mu_k ^\top (e_i \otimes e_j), \frac{1}{\sigma_x^2} +  (e_i \otimes e_j)^\top \Lambda_k (e_i \otimes e_j)) \notag
 \end{align}
 
 \subsection{Particle Thompson sampling with MCMC kernel}
@@ -290,11 +290,11 @@ p(R_k|E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}, \sigma_r, \sigma_x)  &= \mathcal{N
 where
 \begin{align*}
 \mu_k &=\Lambda_k^{-1}\xi_k \\
-\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} \bar{e}_{ji}\bar{e}_{ji}^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
-& +\frac{1}{|c|^2 \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)},\text{ }k \in c} \bar{e}_{ji} \bar{e}_{ji}^\top \\
-\xi_k &=  \frac{1}{\sigma_x^2}\sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} \bar{e}_{ji}\\
-& +\frac{1}{|c| \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)},\text{ }k \in c} x_{icj} \bar{e}_{ji} - \frac{|c|-1}{|c|} \bar{e}_{ji} r_{c/k}^\top \bar{e}_{ji}\\
-\bar{e}_{ji} &= e_{j} \otimes e_{i}.
+\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} \bar{e}_{ij}\bar{e}_{ij}^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
+& +\frac{1}{|c|^2 \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)},\text{ }k \in c} \bar{e}_{ij} \bar{e}_{ij}^\top \\
+\xi_k &=  \frac{1}{\sigma_x^2}\sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} \bar{e}_{ij}\\
+& +\frac{1}{|c| \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)},\text{ }k \in c} x_{icj} \bar{e}_{ij} - \frac{|c|-1}{|c|} \bar{e}_{ij} r_{c/k}^\top \bar{e}_{ij}\\
+\bar{e}_{ij} &= e_{i} \otimes e_{j}.
 \end{align*}
 
 Note that the ordering of the relations in compositional sequence $c$ does not affect the value of compositional triple $(i, c, j)$.
@@ -305,7 +305,7 @@ Let compositional relation $R_c = R_{c(1)} R_{c(2)} \dots R_{c(|c|)}$.
 If the determinant of latent relation $R_k$ is greater than 1, the compositional latent relation $R_c$ might be exploded after multiplying a long sequence of relations. To obtain a stable scale of compositional relation $R_c$, one may multiply decaying factor $\tau < 1$ after each composition. $R_c = \tau^{|c|-1} R_{c(1)} R_{c(2)} \dots R_{c(|c|)}$.
 
 \begin{align}
-x_{(i, c, l)} \sim \mathcal{N}(e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j, \sigma_{c}^2)
+x_{(i, c, j)} \sim \mathcal{N}(e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j, \sigma_{c}^2)
 \end{align}
 
 If the compositional sequence $c$ contains relation $k$, the mean parameter of normal distribution contains $R_k$ in the middle of compositional sequence (i.e., $e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(\delta_k)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j$ where $\delta_k$ is the index of relation $k$). For notational simplicity, we will denote the left side $e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(\delta_k -1)}$ as $\bar{e}_{ic(:\delta_k)}^\top$, and the right side $R_{c(\delta_k + 1)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j$ as $\bar{e}_{ic(\delta_k:)}$, therefore we can rewrite the mean parameter as $\bar{e}_{ic(:\delta_k)}^\top R_{k} \bar{e}_{ic(\delta_k:)}$.
@@ -317,10 +317,10 @@ p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_
 where
 \begin{align*}
 \mu_k &= \Lambda_k^{-1}\xi_k \\
-\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_j \otimes e_i)(e_j \otimes e_i)^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
-+ &\frac{1}{\sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}, \text{ }k \in c} (\bar{e}_{jc(\delta_k:)} \otimes \bar{e}_{ic(:\delta_k)} )(\bar{e}_{jc(\delta_k:)} \otimes \bar{e}_{ic(:\delta_k)} )^\top \\
+\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
++ &\frac{1}{\sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}, \text{ }k \in c} (\bar{e}_{ic(:\delta_k)} \otimes \bar{e}_{jc(\delta_k:)})(\bar{e}_{ic(:\delta_k)} \otimes \bar{e}_{jc(\delta_k:)} )^\top \\
 \xi_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{j} \otimes e_{i}) \\
-& + \frac{1}{\sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}, \text{ }k\in c} x_{icj} (\bar{e}_{jc(\delta_k:)} \otimes \bar{e}_{ic(:\delta_k)} ).
+& + \frac{1}{\sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}, \text{ }k\in c} x_{icj} (\bar{e}_{ic(:\delta_k)}  \otimes \bar{e}_{jc(\delta_k:)}).
 \end{align*}
 
 
@@ -381,15 +381,15 @@ Wordnet(N) & 10 & 836 & 1,766 & 2.5e-04\\
 &p(R_k | E, R_{-k}, \mathcal{X}) \propto p(\mathcal{X} | R, E)p(R_k)&\\
 &\propto \prod_{x_{ikj}}\exp\bigg\{-\frac{(x_{ikj} - e_i^\top R_k e_j)^2}{2\sigma_x^2}\bigg\} &\\
 & \quad\prod_{x_{icj}} \exp\bigg\{-\frac{(x_{icj} - e_i^\top R_c e_j)^2}{2\sigma_c^2}\bigg\} \exp\bigg\{-\frac{r_k^\top r_k}{2\sigma_r^2}\bigg\}&\\
-&= \exp\bigg\{-\frac{\sum_{x_{ikj}}(x_{ikj} - \bar{e}_{ji}^\top r_k)^2}{2\sigma_x^2} &\\
-&\quad- \frac{\sum_{x_{icj}}(x_{icj} - \bar{e}_{ji}^\top r_c)^2}{2\sigma_c^2} -\frac{r_k^\top r_k}{2\sigma_r^2} \bigg\}&\\
-&= \exp\bigg\{-\frac{\sum_{x_{ikj}}(x_{ikj} - \bar{e}_{ji}^\top r_k)^2}{2\sigma_x^2} &\\ 
-&\quad-\frac{\sum_{x_{icj}}(x_{icj} - \bar{e}_{ji}^\top (\frac{1}{|c|}r_k + \frac{|c|-1}{|c|})r_{c/k})^2}{2\sigma_c^2} -\frac{r_k^\top r_k}{2\sigma_r^2} \bigg\}&\\
-&= \exp\bigg\{ -\frac{\sum_{x_{ikj}}- 2 x_{ikj} \bar{e}_{ji}^\top r_k + r_k^\top \bar{e}_{ji} \bar{e}_{ji}^\top r_k }{2\sigma_x^2} &\\
-&\quad-\frac{\sum_{x_{icj}} \frac{2}{|c|} r_k ^\top (x_{icj} - \frac{(|c|-1)}{|c|} \bar{e}_{ji}^\top r_{c/k}) + (\frac{1}{|c|^2}r_k^\top \bar{e}_{ji} \bar{e}_{ji}^\top r_k)}{2\sigma_c^2} &\\
+&= \exp\bigg\{-\frac{\sum_{x_{ikj}}(x_{ikj} - \bar{e}_{ij}^\top r_k)^2}{2\sigma_x^2} &\\
+&\quad- \frac{\sum_{x_{icj}}(x_{icj} - \bar{e}_{ij}^\top r_c)^2}{2\sigma_c^2} -\frac{r_k^\top r_k}{2\sigma_r^2} \bigg\}&\\
+&= \exp\bigg\{-\frac{\sum_{x_{ikj}}(x_{ikj} - \bar{e}_{ij}^\top r_k)^2}{2\sigma_x^2} &\\ 
+&\quad-\frac{\sum_{x_{icj}}(x_{icj} - \bar{e}_{ij}^\top (\frac{1}{|c|}r_k + \frac{|c|-1}{|c|})r_{c/k})^2}{2\sigma_c^2} -\frac{r_k^\top r_k}{2\sigma_r^2} \bigg\}&\\
+&= \exp\bigg\{ -\frac{\sum_{x_{ikj}}- 2 x_{ikj} \bar{e}_{ij}^\top r_k + r_k^\top \bar{e}_{ij} \bar{e}_{ij}^\top r_k }{2\sigma_x^2} &\\
+&\quad-\frac{\sum_{x_{icj}} \frac{2}{|c|} r_k ^\top (x_{icj} - \frac{(|c|-1)}{|c|} \bar{e}_{ij}^\top r_{c/k}) + (\frac{1}{|c|^2}r_k^\top \bar{e}_{ij} \bar{e}_{ij}^\top r_k)}{2\sigma_c^2} &\\
 &\quad-\frac{r_k^\top r_k}{2\sigma_r^2} + const \bigg\}&\\
-&\propto \exp\bigg\{ - \frac{1}{2}r_k^\top(\frac{1}{\sigma_x^2}\sum_{x_{ikj}} \bar{e}_{ji}\bar{e}_{ji}^\top + \frac{1}{|c|^2\sigma_c^2}\sum_{x_{icj}} \bar{e}_{ji}\bar{e}_{ji}^\top + \frac{1}{\sigma_r^2}I) r_k  &\\
-&- r_k^\top \Big(\frac{\sum_{x_{ikj}}-x_{ikj}\bar{e}_{ji}}{\sigma_x^2} + \frac{\sum_{x_{icj}} |c|^{-1} (x_{icj} - \frac{(|c|-1)}{|c|} \bar{e}_{ji}^\top r_{c/k})}{\sigma_c^2} \Big)&
+&\propto \exp\bigg\{ - \frac{1}{2}r_k^\top(\frac{1}{\sigma_x^2}\sum_{x_{ikj}} \bar{e}_{ij}\bar{e}_{ij}^\top + \frac{1}{|c|^2\sigma_c^2}\sum_{x_{icj}} \bar{e}_{ij}\bar{e}_{ij}^\top + \frac{1}{\sigma_r^2}I) r_k  &\\
+&- r_k^\top \Big(\frac{\sum_{x_{ikj}}-x_{ikj}\bar{e}_{ij}}{\sigma_x^2} + \frac{\sum_{x_{icj}} |c|^{-1} (x_{icj} - \frac{(|c|-1)}{|c|} \bar{e}_{ij}^\top r_{c/k})}{\sigma_c^2} \Big)&
 \end{align*}
 Completing the square results Equation \ref{eqn:comp_cond_r}.
 

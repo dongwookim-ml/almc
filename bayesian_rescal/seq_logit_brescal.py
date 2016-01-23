@@ -335,7 +335,8 @@ class PFBayesianLogitRescal:
     def _sample_relation(self, X, mask, E, R, k, EXE, var_r):
         _lambda = np.identity(self.n_dim ** 2) / var_r
 
-        kron = EXE[mask[k].T.flatten() == 1]
+        kron = EXE[mask[k].flatten() == 1]
+
         Y = X[k][mask[k] == 1].flatten()
 
         if len(np.unique(Y)) == 2:
@@ -382,8 +383,8 @@ if __name__ == '__main__':
     n_entity = 10
     n_particle = 10
 
-    E = np.random.normal(0, 1.0, size = [n_entity, n_dim])
-    R = np.random.normal(0, 1.0, size = [n_relation, n_dim, n_dim])
+    E = np.random.normal(0, 1.0, size=[n_entity, n_dim])
+    R = np.random.normal(0, 1.0, size=[n_relation, n_dim, n_dim])
 
     X = np.zeros([n_relation, n_entity, n_entity])
     for k, i, j in itertools.product(range(n_relation), range(n_entity), range(n_entity)):
@@ -391,6 +392,5 @@ if __name__ == '__main__':
         p = 1. / (1. + np.exp(-x))
         X[k, i, j] = np.random.binomial(1, p)
 
-    model = PFLogitBayesianRescal(n_dim, controlled_var=False, n_particles=n_particle)
+    model = PFBayesianLogitRescal(n_dim, controlled_var=False, n_particles=n_particle)
     seq = model.fit(X, np.zeros_like(X))
-

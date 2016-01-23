@@ -59,10 +59,6 @@ def load_and_run(path, T, max_iter):
         for s in seq:
             obs_mask[s] = 1
 
-        if model.controlled_var:
-            model.var_X = np.ones_like(T) * model.unobs_var
-            model.var_X[obs_mask == 1] = model.obs_var
-
         if os.path.exists(log):
             model.log = log
             for idx in model.particle_filter(T, obs_mask, max_iter):
@@ -82,7 +78,7 @@ def load_and_run(path, T, max_iter):
 
 class PFBayesianRescal:
     def __init__(self, n_dim, compute_score=True, sample_prior=False, rbp=False,
-                 controlled_var=False, obs_var=.01, unobs_var=10., n_particles=5, selection='Thompson',
+                 obs_var=.01, unobs_var=10., n_particles=5, selection='Thompson',
                  eval_fn=mean_squared_error, log="", **kwargs):
         """
 
@@ -102,12 +98,6 @@ class PFBayesianRescal:
         rbp: boolean, default=False
             If True, Rao-Blackwellized particle sampling algorithm will be
             applied instead basic particle sampling.
-
-        controlled_var: boolean, default=False
-            Apply controlled variance approach where we place different
-            variances on observed triple and unobserved triple. A variance
-            of observed triple is set to be ```obs_var``` and a variance of
-            unobserved triple is set to be ```unobs_var```
 
         obs_var: float, default=0.01
             The variance of the observed triple.
@@ -136,8 +126,6 @@ class PFBayesianRescal:
         self._var_r = kwargs.pop('var_r', _VAR_R)
         self.var_x = kwargs.pop('var_x', _VAR_X)
 
-        self.is_sgld = kwargs.pop('sgld', _SGLD)
-        self.n_minibatch = kwargs.pop('n_mini', _NMINI)
         self.rbp = rbp
         self.gibbs_init = kwargs.pop('gibbs_init', _GIBBS_INIT)
         self.sample_all = kwargs.pop('sample_all', _SAMPLE_ALL)
@@ -154,7 +142,6 @@ class PFBayesianRescal:
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
         self.dest = kwargs.pop('dest', _DEST)
         self.pull_size = kwargs.pop('pull_size', _PULL_SIZE)
-        self.compositional = kwargs.pop('compositional', _COMP)
 
         if not len(kwargs) == 0:
             raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
@@ -164,21 +151,16 @@ class PFBayesianRescal:
         self.selection = selection
         self.eval_fn = eval_fn
 
-        self.controlled_var = controlled_var
         self.obs_var = obs_var
         self.unobs_var = unobs_var
 
         self.var_e = np.ones(self.n_particles) * self._var_e
         self.var_r = np.ones(self.n_particles) * self._var_r
 
-        self.var_x_expanded = 10.
-
         self.log = log
 
     def __getstate__(self):
         d = dict(self.__dict__)
-        if self.controlled_var:
-            del d['var_X']
         return d
 
     def fit(self, X, obs_mask=None, max_iter=0):
@@ -199,43 +181,25 @@ class PFBayesianRescal:
             Returns a sequence of selected triples over iterations.
         """
         self.n_relations = X.shape[0]
-        self.n_pure_relations = X.shape[0]
         self.n_entities = X.shape[1]
-        if self.compositional:
-            self.n_relations = X.shape[0] + X.shape[0] ** 2
-            self.n_pure_relations = X.shape[0]
-            tmp = np.zeros([self.n_relations, self.n_entities, self.n_entities])
-            X = self.expand_tensor(X, tmp)
-
-            logger.info('Original size: %d', np.sum(X[:self.n_pure_relations]))
-            logger.info('Expanded size %d', np.sum(X[self.n_pure_relations:]))
-            logger.info('Expanded shape: %s', X.shape)
-
         self.E = list()
         self.R = list()
 
-        if type(obs_mask) == type(None):
+        if type(None) == type(obs_mask):
             obs_mask = np.zeros_like(X)
+        else:
+            logger.info("Initial Total, Positive, Negative Observation: %d / %d / %d", np.sum(obs_mask),
+                        np.sum(X[obs_mask == 1]), np.sum(obs_mask) - np.sum(X[obs_mask == 1]))
 
         cur_obs = np.zeros_like(X)
-        for k in range(self.n_pure_relations):
+        for k in range(self.n_relations):
             cur_obs[k][obs_mask[k] == 1] = X[k][obs_mask[k] == 1]
-
-        if self.compositional:
-            tmp = np.zeros_like(X)
-            tmp[:self.n_pure_relations] == obs_mask
-            obs_mask = self.expand_obsmask(tmp, cur_obs)
 
         self.obs_sum = np.sum(np.sum(obs_mask, 1), 1)
         self.valid_relations = np.nonzero(np.sum(np.sum(X, 1), 1))[0]
 
         if max_iter == 0:
             max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask))
-
-        # for controlled variance
-        if self.controlled_var:
-            self.var_X = np.ones_like(X) * self.unobs_var
-            self.var_X[obs_mask == 1] = self.obs_var
 
         cur_obs[cur_obs.nonzero()] = 1
         if self.gibbs_init and np.sum(self.obs_sum) != 0:
@@ -247,7 +211,7 @@ class PFBayesianRescal:
                 tic = time.time()
                 self._sample_entities(cur_obs, obs_mask, E, R, self._var_e)
                 self._sample_relations(cur_obs, obs_mask, E, R, self._var_r)
-                logger.info("Gibbs Init %d: %f", gi, time.time()-tic)
+                logger.info("Gibbs Init %d: %f", gi, time.time() - tic)
 
             for p in range(self.n_particles):
                 self.E.append(E.copy())
@@ -283,15 +247,10 @@ class PFBayesianRescal:
                 yield next_idx
                 cur_obs[next_idx] = X[next_idx]
                 mask[next_idx] = 1
-                if self.compositional and cur_obs[next_idx] == self.pos_val:
-                    mask = self.expand_obsmask(mask, cur_obs, next_idx[0])
                 if X[next_idx] == self.pos_val:
                     pop += 1
 
                 cur_obs[cur_obs.nonzero()] = 1
-
-                if self.controlled_var:
-                    self.var_X[next_idx] = self.obs_var
 
                 logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop,
                             (i * self.pull_size + pn))
@@ -302,51 +261,33 @@ class PFBayesianRescal:
             cur_obs[cur_obs.nonzero()] = 1
             self.obs_sum = np.sum(np.sum(mask, 1), 1)
 
-            if self.compositional:
-                logger.debug('[Additional Points] %d', np.sum(self.obs_sum[self.n_pure_relations:]))
-
             ESS = 1. / np.sum((self.p_weights ** 2))
 
             if ESS < self.n_particles / 2.:
                 self.resample()
 
-            if self.is_sgld:
-                epsilon = a * (b + i) ** tau
+            for m in range(self.mc_move):
+                for p in range(self.n_particles):
+                    if self.sample_all:
+                        self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
+                        self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
+                    else:
+                        self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
 
-                if self.parallelize:
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_thread) as executor:
-                        fs = [executor.submit(self.stochastic_gradient, cur_obs, self.E[p], self.R[p], self.n_minibatch,
-                                              epsilon, self.var_e[p], self.var_r[p]) for p
-                              in range(self.n_particles)]
-                    concurrent.futures.wait(fs)
-                else:
-                    for p in range(self.n_particles):
-                        self.stochastic_gradient(cur_obs, self.E[p], self.R[p], self.n_minibatch, epsilon,
-                                                 self.var_e[p], self.var_r[p])
+                        RE = list()
+                        RTE = list()
+                        for k in range(self.n_relations):
+                            RE.append(np.dot(self.R[p][k], self.E[p].T).T)  #
+                            RTE.append(np.dot(self.R[p][k].T, self.E[p].T).T)
 
-            else:
-                for m in range(self.mc_move):
-                    for p in range(self.n_particles):
-                        if self.sample_all:
-                            self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
-                            self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
-                        else:
-                            self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
-
-                            RE = list()
-                            RTE = list()
+                        for ni in [next_idx[1], next_idx[2]]:
+                            self._sample_entity(X, mask, self.E[p], self.R[p], ni, self.var_e[p], RE, RTE)
                             for k in range(self.n_relations):
-                                RE.append(np.dot(self.R[p][k], self.E[p].T).T)  #
-                                RTE.append(np.dot(self.R[p][k].T, self.E[p].T).T)
+                                RE[k][ni] = np.dot(self.R[p][k], self.E[p][ni])
+                                RTE[k][ni] = np.dot(self.R[p][k].T, self.E[p][ni])
 
-                            for ni in [next_idx[1], next_idx[2]]:
-                                self._sample_entity(X, mask, self.E[p], self.R[p], ni, self.var_e[p], RE, RTE)
-                                for k in range(self.n_relations):
-                                    RE[k][ni] = np.dot(self.R[p][k], self.E[p][ni])
-                                    RTE[k][ni] = np.dot(self.R[p][k].T, self.E[p][ni])
-
-                        if self.rbp:
-                            self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
+                    if self.rbp:
+                        self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
 
             if self.sample_prior and i != 0 and i % self.prior_sample_gap == 0:
                 self._sample_prior()
@@ -361,37 +302,6 @@ class PFBayesianRescal:
             else:
                 logger.info("[%3d] sec: %.3f", i, (toc - tic))
 
-    def expand_tensor(self, T, T_expanded):
-        """
-
-        Parameters
-        ----------
-        T : numpy.ndarray
-            Tensor with size of (n_relations, n_entities, n_entities)
-        T_expanded : numpy.ndarray
-            Tensor with size of (n_relations+n_relations**2, n_entities, n_entities)
-
-        Returns
-        -------
-        T_expanded : numpy.ndarray
-            returns two-step expanded tensor of T where each entry count the number of path from entity to entity
-            with combination of two relations
-        """
-        T_expanded[:self.n_pure_relations] = T
-        for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
-            T_expanded[self.n_pure_relations + k] = np.dot(T[k1], T[k2])
-        return T_expanded
-
-    def expand_obsmask(self, mask, cur_obs, next_idx=-1):
-        for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
-            if next_idx != -1 and (next_idx == k1 or next_idx == k2):
-                cur_obs[self.n_pure_relations + k] = np.dot(cur_obs[k1], cur_obs[k2])
-                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
-            elif next_idx == -1:
-                cur_obs[self.n_pure_relations + k] = np.dot(cur_obs[k1], cur_obs[k2])
-                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
-        return mask
-
     def compute_particle_weight(self, next_idx, X, mask):
         from scipy.stats import norm
         r_k, e_i, e_j = next_idx
@@ -399,41 +309,34 @@ class PFBayesianRescal:
         log_weight = np.zeros(self.n_particles)
         for p in range(self.n_particles):
             if self.rbp:
-                if not self.controlled_var:
-                    EXE = np.kron(self.E[p], self.E[p])
-                    _lambda = np.identity(self.n_dim ** 2) / self.var_r[p]
-                    xi = np.zeros(self.n_dim ** 2)
+                EXE = np.kron(self.E[p], self.E[p])
+                _lambda = np.identity(self.n_dim ** 2) / self.var_r[p]
+                xi = np.zeros(self.n_dim ** 2)
 
-                    kron = EXE[mask[r_k].flatten() == 1]
-                    if kron.shape[0] != 0:
-                        _lambda += np.dot(kron.T, kron)
-                        xi += np.sum(X[r_k, mask[r_k] == 1].flatten()[:, np.newaxis] * kron, 0)
+                kron = EXE[mask[r_k].flatten() == 1]
+                if kron.shape[0] != 0:
+                    _lambda += np.dot(kron.T, kron)
+                    xi += np.sum(X[r_k, mask[r_k] == 1].flatten()[:, np.newaxis] * kron, 0)
 
-                    _lambda /= self.var_x
-                    inv_lambda = np.linalg.inv(_lambda)
-                    mu = np.dot(inv_lambda, xi) / self.var_x
+                _lambda /= self.var_x
+                inv_lambda = np.linalg.inv(_lambda)
+                mu = np.dot(inv_lambda, xi) / self.var_x
 
-                    ###################
-                    # EXE = np.kron(self.E[p], self.E[p])
-                    # _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
-                    # _lambda /= self.var_x
-                    # _lambda += (1. / self.var_r[p]) * np.identity(self.n_dim ** 2)
-                    # inv_lambda = np.linalg.inv(_lambda)
-                    # xi = np.sum(EXE * X[r_k].flatten()[:, np.newaxis], 0)
-                    # mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
-                    ###################
+                ###################
+                # EXE = np.kron(self.E[p], self.E[p])
+                # _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
+                # _lambda /= self.var_x
+                # _lambda += (1. / self.var_r[p]) * np.identity(self.n_dim ** 2)
+                # inv_lambda = np.linalg.inv(_lambda)
+                # xi = np.sum(EXE * X[r_k].flatten()[:, np.newaxis], 0)
+                # mu = (1. / self.var_x) * np.dot(inv_lambda, xi)
+                ###################
 
-                    exe = np.kron(self.E[p][e_i], self.E[p][e_j])
-                    log_weight[p] = norm.logpdf(X[next_idx], np.dot(exe, mu), np.dot(np.dot(exe.T, _lambda), exe))
-                else:
-                    raise Exception('Rao-blackwellized PF for controlled var is implemented!')
-
+                exe = np.kron(self.E[p][e_i], self.E[p][e_j])
+                log_weight[p] = norm.logpdf(X[next_idx], np.dot(exe, mu), np.dot(np.dot(exe.T, _lambda), exe))
             else:
                 mean = np.dot(np.dot(self.E[p][e_i], self.R[p][r_k]), self.E[p][e_j])
-                if self.controlled_var:
-                    log_weight[p] = norm.logpdf(X[next_idx], mean, self.unobs_var)
-                else:
-                    log_weight[p] = norm.logpdf(X[next_idx], mean, self.var_x)
+                log_weight[p] = norm.logpdf(X[next_idx], mean, self.var_x)
 
         log_weight -= np.max(log_weight)
         weight = np.exp(log_weight)
@@ -461,7 +364,7 @@ class PFBayesianRescal:
         if self.selection == 'Thompson':
             p = multinomial(1, self.p_weights).argmax()
             _X = self._reconstruct(self.E[p], self.R[p])
-            _X[mask[:self.n_pure_relations] == 1] = MIN_VAL
+            _X[mask[:self.n_relations] == 1] = MIN_VAL
             return np.unravel_index(_X.argmax(), _X.shape)
 
         elif self.selection == 'Random':
@@ -491,21 +394,17 @@ class PFBayesianRescal:
         logger.debug("Sampled var_e %.3f", np.mean(self.var_e))
 
     def _sample_entities(self, X, mask, E, R, var_e):
-        if self.controlled_var:
-            for i in range(self.n_entities):
-                self._sample_entity(X, mask, E, R, i, var_e)
-        else:
-            RE = list()
-            RTE = list()
-            for k in range(self.n_relations):
-                RE.append(np.dot(R[k], E.T).T)  #
-                RTE.append(np.dot(R[k].T, E.T).T)
+        RE = list()
+        RTE = list()
+        for k in range(self.n_relations):
+            RE.append(np.dot(R[k], E.T).T)  #
+            RTE.append(np.dot(R[k].T, E.T).T)
 
-            for i in range(self.n_entities):
-                self._sample_entity(X, mask, E, R, i, var_e, RE, RTE)
-                for k in range(self.n_relations):
-                    RE[k][i] = np.dot(R[k], E[i])
-                    RTE[k][i] = np.dot(R[k].T, E[i])
+        for i in range(self.n_entities):
+            self._sample_entity(X, mask, E, R, i, var_e, RE, RTE)
+            for k in range(self.n_relations):
+                RE[k][i] = np.dot(R[k], E[i])
+                RTE[k][i] = np.dot(R[k].T, E[i])
 
     def _sample_entity(self, X, mask, E, R, i, var_e, RE=None, RTE=None):
         _lambda = np.identity(self.n_dim) / var_e
@@ -513,63 +412,41 @@ class PFBayesianRescal:
 
         E[i] *= 0
 
-        if self.controlled_var:
-            for k in range(self.n_relations):
-                tmp = np.dot(R[k], E.T)  # D x E
-                tmp2 = np.dot(R[k].T, E.T)
-                _lambda += np.dot(tmp * (1. / self.var_X[k, i, :]), tmp.T)
-                _lambda += np.dot(tmp2 * (1. / self.var_X[k, :, i]), tmp2.T)
+        for k in self.obs_sum.nonzero()[0]:
+            RE[k][i] *= 0
+            RTE[k][i] *= 0
+            tmp = RE[k][mask[k, i, :] == 1]  # ExD
+            tmp2 = RTE[k][mask[k, :, i] == 1]
+            if tmp.shape[0] != 0:
+                xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x
+                _lambda += np.dot(tmp.T, tmp) / self.var_x
+            if tmp2.shape[0] != 0:
+                xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_x
+                _lambda += np.dot(tmp2.T, tmp2) / self.var_x
 
-                xi += np.sum((1. / self.var_X[k, i, :]) * X[k, i, :] * tmp, 1)
-                xi += np.sum((1. / self.var_X[k, :, i]) * X[k, :, i] * tmp2, 1)
+        # xi /= self.var_x
+        # _lambda /= self.var_x
 
-            inv_lambda = np.linalg.inv(_lambda)
-            mu = np.dot(inv_lambda, xi)
+        inv_lambda = np.linalg.inv(_lambda)
+        mu = np.dot(inv_lambda, xi)
 
-        else:
-            for k in self.obs_sum.nonzero()[0]:
-                RE[k][i] *= 0
-                RTE[k][i] *= 0
-                tmp = RE[k][mask[k, i, :] == 1]  # ExD
-                tmp2 = RTE[k][mask[k, :, i] == 1]
-                if tmp.shape[0] != 0:
-                    if k < self.n_pure_relations:
-                        xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x
-                        _lambda += np.dot(tmp.T, tmp) / self.var_x
-                    else:
-                        xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x_expanded
-                        _lambda += np.dot(tmp.T, tmp) / self.var_x_expanded
-                if tmp2.shape[0] != 0:
-                    if k < self.n_pure_relations:
-                        xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_x
-                        _lambda += np.dot(tmp2.T, tmp2) / self.var_x
-                    else:
-                        xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_x_expanded
-                        _lambda += np.dot(tmp2.T, tmp2) / self.var_x_expanded
-
-            # xi /= self.var_x
-            # _lambda /= self.var_x
-
-            inv_lambda = np.linalg.inv(_lambda)
-            mu = np.dot(inv_lambda, xi)
-
-            ################### sanity check
-            # _lambda = np.zeros([self.n_dim, self.n_dim])
-            # xi = np.zeros(self.n_dim)
-            # for k in range(self.n_relations):
-            #     tmp = np.dot(R[k], E.T)  # D x E
-            #     tmp2 = np.dot(R[k].T, E.T)
-            #     _lambda += np.dot(tmp, tmp.T) + np.dot(tmp2, tmp2.T)
-            #     xi += np.sum(X[k, i, :] * tmp, 1) + np.sum(X[k, :, i] * tmp2, 1)
-            #
-            # xi *= (1. / self.var_x)
-            # _lambda *= 1. / self.var_x
-            # _lambda += (1. / self.var_e) * np.identity(self.n_dim)
-            # _inv_lambda = np.linalg.inv(_lambda)
-            # _mu = np.dot(_inv_lambda, xi)
-            #
-            # assert np.allclose(_inv_lambda, inv_lambda)
-            # assert np.allclose(_mu, mu)
+        ################### sanity check
+        # _lambda = np.zeros([self.n_dim, self.n_dim])
+        # xi = np.zeros(self.n_dim)
+        # for k in range(self.n_relations):
+        #     tmp = np.dot(R[k], E.T)  # D x E
+        #     tmp2 = np.dot(R[k].T, E.T)
+        #     _lambda += np.dot(tmp, tmp.T) + np.dot(tmp2, tmp2.T)
+        #     xi += np.sum(X[k, i, :] * tmp, 1) + np.sum(X[k, :, i] * tmp2, 1)
+        #
+        # xi *= (1. / self.var_x)
+        # _lambda *= 1. / self.var_x
+        # _lambda += (1. / self.var_e) * np.identity(self.n_dim)
+        # _inv_lambda = np.linalg.inv(_lambda)
+        # _mu = np.dot(_inv_lambda, xi)
+        #
+        # assert np.allclose(_inv_lambda, inv_lambda)
+        # assert np.allclose(_mu, mu)
 
         E[i] = multivariate_normal(mu, inv_lambda)
 
@@ -583,80 +460,28 @@ class PFBayesianRescal:
                 R[k] = np.random.normal(0, var_r, size=[self.n_dim, self.n_dim])
 
     def _sample_relation(self, X, mask, E, R, k, EXE, var_r):
-        if self.controlled_var:
-            tmp = EXE / self.var_X[k, :, :].T.flatten()[:, np.newaxis]
-            _lambda = np.dot(tmp.T, EXE)
-            _lambda += np.identity(self.n_dim ** 2) / var_r
-            inv_lambda = np.linalg.inv(_lambda)
+        _lambda = np.identity(self.n_dim ** 2) / var_r
+        xi = np.zeros(self.n_dim ** 2)
 
-            xi = np.sum(EXE * X[k].T.flatten()[:, np.newaxis] / self.var_X[k, :, :].T.flatten()[:, np.newaxis], 0)
-            mu = np.dot(inv_lambda, xi)
-        else:
-            _lambda = np.identity(self.n_dim ** 2) / var_r
-            xi = np.zeros(self.n_dim ** 2)
+        kron = EXE[mask[k].flatten() == 1]
 
-            kron = EXE[mask[k].T.flatten() == 1]
-            if kron.shape[0] != 0:
-                _lambda += np.dot(kron.T, kron)
-                xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1)
+        if kron.shape[0] != 0:
+            _lambda += np.dot(kron.T, kron)
+            xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1)
 
-            if k < self.n_pure_relations:
-                _lambda /= self.var_x
-            else:
-                _lambda /= self.var_x_expanded
-            inv_lambda = np.linalg.inv(_lambda)
-            if k < self.n_pure_relations:
-                mu = np.dot(inv_lambda, xi) / self.var_x
-            else:
-                mu = np.dot(inv_lambda, xi) / self.var_x_expanded
+        _lambda /= self.var_x
+        inv_lambda = np.linalg.inv(_lambda)
+        mu = np.dot(inv_lambda, xi) / self.var_x
 
         try:
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
         except:
             pass
 
-    def stochastic_gradient(self, X, E, R, n_minibatch, epsilon, var_e, var_r):
-        for i in range(self.n_entities):
-            candid = np.setdiff1d(range(self.n_entities), i)
-            np.random.shuffle(candid)
-            random_entities = candid[:n_minibatch]
-            for k in range(self.n_relations):
-                x_bar = X[k, i, random_entities] - np.dot(np.dot(E[i], R[k]), E[random_entities].T)
-                gradE = np.dot(E[random_entities], R[k]) * x_bar[:, np.newaxis] / self.var_x
-
-                x_bar = X[k, random_entities, i] - np.dot(np.dot(E[random_entities], R[k].T), E[i].T)
-                gradE += np.dot(E[random_entities], R[k].T) * x_bar[:, np.newaxis] / self.var_x
-
-            gradE = np.sum(gradE, 0)
-            gradE *= (self.n_entities - 1) * 2 / (n_minibatch * 2)
-
-            gradE -= E[i] / var_e
-
-            nu = np.random.normal(0, epsilon, size=self.n_dim)
-
-            E[i] += 0.5 * epsilon * gradE + nu
+    def _reconstruct(self, E, R):
+        _X = np.zeros([self.n_relations, self.n_entities, self.n_entities])
 
         for k in range(self.n_relations):
-            candid = list(range(self.n_entities))
-            np.random.shuffle(candid)
-            random_entities = candid[:n_minibatch]
-
-            EXE = np.kron(E[random_entities], E[random_entities])
-            x_bar = X[k, random_entities, random_entities] - np.dot(np.dot(E[random_entities], R[k]),
-                                                                    E[random_entities].T)
-            gradR = EXE * x_bar.flatten()[:, np.newaxis]
-            gradR = np.sum(gradR, 0)
-
-            gradR *= (self.n_entities ** 2) / (n_minibatch ** 2)
-            gradR -= R[k].flatten() / var_r
-            nu = np.random.normal(0, epsilon, size=self.n_dim ** 2)
-
-            R[k] += (0.5 * epsilon * gradR + nu).reshape([self.n_dim, self.n_dim])
-
-    def _reconstruct(self, E, R):
-        _X = np.zeros([self.n_pure_relations, self.n_entities, self.n_entities])
-
-        for k in range(self.n_pure_relations):
             _X[k] = np.dot(np.dot(E, R[k]), E.T)
 
         return _X
@@ -672,10 +497,7 @@ class PFBayesianRescal:
 
         for k in range(self.n_relations):
             mean = np.dot(np.dot(self.E[p], self.R[p][k]), self.E[p].T)
-            if self.controlled_var:
-                score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_X[k].flatten())))
-            else:
-                score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)) * mask[k].flatten())
+            score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)) * mask[k].flatten())
             score += np.sum(norm.logpdf(self.R[p][k].flatten(), 0, np.sqrt(self.var_r[p])))
 
         for i in range(self.n_entities):

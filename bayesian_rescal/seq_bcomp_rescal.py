@@ -143,6 +143,12 @@ class PFBayesianCompRescal:
         if type(obs_mask) == type(None):
             # observation mask
             obs_mask = np.zeros_like(expand_X)
+        else:
+            logger.info("Initial Total, Positive, Negative Observation: %d / %d / %d", np.sum(obs_mask),
+                    np.sum(X[obs_mask == 1]), np.sum(obs_mask) - np.sum(X[obs_mask == 1]))
+            new_obs_mask = np.zeros_like(expand_X)
+            new_obs_mask[:self.n_pure_relations] = obs_mask
+            obs_mask = new_obs_mask
 
         cur_obs = np.zeros_like(expand_X)
         for k in range(self.n_pure_relations):
@@ -360,7 +366,7 @@ class PFBayesianCompRescal:
         try:
             E[i] = multivariate_normal(mu, inv_lambda)
         except:
-            logger.debug('Sample E error', i)
+            logger.debug('Sample E error, %d', i)
 
     def _sample_relations(self, X, mask, E, R, var_r):
         EXE = np.kron(E, E)
@@ -385,17 +391,22 @@ class PFBayesianCompRescal:
 
         for _k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
             cur_idx = self.n_pure_relations + _k
-            if self.obs_sum[cur_idx] != 0:
-                if k1 == k:
-                    exre = np.kron(E, np.dot(R[k2], E.T).T)
-                    kron2 = exre[mask[cur_idx].T.flatten() == 1]
-                    _lambda += np.dot(kron2.T, kron2) / self.var_comp
-                    xi += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron2.T, 1) / self.var_comp
-                elif k2 == k:
-                    rexe = np.kron(np.dot(E, R[k1]), E)
-                    kron2 = rexe[mask[cur_idx].T.flatten() == 1]
-                    _lambda += np.dot(kron2.T, kron2) / self.var_comp
-                    xi += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron2.T, 1) / self.var_comp
+            if self.obs_sum[cur_idx] != 0 and k1 == k:
+                nonzero_idx = np.array(np.nonzero(mask[cur_idx])).T
+                kron2 = np.zeros([nonzero_idx.shape[0], self.n_dim ** 2])
+                for _i, idx in enumerate(nonzero_idx):
+                    kron2[_i] = np.kron(E[idx[0]], np.dot(R[k2], E[idx[1]]))
+
+                _lambda += np.dot(kron2.T, kron2) / self.var_comp
+                xi += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron2.T, 1) / self.var_comp
+            elif self.obs_sum[cur_idx] != 0 and k2 == k:
+                nonzero_idx = np.array(np.nonzero(mask[cur_idx])).T
+                kron2 = np.zeros([nonzero_idx.shape[0], self.n_dim ** 2])
+                for _i, idx in enumerate(nonzero_idx):
+                    kron2[_i] = np.kron(np.dot(E[idx[0]], R[k1]), E[idx[1]])
+
+                _lambda += np.dot(kron2.T, kron2) / self.var_comp
+                xi += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron2.T, 1) / self.var_comp
 
         inv_lambda = np.linalg.inv(_lambda)
         mu = np.dot(inv_lambda, xi)
@@ -403,14 +414,14 @@ class PFBayesianCompRescal:
         try:
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
         except:
-            logger.debug('Sample R error', k)
-
+            logger.debug('Sample R error, %d', k)
 
     def _sample_additive_relation(self, X, mask, R, k, EXE, var_r):
         _lambda = np.identity(self.n_dim ** 2) / var_r
         xi = np.zeros(self.n_dim ** 2)
 
-        kron = EXE[mask[k].T.flatten() == 1]
+        kron = EXE[mask[k].flatten() == 1]
+
         if kron.shape[0] != 0:
             _lambda += np.dot(kron.T, kron) / self.var_x
             xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1) / self.var_x
@@ -419,7 +430,8 @@ class PFBayesianCompRescal:
         for _k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
             cur_idx = self.n_pure_relations + _k
             if self.obs_sum[cur_idx] != 0:
-                kron = EXE[mask[cur_idx].T.flatten() == 1]
+                kron = EXE[mask[cur_idx].flatten() == 1]
+
                 if k1 == k:
                     _lambda += np.dot(kron.T, kron) / (self.var_comp * 4.)
                     tmp += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron.T, 1)
@@ -438,7 +450,7 @@ class PFBayesianCompRescal:
         try:
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
         except:
-            logger.debug('Sample R error', k)
+            logger.debug('Sample R error, %d', k)
 
     def _reconstruct(self, E, R, include_comp=False):
         if include_comp:

@@ -263,7 +263,6 @@ class BayesianRescal:
         return _fit
 
     def _save_model(self):
-        import os
         import pickle
 
         with open(self.dest, 'wb') as f:
