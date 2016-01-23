@@ -2,7 +2,6 @@ import logging
 import time
 import itertools
 import numpy as np
-import concurrent.futures
 from numpy.random import multivariate_normal, gamma, multinomial
 from sklearn.metrics import mean_squared_error
 
@@ -33,11 +32,14 @@ _VAR_COMP = 10.
 _DEST = ''
 _LOG = ''
 
+ADDITIVE = 'additive'
+MULTIPLICATIVE = 'multiplicative'
+
 MIN_VAL = np.iinfo(np.int32).min
 
 
-class PFBayesianAddCompRescal:
-    def __init__(self, n_dim, sample_prior=False, n_particles=5,
+class PFBayesianCompRescal:
+    def __init__(self, n_dim, compositionality='additive', n_particles=5,
                  eval_fn=mean_squared_error, **kwargs):
         """
 
@@ -67,6 +69,7 @@ class PFBayesianAddCompRescal:
 
         """
         self.n_dim = n_dim
+        self.compositionality = compositionality
 
         self._var_e = kwargs.pop('var_e', _VAR_E)
         self._var_r = kwargs.pop('var_r', _VAR_R)
@@ -364,11 +367,14 @@ class PFBayesianAddCompRescal:
 
         for k in range(self.n_pure_relations):
             if self.obs_sum[k] != 0:
-                self._sample_relation(X, mask, R, k, EXE, var_r)
+                if self.compositionality == ADDITIVE:
+                    self._sample_additive_relation(X, mask, R, k, EXE, var_r)
+                elif self.compositionality == MULTIPLICATIVE:
+                    self._sample_multiplicative_relation(X, mask, R, E, k, EXE, var_r)
             else:
                 R[k] = np.random.normal(0, var_r, size=[self.n_dim, self.n_dim])
 
-    def _sample_relation(self, X, mask, R, k, EXE, var_r):
+    def _sample_multiplicative_relation(self, X, mask, R, E, k, EXE, var_r):
         _lambda = np.identity(self.n_dim ** 2) / var_r
         xi = np.zeros(self.n_dim ** 2)
 
@@ -377,17 +383,52 @@ class PFBayesianAddCompRescal:
             _lambda += np.dot(kron.T, kron) / self.var_x
             xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1) / self.var_x
 
+        for _k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
+            cur_idx = self.n_pure_relations + _k
+            if self.obs_sum[cur_idx] != 0:
+                if k1 == k:
+                    exre = np.kron(E, np.dot(R[k2], E.T).T)
+                    kron2 = exre[mask[cur_idx].T.flatten() == 1]
+                    _lambda += np.dot(kron2.T, kron2) / self.var_comp
+                    xi += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron2.T, 1) / self.var_comp
+                elif k2 == k:
+                    rexe = np.kron(np.dot(E, R[k1]), E)
+                    kron2 = rexe[mask[cur_idx].T.flatten() == 1]
+                    _lambda += np.dot(kron2.T, kron2) / self.var_comp
+                    xi += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron2.T, 1) / self.var_comp
+
+        inv_lambda = np.linalg.inv(_lambda)
+        mu = np.dot(inv_lambda, xi)
+
+        try:
+            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+        except:
+            logger.debug('Sample R error', k)
+
+
+    def _sample_additive_relation(self, X, mask, R, k, EXE, var_r):
+        _lambda = np.identity(self.n_dim ** 2) / var_r
+        xi = np.zeros(self.n_dim ** 2)
+
+        kron = EXE[mask[k].T.flatten() == 1]
+        if kron.shape[0] != 0:
+            _lambda += np.dot(kron.T, kron) / self.var_x
+            xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1) / self.var_x
+
         tmp = np.zeros(self.n_dim ** 2)
         for _k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
-            kron = EXE[mask[_k].flatten() == 1]
-            if k1 == k:
-                _lambda += np.dot(kron.T, kron) / (self.var_comp * 4)
-                tmp += np.sum(X[_k, mask[_k] == 1].flatten() * kron.T, 1)
-                tmp -= 0.5*np.sum(np.dot(kron, R[k2].flatten()) * kron.T, 1)
-            elif k2 == k:
-                _lambda += np.dot(kron.T, kron) / (self.var_comp * 4)
-                tmp += np.sum(X[_k, mask[_k] == 1].flatten() * kron.T, 1)
-                tmp -= 0.5*np.sum(np.dot(kron, R[k1].flatten()) * kron.T, 1)
+            cur_idx = self.n_pure_relations + _k
+            if self.obs_sum[cur_idx] != 0:
+                kron = EXE[mask[cur_idx].T.flatten() == 1]
+                if k1 == k:
+                    _lambda += np.dot(kron.T, kron) / (self.var_comp * 4.)
+                    tmp += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron.T, 1)
+                    tmp -= 0.5 * np.sum(np.dot(kron, R[k2].flatten()) * kron.T, 1)
+                elif k2 == k:
+                    _lambda += np.dot(kron.T, kron) / (self.var_comp * 4.)
+                    tmp += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron.T, 1)
+                    tmp -= 0.5 * np.sum(np.dot(kron, R[k1].flatten()) * kron.T, 1)
+
         tmp /= 2. * self.var_comp
         xi += tmp
 

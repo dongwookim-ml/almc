@@ -584,18 +584,18 @@ class PFBayesianRescal:
 
     def _sample_relation(self, X, mask, E, R, k, EXE, var_r):
         if self.controlled_var:
-            tmp = EXE / self.var_X[k, :, :].flatten()[:, np.newaxis]
+            tmp = EXE / self.var_X[k, :, :].T.flatten()[:, np.newaxis]
             _lambda = np.dot(tmp.T, EXE)
             _lambda += np.identity(self.n_dim ** 2) / var_r
             inv_lambda = np.linalg.inv(_lambda)
 
-            xi = np.sum(EXE * X[k].flatten()[:, np.newaxis] / self.var_X[k, :, :].flatten()[:, np.newaxis], 0)
+            xi = np.sum(EXE * X[k].T.flatten()[:, np.newaxis] / self.var_X[k, :, :].T.flatten()[:, np.newaxis], 0)
             mu = np.dot(inv_lambda, xi)
         else:
             _lambda = np.identity(self.n_dim ** 2) / var_r
             xi = np.zeros(self.n_dim ** 2)
 
-            kron = EXE[mask[k].flatten() == 1]
+            kron = EXE[mask[k].T.flatten() == 1]
             if kron.shape[0] != 0:
                 _lambda += np.dot(kron.T, kron)
                 xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1)

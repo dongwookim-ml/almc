@@ -335,7 +335,7 @@ class PFBayesianLogitRescal:
     def _sample_relation(self, X, mask, E, R, k, EXE, var_r):
         _lambda = np.identity(self.n_dim ** 2) / var_r
 
-        kron = EXE[mask[k].flatten() == 1]
+        kron = EXE[mask[k].T.flatten() == 1]
         Y = X[k][mask[k] == 1].flatten()
 
         if len(np.unique(Y)) == 2:

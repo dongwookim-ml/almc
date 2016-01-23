@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 from scipy.io.matlab import loadmat
 from seq_brescal import PFBayesianRescal
-from seq_bcomp_rescal import PFBayesianAddCompRescal
+from seq_bcomp_rescal import PFBayesianCompRescal
 
 if __name__ == '__main__':
     if len(sys.argv) != 9:
@@ -65,8 +65,13 @@ if __name__ == '__main__':
         if model == 'brescal':
             _model = PFBayesianRescal(n_dim, var_x=var_x, n_particles=n_particle, compute_score=False, parallel=False,
                                       log=log, dest=model_file, sample_all=True)
-        elif model == 'bcomp_rescal':
-            _model = PFBayesianAddCompRescal(n_dim, var_x=var_x, var_comp=var_comp, n_particles=n_particle,
+        elif model == 'bcomp_add':
+            _model = PFBayesianCompRescal(n_dim, compositionality='additive', var_x=var_x, var_comp=var_comp, n_particles=n_particle,
                                              compute_score=False, log=log, dest=model_file)
+        elif model == 'bcomp_mul':
+            _model = PFBayesianCompRescal(n_dim, compositionality='multiplicative', var_x=var_x, var_comp=var_comp, n_particles=n_particle,
+                                             compute_score=False, log=log, dest=model_file)
+        else:
+            raise Exception('No such model exists %s' % model)
 
         seq = _model.fit(T, max_iter=max_iter)
