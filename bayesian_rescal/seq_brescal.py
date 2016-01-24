@@ -198,6 +198,9 @@ class PFBayesianRescal:
         self.obs_sum = np.sum(np.sum(obs_mask, 1), 1)
         self.valid_relations = np.nonzero(np.sum(np.sum(X, 1), 1))[0]
 
+        self.features = np.zeros([2 * self.n_entities * self.n_relations, self.n_dim])
+        self.xi = np.zeros([2 * self.n_entities * self.n_relations])
+
         if max_iter == 0:
             max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask))
 
@@ -394,11 +397,11 @@ class PFBayesianRescal:
         logger.debug("Sampled var_e %.3f", np.mean(self.var_e))
 
     def _sample_entities(self, X, mask, E, R, var_e):
-        RE = list()
-        RTE = list()
+        RE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
+        RTE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
         for k in range(self.n_relations):
-            RE.append(np.dot(R[k], E.T).T)  #
-            RTE.append(np.dot(R[k].T, E.T).T)
+            RE[k] = np.dot(R[k], E.T).T
+            RTE[k] = np.dot(R[k].T, E.T).T
 
         for i in range(self.n_entities):
             self._sample_entity(X, mask, E, R, i, var_e, RE, RTE)
@@ -407,47 +410,44 @@ class PFBayesianRescal:
                 RTE[k][i] = np.dot(R[k].T, E[i])
 
     def _sample_entity(self, X, mask, E, R, i, var_e, RE=None, RTE=None):
+        nz_r = mask[:, i, :].nonzero()
+        nz_c = mask[:, :, i].nonzero()
+        nnz_r = nz_r[0].size
+        nnz_c = nz_c[0].size
+        nnz_all = nnz_r + nnz_c
+
+        self.features[:nnz_r] = RE[nz_r]
+        self.features[nnz_r:nnz_all] = RTE[nz_c]
+        self.xi[:nnz_r] = X[:, i, :][nz_r]
+        self.xi[nnz_r:nnz_all] = X[:, :, i][nz_c]
+        _xi = self.xi[:nnz_all] * self.features[:nnz_all].T / self.var_x
+        xi = np.sum(_xi, 1)
+
         _lambda = np.identity(self.n_dim) / var_e
-        xi = np.zeros(self.n_dim)
+        _lambda += np.dot(self.features[:nnz_all].T, self.features[:nnz_all]) / self.var_x
 
-        E[i] *= 0
-
-        for k in self.obs_sum.nonzero()[0]:
-            RE[k][i] *= 0
-            RTE[k][i] *= 0
-            tmp = RE[k][mask[k, i, :] == 1]  # ExD
-            tmp2 = RTE[k][mask[k, :, i] == 1]
-            if tmp.shape[0] != 0:
-                xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x
-                _lambda += np.dot(tmp.T, tmp) / self.var_x
-            if tmp2.shape[0] != 0:
-                xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_x
-                _lambda += np.dot(tmp2.T, tmp2) / self.var_x
-
+        # _lambda = np.identity(self.n_dim) / var_e
+        # xi = np.zeros(self.n_dim)
+        #
+        # for k in self.obs_sum.nonzero()[0]:
+        #     # RE[k][i] *= 0
+        #     # RTE[k][i] *= 0
+        #     tmp = RE[k][mask[k, i, :] == 1]  # ExD
+        #     tmp2 = RTE[k][mask[k, :, i] == 1]
+        #     if tmp.shape[0] != 0:
+        #         xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x
+        #         _lambda += np.dot(tmp.T, tmp) / self.var_x
+        #     if tmp2.shape[0] != 0:
+        #         xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_x
+        #         _lambda += np.dot(tmp2.T, tmp2) / self.var_x
+        #
+        # assert np.allclose(xi2, xi)
+        # assert np.allclose(_lambda2, _lambda)
         # xi /= self.var_x
         # _lambda /= self.var_x
 
         inv_lambda = np.linalg.inv(_lambda)
         mu = np.dot(inv_lambda, xi)
-
-        ################### sanity check
-        # _lambda = np.zeros([self.n_dim, self.n_dim])
-        # xi = np.zeros(self.n_dim)
-        # for k in range(self.n_relations):
-        #     tmp = np.dot(R[k], E.T)  # D x E
-        #     tmp2 = np.dot(R[k].T, E.T)
-        #     _lambda += np.dot(tmp, tmp.T) + np.dot(tmp2, tmp2.T)
-        #     xi += np.sum(X[k, i, :] * tmp, 1) + np.sum(X[k, :, i] * tmp2, 1)
-        #
-        # xi *= (1. / self.var_x)
-        # _lambda *= 1. / self.var_x
-        # _lambda += (1. / self.var_e) * np.identity(self.n_dim)
-        # _inv_lambda = np.linalg.inv(_lambda)
-        # _mu = np.dot(_inv_lambda, xi)
-        #
-        # assert np.allclose(_inv_lambda, inv_lambda)
-        # assert np.allclose(_mu, mu)
-
         E[i] = multivariate_normal(mu, inv_lambda)
 
     def _sample_relations(self, X, mask, E, R, var_r):

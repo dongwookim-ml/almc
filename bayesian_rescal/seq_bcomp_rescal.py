@@ -139,6 +139,8 @@ class PFBayesianCompRescal:
 
         self.E = np.zeros([self.n_particles, self.n_entities, self.n_dim])
         self.R = np.zeros([self.n_particles, self.n_pure_relations, self.n_dim, self.n_dim])
+        self.features = np.zeros([2 * self.n_entities * self.n_relations, self.n_dim])
+        self.xi = np.zeros([2 * self.n_entities * self.n_relations])
 
         if type(obs_mask) == type(None):
             # observation mask
@@ -336,29 +338,22 @@ class PFBayesianCompRescal:
                 RE[k][i] = np.dot(_R[k], E[i])
                 RTE[k][i] = np.dot(_R[k].T, E[i])
 
-    def _sample_entity(self, X, mask, E, i, var_e, RE=None, RTE=None):
-        _lambda = np.identity(self.n_dim) / var_e
-        xi = np.zeros(self.n_dim)
+    def _sample_entity(self, X, mask, E, i, var_e, RE, RTE):
+        nz_r = mask[:, i, :].nonzero()
+        nz_c = mask[:, :, i].nonzero()
+        nnz_r = nz_r[0].size
+        nnz_c = nz_c[0].size
+        nnz_all = nnz_r + nnz_c
 
-        for k in self.obs_sum.nonzero()[0]:
-            RE[k][i] *= 0
-            RTE[k][i] *= 0
-            tmp = RE[k][mask[k, i, :] == 1]  # ExD
-            tmp2 = RTE[k][mask[k, :, i] == 1]
-            if tmp.shape[0] != 0:
-                if k < self.n_pure_relations:
-                    xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x
-                    _lambda += np.dot(tmp.T, tmp) / self.var_x
-                else:
-                    xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_comp
-                    _lambda += np.dot(tmp.T, tmp) / self.var_comp
-            if tmp2.shape[0] != 0:
-                if k < self.n_pure_relations:
-                    xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_x
-                    _lambda += np.dot(tmp2.T, tmp2) / self.var_x
-                else:
-                    xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_comp
-                    _lambda += np.dot(tmp2.T, tmp2) / self.var_comp
+        self.features[:nnz_r] = RE[nz_r]
+        self.features[nnz_r:nnz_all] = RTE[nz_c]
+        self.xi[:nnz_r] = X[:, i, :][nz_r]
+        self.xi[nnz_r:nnz_all] = X[:, :, i][nz_c]
+        _xi = self.xi[:nnz_all] * self.features[:nnz_all].T / self.var_x
+        xi = np.sum(_xi, 1)
+
+        _lambda = np.identity(self.n_dim) / var_e
+        _lambda += np.dot(self.features[:nnz_all].T, self.features[:nnz_all]) / self.var_x
 
         inv_lambda = np.linalg.inv(_lambda)
         mu = np.dot(inv_lambda, xi)
