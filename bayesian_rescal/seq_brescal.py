@@ -22,7 +22,6 @@ _MC_MOVE = 1
 _SGLD = False
 _NMINI = 1
 _GIBBS_INIT = True
-_PULL_SIZE = 1
 _COMP = False
 _SAMPLE_ALL = True
 
@@ -141,7 +140,6 @@ class PFBayesianRescal:
         self.mc_move = kwargs.pop('mc_move', _MC_MOVE)
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
         self.dest = kwargs.pop('dest', _DEST)
-        self.pull_size = kwargs.pop('pull_size', _PULL_SIZE)
 
         if not len(kwargs) == 0:
             raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
@@ -184,8 +182,10 @@ class PFBayesianRescal:
         self.n_entities = X.shape[1]
         self.E = list()
         self.R = list()
+        self.RE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
+        self.RTE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
 
-        if type(None) == type(obs_mask):
+        if isinstance(obs_mask, type(None)):
             obs_mask = np.zeros_like(X)
         else:
             logger.info("Initial Total, Positive, Negative Observation: %d / %d / %d", np.sum(obs_mask),
@@ -245,21 +245,20 @@ class PFBayesianRescal:
         for i in range(max_iter):
             tic = time.time()
 
-            for pn in range(self.pull_size):
-                next_idx = self.get_next_sample(mask)
-                yield next_idx
-                cur_obs[next_idx] = X[next_idx]
-                mask[next_idx] = 1
-                if X[next_idx] == self.pos_val:
-                    pop += 1
+            next_idx = self.get_next_sample(mask)
+            yield next_idx
+            cur_obs[next_idx] = X[next_idx]
+            mask[next_idx] = 1
+            if X[next_idx] == self.pos_val:
+                pop += 1
 
-                cur_obs[cur_obs.nonzero()] = 1
+            cur_obs[cur_obs.nonzero()] = 1
 
-                logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop,
-                            (i * self.pull_size + pn))
+            logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop,
+                        (i + 1))
 
-                self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
-                self.p_weights /= np.sum(self.p_weights)
+            self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
+            self.p_weights /= np.sum(self.p_weights)
 
             cur_obs[cur_obs.nonzero()] = 1
             self.obs_sum = np.sum(np.sum(mask, 1), 1)
@@ -276,18 +275,8 @@ class PFBayesianRescal:
                         self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
                     else:
                         self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
-
-                        RE = list()
-                        RTE = list()
-                        for k in range(self.n_relations):
-                            RE.append(np.dot(self.R[p][k], self.E[p].T).T)  #
-                            RTE.append(np.dot(self.R[p][k].T, self.E[p].T).T)
-
-                        for ni in [next_idx[1], next_idx[2]]:
-                            self._sample_entity(X, mask, self.E[p], self.R[p], ni, self.var_e[p], RE, RTE)
-                            for k in range(self.n_relations):
-                                RE[k][ni] = np.dot(self.R[p][k], self.E[p][ni])
-                                RTE[k][ni] = np.dot(self.R[p][k].T, self.E[p][ni])
+                        self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p],
+                                              [next_idx[0], next_idx[1]])
 
                     if self.rbp:
                         self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
@@ -396,14 +385,17 @@ class PFBayesianRescal:
                                        1. / (0.5 * np.sum(self.E[p] ** 2) + self.e_beta))
         logger.debug("Sampled var_e %.3f", np.mean(self.var_e))
 
-    def _sample_entities(self, X, mask, E, R, var_e):
-        RE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
-        RTE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
+    def _sample_entities(self, X, mask, E, R, var_e, sample_idx=None):
+        RE = self.RE
+        RTE = self.RTE
         for k in range(self.n_relations):
             RE[k] = np.dot(R[k], E.T).T
             RTE[k] = np.dot(R[k].T, E.T).T
 
-        for i in range(self.n_entities):
+        if isinstance(sample_idx, type(None)):
+            sample_idx = range(self.n_entities)
+
+        for i in sample_idx:
             self._sample_entity(X, mask, E, R, i, var_e, RE, RTE)
             for k in range(self.n_relations):
                 RE[k][i] = np.dot(R[k], E[i])

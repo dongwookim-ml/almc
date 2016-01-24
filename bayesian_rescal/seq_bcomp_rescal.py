@@ -20,7 +20,6 @@ _POS_VAL = 1
 _MC_MOVE = 1
 _GIBBS_INIT = True
 _GIBBS_ITER = 10
-_PULL_SIZE = 1
 _SAMPLE_ALL = True
 _COMPUTE_SCORE = True
 
@@ -139,15 +138,18 @@ class PFBayesianCompRescal:
 
         self.E = np.zeros([self.n_particles, self.n_entities, self.n_dim])
         self.R = np.zeros([self.n_particles, self.n_pure_relations, self.n_dim, self.n_dim])
+        self._R = np.zeros([self.n_relations, self.n_dim, self.n_dim])
         self.features = np.zeros([2 * self.n_entities * self.n_relations, self.n_dim])
         self.xi = np.zeros([2 * self.n_entities * self.n_relations])
+        self.RE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
+        self.RTE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
 
-        if type(obs_mask) == type(None):
+        if isinstance(obs_mask, type(None)):
             # observation mask
             obs_mask = np.zeros_like(expand_X)
         else:
             logger.info("Initial Total, Positive, Negative Observation: %d / %d / %d", np.sum(obs_mask),
-                    np.sum(X[obs_mask == 1]), np.sum(obs_mask) - np.sum(X[obs_mask == 1]))
+                        np.sum(X[obs_mask == 1]), np.sum(obs_mask) - np.sum(X[obs_mask == 1]))
             new_obs_mask = np.zeros_like(expand_X)
             new_obs_mask[:self.n_pure_relations] = obs_mask
             obs_mask = new_obs_mask
@@ -222,7 +224,7 @@ class PFBayesianCompRescal:
 
             cur_obs[cur_obs.nonzero()] = 1
 
-            logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop, i)
+            logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop, i+1)
 
             self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
             self.p_weights /= np.sum(self.p_weights)
@@ -241,7 +243,11 @@ class PFBayesianCompRescal:
             for m in range(self.mc_move):
                 for p in range(self.n_particles):
                     self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
-                    self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
+                    if self.sample_all:
+                        self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
+                    else:
+                        self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p],
+                                              [next_idx[1], next_idx[2]])
 
             if self.sample_prior and i != 0 and i % self.prior_sample_gap == 0:
                 self._sample_prior()
@@ -320,19 +326,22 @@ class PFBayesianCompRescal:
                                        1. / (0.5 * np.sum(self.E[p] ** 2) + self.e_beta))
         logger.debug("Sampled var_e %.3f", np.mean(self.var_e))
 
-    def _sample_entities(self, X, mask, E, R, var_e):
-        _R = np.zeros([self.n_relations, self.n_dim, self.n_dim])
+    def _sample_entities(self, X, mask, E, R, var_e, sample_idx=None):
+        _R = self._R
         _R[:self.n_pure_relations] = R
         for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
             _R[self.n_pure_relations + k] = np.dot(R[k1], R[k2])
 
-        RE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
-        RTE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
+        RE = self.RE
+        RTE = self.RTE
         for k in range(self.n_relations):
             RE[k] = np.dot(_R[k], E.T).T
             RTE[k] = np.dot(_R[k].T, E.T).T
 
-        for i in range(self.n_entities):
+        if isinstance(sample_idx, type(None)):
+            sample_idx = range(self.n_entities)
+
+        for i in sample_idx:
             self._sample_entity(X, mask, E, i, var_e, RE, RTE)
             for k in range(self.n_relations):
                 RE[k][i] = np.dot(_R[k], E[i])

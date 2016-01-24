@@ -1,5 +1,6 @@
 import logging
 import time
+import itertools
 import numpy as np
 from numpy.random import multivariate_normal, multinomial
 from sklearn.linear_model import LogisticRegression
@@ -20,7 +21,7 @@ _POS_VAL = 1
 _MC_MOVE = 1
 _GIBBS_INIT = True
 _GIBBS_ITER = 20
-_PULL_SIZE = 1
+_SAMPLE_ALL = True
 _DEST = ''
 _APPROX_DIAG = True
 
@@ -97,8 +98,6 @@ class PFBayesianLogitRescal:
         self.compute_score = compute_score
 
         self.approx_diag = kwargs.pop('approx_diag', _APPROX_DIAG)
-        self.sample_prior = kwargs.pop('sample_prior', _P_SAMPLE)
-        self.prior_sample_gap = kwargs.pop('prior_sample_gap', _P_SAMPLE_GAP)
         self.e_alpha = kwargs.pop('e_alpha', _E_ALPHA)
         self.e_beta = kwargs.pop('e_beta', _E_BETA)
         self.r_alpha = kwargs.pop('r_alpha', _R_ALPHA)
@@ -109,9 +108,9 @@ class PFBayesianLogitRescal:
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
         self.dest = kwargs.pop('dest', _DEST)
 
-        self.pull_size = kwargs.pop('pull_size', _PULL_SIZE)
         self.gibbs_init = kwargs.pop('gibbs_init', _GIBBS_INIT)
         self.gibbs_iter = kwargs.pop('gibbs_iter', _GIBBS_ITER)
+        self.sample_all = kwargs.pop('sample_all', _SAMPLE_ALL)
 
         if not len(kwargs) == 0:
             raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
@@ -139,7 +138,7 @@ class PFBayesianLogitRescal:
 
         self.n_obs_entities = np.zeros(self.n_entities)
 
-        if type(obs_mask) == type(None):
+        if isinstance(obs_mask, type(None)):
             obs_mask = np.zeros_like(X)
             for i, k in itertools.product(range(self.n_entities), range(self.n_relations)):
                 self.n_obs_entities[i] += np.sum(obs_mask[k, i, :]) + np.sum(obs_mask[k, :, i])
@@ -194,24 +193,23 @@ class PFBayesianLogitRescal:
         for i in range(max_iter):
             tic = time.time()
 
-            for pn in range(self.pull_size):
-                next_idx = self.get_next_sample(mask, cur_obs)
-                yield next_idx
-                cur_obs[next_idx] = X[next_idx]
-                mask[next_idx] = 1
+            next_idx = self.get_next_sample(mask, cur_obs)
+            yield next_idx
+            cur_obs[next_idx] = X[next_idx]
+            mask[next_idx] = 1
 
-                self.n_obs_entities[next_idx[1]] += 1
-                self.n_obs_entities[next_idx[2]] += 1
-                self.obs_sum = np.sum(np.sum(mask, 1), 1)
+            self.n_obs_entities[next_idx[1]] += 1
+            self.n_obs_entities[next_idx[2]] += 1
+            self.obs_sum = np.sum(np.sum(mask, 1), 1)
 
-                if X[next_idx] == self.pos_val:
-                    pop += 1
+            if X[next_idx] == self.pos_val:
+                pop += 1
 
-                logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop,
-                            (i * self.pull_size + pn))
+            logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop,
+                        (i + 1))
 
-                self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
-                self.p_weights /= np.sum(self.p_weights)
+            self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
+            self.p_weights /= np.sum(self.p_weights)
 
             ESS = 1. / np.sum((self.p_weights ** 2))
 
@@ -221,10 +219,11 @@ class PFBayesianLogitRescal:
             for m in range(self.mc_move):
                 for p in range(self.n_particles):
                     self._sample_relations(cur_obs, mask, self.E[p], self.R[p], self.var_r[p])
-                    self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
-
-            if self.sample_prior and i != 0 and i % self.prior_sample_gap == 0:
-                self._sample_prior()
+                    if self.sample_all:
+                        self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p])
+                    else:
+                        self._sample_entities(cur_obs, mask, self.E[p], self.R[p], self.var_e[p],
+                                              [next_idx[1], next_idx[2]])
 
             toc = time.time()
             if self.compute_score:
@@ -281,24 +280,17 @@ class PFBayesianLogitRescal:
                     correct = True
             return sample
 
-    def _sample_prior(self):
-        self._sample_var_r()
-        self._sample_var_e()
-
-    def _sample_var_r(self):
-        pass
-
-    def _sample_var_e(self):
-        pass
-
-    def _sample_entities(self, X, mask, E, R, var_e):
+    def _sample_entities(self, X, mask, E, R, var_e, sample_idx=None):
         RE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
         RTE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
         for k in range(self.n_relations):
             RE[k] = np.dot(R[k], E.T).T
             RTE[k] = np.dot(R[k].T, E.T).T
 
-        for i in range(self.n_entities):
+        if isinstance(sample_idx, type(None)):
+            sample_idx = range(self.n_entities)
+
+        for i in sample_idx:
             if self.approx_diag:
                 self._sample_entity_diag(X, mask, E, R, i, var_e, RE, RTE)
             else:
@@ -323,7 +315,7 @@ class PFBayesianLogitRescal:
         features = self.features[:nnz_all]
         Y = self.Y[:nnz_all]
         try:
-            logit = LogisticRegression(penalty='l2', C=0.1 / var_e, fit_intercept=False)
+            logit = LogisticRegression(penalty='l2', C=1.0 / var_e, fit_intercept=False)
             logit.fit(features, Y)
             mu = logit.coef_[0]
             prd = logit.predict_proba(features)
@@ -350,7 +342,7 @@ class PFBayesianLogitRescal:
         features = self.features[:nnz_all]
         Y = self.Y[:nnz_all]
         try:
-            logit = LogisticRegression(penalty='l2', C=0.1 / var_e, fit_intercept=False)
+            logit = LogisticRegression(penalty='l2', C=1.0 / var_e, fit_intercept=False)
             logit.fit(features, Y)
             mu = logit.coef_[0]
             prd = logit.predict_proba(features)
@@ -376,7 +368,7 @@ class PFBayesianLogitRescal:
         Y = X[k][mask[k] == 1].flatten()
 
         if len(np.unique(Y)) == 2:
-            logit = LogisticRegression(penalty='l2', C=1. / var_r, fit_intercept=False)
+            logit = LogisticRegression(penalty='l2', C=1.0 / var_r, fit_intercept=False)
             logit.fit(kron, Y)
             mu = logit.coef_[0]
             prd = logit.predict_proba(kron)
