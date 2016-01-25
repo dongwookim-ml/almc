@@ -2,6 +2,7 @@ import logging
 import time
 import itertools
 import numpy as np
+from sklearn.linear_model import LogisticRegression
 from numpy.random import multivariate_normal, gamma, multinomial
 from sklearn.metrics import mean_squared_error
 
@@ -19,9 +20,10 @@ _MAX_THREAD = 4
 _POS_VAL = 1
 _MC_MOVE = 1
 _GIBBS_INIT = True
-_GIBBS_ITER = 10
+_GIBBS_ITER = 20
 _SAMPLE_ALL = True
 _COMPUTE_SCORE = True
+_LOGIT_SOLVER = 'lbfgs'  # {'newton-cg', 'lbfgs', 'liblinear', 'sag'}
 
 _VAR_E = 1.
 _VAR_R = 1.
@@ -33,8 +35,14 @@ _LOG = ''
 
 ADDITIVE = 'additive'
 MULTIPLICATIVE = 'multiplicative'
+LOGIT_MUL = 'logit_mul'
 
 MIN_VAL = np.iinfo(np.int32).min
+
+
+def kron_colwise(a, b):
+    n_row, n_col = a.shape
+    return np.repeat(a, n_col, axis=1) * np.tile(b, n_col)
 
 
 class PFBayesianCompRescal:
@@ -143,6 +151,8 @@ class PFBayesianCompRescal:
         self.xi = np.zeros([2 * self.n_entities * self.n_relations])
         self.RE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
         self.RTE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
+        self.kron = np.zeros([self.n_relations * self.n_entities ** 2, self.n_dim ** 2])
+        self.y = np.zeros([self.n_relations * self.n_entities ** 2])
 
         if isinstance(obs_mask, type(None)):
             # observation mask
@@ -168,7 +178,7 @@ class PFBayesianCompRescal:
         del expand_X
 
         max_possible_iter = int(np.prod([self.n_pure_relations, self.n_entities, self.n_entities]) - np.sum(
-            obs_mask[:self.n_pure_relations]))
+                obs_mask[:self.n_pure_relations]))
         if max_iter == 0 or max_iter > max_possible_iter:
             max_iter = max_possible_iter
 
@@ -224,7 +234,8 @@ class PFBayesianCompRescal:
 
             cur_obs[cur_obs.nonzero()] = 1
 
-            logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop, i+1)
+            logger.info('[NEXT](%s) %s: %.3f, population: %d/%d', self.compositionality, str(next_idx), X[next_idx],
+                        pop, i + 1)
 
             self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
             self.p_weights /= np.sum(self.p_weights)
@@ -266,10 +277,18 @@ class PFBayesianCompRescal:
         for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
             if next_idx != -1 and (next_idx == k1 or next_idx == k2):
                 cur_obs[self.n_pure_relations + k] = np.dot(cur_obs[k1], cur_obs[k2])
-                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
+                if self.compositionality == LOGIT_MUL:
+                    cur_obs[cur_obs != 0] = 1
+                    mask[self.n_pure_relations + k][np.dot(mask[k1], mask[k2]) != 0] = 1
+                else:
+                    mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
             elif next_idx == -1:
                 cur_obs[self.n_pure_relations + k] = np.dot(cur_obs[k1], cur_obs[k2])
-                mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
+                if self.compositionality == LOGIT_MUL:
+                    cur_obs[cur_obs != 0] = 1
+                    mask[self.n_pure_relations + k][np.dot(mask[k1], mask[k2]) != 0] = 1
+                else:
+                    mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
 
     def compute_particle_weight(self, next_idx, X, mask):
         from scipy.stats import norm
@@ -342,10 +361,40 @@ class PFBayesianCompRescal:
             sample_idx = range(self.n_entities)
 
         for i in sample_idx:
-            self._sample_entity(X, mask, E, i, var_e, RE, RTE)
+            if self.compositionality == LOGIT_MUL:
+                self._sample_logit_entity(X, mask, E, i, var_e, RE, RTE)
+            else:
+                self._sample_entity(X, mask, E, i, var_e, RE, RTE)
             for k in range(self.n_relations):
                 RE[k][i] = np.dot(_R[k], E[i])
                 RTE[k][i] = np.dot(_R[k].T, E[i])
+
+    def _sample_logit_entity(self, X, mask, E, i, var_e, RE, RTE):
+        _lambda = np.ones(self.n_dim) / var_e
+
+        nz_r = mask[:, i, :].nonzero()
+        nz_c = mask[:, :, i].nonzero()
+        nnz_r = nz_r[0].size
+        nnz_c = nz_c[0].size
+        nnz_all = nnz_r + nnz_c
+        self.features[:nnz_r] = RE[nz_r]
+        self.features[nnz_r:nnz_all] = RTE[nz_c]
+        self.xi[:nnz_r] = X[:, i, :][nz_r]
+        self.xi[nnz_r:nnz_all] = X[:, :, i][nz_c]
+
+        features = self.features[:nnz_all]
+        xi = self.xi[:nnz_all]
+        try:
+            logit = LogisticRegression(penalty='l2', solver=_LOGIT_SOLVER, C=1.0 / var_e, fit_intercept=False)
+            logit.fit(features, xi)
+            mu = logit.coef_[0]
+            prd = logit.predict_proba(features)
+            _lambda += np.sum(features.T ** 2 * prd[:, 0] * prd[:, 1], 1)
+        except:
+            mu = np.zeros(self.n_dim)
+
+        inv_lambda = 1. / _lambda
+        E[i] = np.random.normal(mu, inv_lambda)
 
     def _sample_entity(self, X, mask, E, i, var_e, RE, RTE):
         nz_r = mask[:, i, :].nonzero()
@@ -374,17 +423,72 @@ class PFBayesianCompRescal:
 
     def _sample_relations(self, X, mask, E, R, var_r):
         EXE = np.kron(E, E)
+        RE = np.swapaxes(np.dot(R, E.T), 1, 2)
+        ER = np.swapaxes(np.dot(E, R), 0, 1)
 
         for k in range(self.n_pure_relations):
             if self.obs_sum[k] != 0:
                 if self.compositionality == ADDITIVE:
-                    self._sample_additive_relation(X, mask, R, k, EXE, var_r)
+                    self._sample_additive_relation(X, mask, R, k, EXE, var_r, RE, ER)
                 elif self.compositionality == MULTIPLICATIVE:
-                    self._sample_multiplicative_relation(X, mask, R, E, k, EXE, var_r)
+                    self._sample_multiplicative_relation(X, mask, R, E, k, EXE, var_r, RE, ER)
+                elif self.compositionality == LOGIT_MUL:
+                    self._sample_logit_relation(X, mask, R, E, k, EXE, var_r, RE, ER)
+
+                RE[k] = np.dot(R[k], E.T).T
+                ER[k] = np.dot(E, R[k])
             else:
                 R[k] = np.random.normal(0, var_r, size=[self.n_dim, self.n_dim])
 
-    def _sample_multiplicative_relation(self, X, mask, R, E, k, EXE, var_r):
+    def _sample_logit_relation(self, X, mask, R, E, k, EXE, var_r, RE, ER):
+        cidx = np.sum(mask[k])
+        self.kron[:cidx] = EXE[mask[k].flatten() == 1]
+        self.y[:cidx] = X[k][mask[k] == 1].flatten()
+        _lambda = np.ones(self.n_dim ** 2) / var_r
+
+        for _k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
+            cur_idx = self.n_pure_relations + _k
+            if self.obs_sum[cur_idx] != 0 and k1 == k:
+                nonzero_idx = mask[cur_idx].nonzero()
+                nnz = nonzero_idx[0].size
+                # for _i, idx in enumerate(nonzero_idx):
+                #     kron[cidx+_i] = np.kron(E[idx[0]], np.dot(R[k2], E[idx[1]]))
+
+                # axis-wise kronecker
+                # kron[cidx:cidx + nnz] = np.repeat(E[nonzero_idx[:, 0]], self.n_dim, axis=1) * np.tile(
+                #         np.dot(R[k2], E[nonzero_idx[:, 1]].T).T, self.n_dim)
+                self.kron[cidx:cidx + nnz] = kron_colwise(E[nonzero_idx[0]], RE[k2][nonzero_idx[1]])
+                self.y[cidx:cidx + nnz] = X[cur_idx][nonzero_idx]
+                cidx += nnz
+
+            elif self.obs_sum[cur_idx] != 0 and k2 == k:
+                nonzero_idx = mask[cur_idx].nonzero()
+                nnz = nonzero_idx[0].size
+                # for _i, idx in enumerate(nonzero_idx):
+                #     kron[cidx + _i] = np.kron(np.dot(E[idx[0]], R[k1]), E[idx[1]])
+
+                # kron[cidx:cidx + nnz] = np.repeat(np.dot(E[nonzero_idx[:, 0]], R[k1]), self.n_dim, axis=1) * np.tile(
+                #         E[nonzero_idx[:, 1]], self.n_dim)
+                self.kron[cidx:cidx + nnz] = kron_colwise(ER[k1][nonzero_idx[0]], E[nonzero_idx[1]])
+                self.y[cidx:cidx + nnz] = X[cur_idx, mask[cur_idx] == 1].flatten()
+                cidx += nnz
+
+        kron = self.kron[:cidx]
+        y = self.y[:cidx]
+
+        if len(np.unique(y)) == 2:
+            logit = LogisticRegression(penalty='l2', solver=_LOGIT_SOLVER, C=1.0 / var_r, fit_intercept=False)
+            logit.fit(kron, y)
+            mu = logit.coef_[0]
+            prd = logit.predict_proba(kron)
+            _lambda += np.sum(kron.T ** 2 * prd[:, 0] * prd[:, 1], 1)
+        else:
+            mu = np.zeros(self.n_dim ** 2)
+
+        inv_lambda = 1. / _lambda
+        R[k] = np.random.normal(mu, inv_lambda).reshape(R[k].shape)
+
+    def _sample_multiplicative_relation(self, X, mask, R, E, k, EXE, var_r, RE, ER):
         _lambda = np.identity(self.n_dim ** 2) / var_r
         xi = np.zeros(self.n_dim ** 2)
 
@@ -397,18 +501,22 @@ class PFBayesianCompRescal:
             cur_idx = self.n_pure_relations + _k
             if self.obs_sum[cur_idx] != 0 and k1 == k:
                 nonzero_idx = np.array(np.nonzero(mask[cur_idx])).T
-                kron2 = np.zeros([nonzero_idx.shape[0], self.n_dim ** 2])
-                for _i, idx in enumerate(nonzero_idx):
-                    kron2[_i] = np.kron(E[idx[0]], np.dot(R[k2], E[idx[1]]))
 
+                # kron2 = np.zeros([nonzero_idx.shape[0], self.n_dim ** 2])
+                # for _i, idx in enumerate(nonzero_idx):
+                #     kron2[_i] = np.kron(E[idx[0]], np.dot(R[k2], E[idx[1]]))
+
+                kron2 = kron_colwise(E[nonzero_idx[:, 0]], RE[k2][nonzero_idx[:, 1]])
                 _lambda += np.dot(kron2.T, kron2) / self.var_comp
                 xi += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron2.T, 1) / self.var_comp
             elif self.obs_sum[cur_idx] != 0 and k2 == k:
                 nonzero_idx = np.array(np.nonzero(mask[cur_idx])).T
-                kron2 = np.zeros([nonzero_idx.shape[0], self.n_dim ** 2])
-                for _i, idx in enumerate(nonzero_idx):
-                    kron2[_i] = np.kron(np.dot(E[idx[0]], R[k1]), E[idx[1]])
 
+                # kron2 = np.zeros([nonzero_idx.shape[0], self.n_dim ** 2])
+                # for _i, idx in enumerate(nonzero_idx):
+                #     kron2[_i] = np.kron(np.dot(E[idx[0]], R[k1]), E[idx[1]])
+
+                kron2 = kron_colwise(ER[k1][nonzero_idx[:, 0]], E[nonzero_idx[:, 1]])
                 _lambda += np.dot(kron2.T, kron2) / self.var_comp
                 xi += np.sum(X[cur_idx, mask[cur_idx] == 1].flatten() * kron2.T, 1) / self.var_comp
 
@@ -420,7 +528,7 @@ class PFBayesianCompRescal:
         except:
             logger.debug('Sample R error, %d', k)
 
-    def _sample_additive_relation(self, X, mask, R, k, EXE, var_r):
+    def _sample_additive_relation(self, X, mask, R, k, EXE, var_r, RE, ER):
         _lambda = np.identity(self.n_dim ** 2) / var_r
         xi = np.zeros(self.n_dim ** 2)
 

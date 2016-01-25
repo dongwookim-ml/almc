@@ -2,6 +2,7 @@ import logging
 import time
 import itertools
 import numpy as np
+import scipy as sp
 from numpy.random import multivariate_normal, multinomial
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_squared_error
@@ -142,6 +143,9 @@ class PFBayesianLogitRescal:
             obs_mask = np.zeros_like(X)
             for i, k in itertools.product(range(self.n_entities), range(self.n_relations)):
                 self.n_obs_entities[i] += np.sum(obs_mask[k, i, :]) + np.sum(obs_mask[k, :, i])
+        else:
+            logger.info("Initial Total, Positive, Negative Observation: %d / %d / %d", np.sum(obs_mask),
+                        np.sum(X[obs_mask == 1]), np.sum(obs_mask) - np.sum(X[obs_mask == 1]))
 
         cur_obs = np.zeros_like(X)
         cur_obs[obs_mask == 1] = X[obs_mask == 1]
@@ -364,6 +368,7 @@ class PFBayesianLogitRescal:
             _lambda = np.ones(self.n_dim ** 2) / var_r
         else:
             _lambda = np.identity(self.n_dim ** 2) / var_r
+
         kron = EXE[mask[k].flatten() == 1]
         Y = X[k][mask[k] == 1].flatten()
 
@@ -372,6 +377,7 @@ class PFBayesianLogitRescal:
             logit.fit(kron, Y)
             mu = logit.coef_[0]
             prd = logit.predict_proba(kron)
+
             if self.approx_diag:
                 _lambda += np.sum(kron.T ** 2 * prd[:, 0] * prd[:, 1], 1)
             else:
@@ -425,7 +431,7 @@ if __name__ == '__main__':
     X = np.zeros([n_relation, n_entity, n_entity])
     for k, i, j in itertools.product(range(n_relation), range(n_entity), range(n_entity)):
         x = np.dot(np.dot(E[i].T, R[k]), E[j])
-        p = 1. / (1. + np.exp(-x))
+        p = _sigmoid(x)
         X[k, i, j] = np.random.binomial(1, p)
 
     model = PFBayesianLogitRescal(n_dim, n_particles=n_particle, eval_fn=roc_auc_score)
