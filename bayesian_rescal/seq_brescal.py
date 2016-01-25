@@ -2,6 +2,7 @@ import logging
 import time
 import itertools
 import numpy as np
+import scipy as sp
 import concurrent.futures
 from numpy.random import multivariate_normal, gamma, multinomial
 from sklearn.metrics import mean_squared_error
@@ -36,6 +37,43 @@ b = 0.01
 tau = -0.55
 
 MIN_VAL = np.iinfo(np.int32).min
+
+def inverse(M):
+    """Inverse of a symmetric matrix.
+    Using cProfile, this seems slower than numpy.linalg.inv
+    """
+    w, v = np.linalg.eigh(M)
+    inv_w = np.diag(1./w)
+    inv = np.dot(v.T,np.dot(inv_w,v))
+    return inv
+
+def normal(mean, prec):
+    """Multivariate normal with precision (inverse covariance)
+    as a parameter.
+
+    Returns a single sample.
+
+    Copying
+    https://github.com/numpy/numpy/blob/master/numpy/random/mtrand/mtrand.pyx
+    """
+    # Check preconditions on arguments
+    mean = np.array(mean)
+    prec = np.array(prec)
+
+    if len(mean.shape) != 1:
+        raise ValueError("mean must be 1 dimensional")
+    if (len(prec.shape) != 2) or (prec.shape[0] != prec.shape[1]):
+        raise ValueError("cov must be 2 dimensional and square")
+    if mean.shape[0] != prec.shape[0]:
+        raise ValueError("mean and cov must have same length")
+
+    x = np.random.randn(mean.shape[0])
+    # numpy uses svd, we use eigh
+    (s, v) = np.linalg.eigh(prec)
+
+    x = np.dot(x, np.sqrt(1./s)[:, None] * v.T)
+    x += mean
+    return x
 
 
 def compute_regret(T, seq):
@@ -311,9 +349,7 @@ class PFBayesianRescal:
                     xi += np.sum(X[r_k, mask[r_k] == 1].flatten()[:, np.newaxis] * kron, 0)
 
                 _lambda /= self.var_x
-                inv_lambda = np.linalg.inv(_lambda)
-                mu = np.dot(inv_lambda, xi) / self.var_x
-
+                mu = np.linalg.solve(_lambda, xi) / self.var_x
                 ###################
                 # EXE = np.kron(self.E[p], self.E[p])
                 # _lambda = np.dot(EXE.T, EXE)  # D^2 x D^2
@@ -438,9 +474,8 @@ class PFBayesianRescal:
         # xi /= self.var_x
         # _lambda /= self.var_x
 
-        inv_lambda = np.linalg.inv(_lambda)
-        mu = np.dot(inv_lambda, xi)
-        E[i] = multivariate_normal(mu, inv_lambda)
+        mu = np.linalg.solve(_lambda, xi)
+        E[i] = normal(mu, _lambda)
 
     def _sample_relations(self, X, mask, E, R, var_r):
         EXE = np.kron(E, E)
@@ -462,11 +497,10 @@ class PFBayesianRescal:
             xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1)
 
         _lambda /= self.var_x
-        inv_lambda = np.linalg.inv(_lambda)
-        mu = np.dot(inv_lambda, xi) / self.var_x
+        mu = np.linalg.solve(_lambda, xi) / self.var_x
 
         try:
-            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+            R[k] = normal(mu, _lambda).reshape([self.n_dim, self.n_dim])
         except:
             pass
 
