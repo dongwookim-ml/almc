@@ -47,6 +47,13 @@ def inverse(M):
     inv = np.dot(v.T,np.dot(inv_w,v))
     return inv
 
+def rademacher(n):
+    """Returns a Rademacher random variable of length n"""
+    r = np.random.rand(n)
+    r = np.round(r)
+    r[r==0.] = -1.
+    return r
+
 def normal(mean, prec):
     """Multivariate normal with precision (inverse covariance)
     as a parameter.
@@ -67,11 +74,20 @@ def normal(mean, prec):
     if mean.shape[0] != prec.shape[0]:
         raise ValueError("mean and cov must have same length")
 
-    x = np.random.randn(mean.shape[0])
+    n = mean.shape[0]
+    x = np.random.randn(n)
     # numpy uses svd, we use eigh
     (s, v) = np.linalg.eigh(prec)
-
-    x = np.dot(x, np.sqrt(1./s)[:, None] * v.T)
+    #s = s[::-1]
+    #v = np.flipud((rademacher(mean.shape[0])*v).T)
+    #(u, _s, _v) = np.linalg.svd(prec)
+    #if not np.allclose(s, _s):
+    #    print(s)
+    #    print(_s)
+    #if not np.allclose(np.abs(v), np.abs(_v)):
+    #    print(v)
+    #    print(_v)
+    x = np.dot(x, np.sqrt(1./s)[:, None] * (rademacher(n)*v).T)
     x += mean
     return x
 
