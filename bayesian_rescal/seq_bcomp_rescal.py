@@ -4,7 +4,7 @@ import itertools
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from numpy.random import multivariate_normal, gamma, multinomial
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, roc_auc_score
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def kron_colwise(a, b):
 
 class PFBayesianCompRescal:
     def __init__(self, n_dim, compositionality='additive', n_particles=5,
-                 eval_fn=mean_squared_error, **kwargs):
+                 eval_fn=roc_auc_score, **kwargs):
         """
 
         Parameters
@@ -99,6 +99,7 @@ class PFBayesianCompRescal:
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
         self.dest = kwargs.pop('dest', _DEST)
         self.log = kwargs.pop('log', _LOG)
+        self.eval_log = kwargs.pop('eval_log', _LOG)
 
         if not len(kwargs) == 0:
             raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
@@ -114,7 +115,7 @@ class PFBayesianCompRescal:
         d = dict(self.__dict__)
         return d
 
-    def fit(self, X, obs_mask=None, max_iter=0):
+    def fit(self, X, obs_mask=None, max_iter=0, test_mask=None):
         """
         Running the particle Thompson sampling with predefined parameters.
 
@@ -205,26 +206,33 @@ class PFBayesianCompRescal:
 
         if len(self.log) > 0:
             seq = list()
-            for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter):
+            for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter, test_mask):
                 with open(self.log, 'a') as f:
                     f.write('%d,%d,%d\n' % (idx[0], idx[1], idx[2]))
                 seq.append(idx)
+                if len(self.eval_log) > 0:
+                    p = multinomial(1, self.p_weights).argmax()
+                    test_error = self.eval_fn(X[test_mask==1], self._reconstruct(self.E[p], self.R[p])[test_mask==1])
+                    with open(self.eval_log, 'a') as f:
+                        f.write('%f\n' % (test_error))
+                    logger.info('[TEST_ERROR] %.2f', test_error)
         else:
-            seq = [idx for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter)]
+            seq = [idx for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter, test_mask)]
 
         if len(self.dest) > 0:
             self._save_model(seq)
 
         return seq
 
-    def particle_filter(self, X, cur_obs, mask, max_iter):
+    def particle_filter(self, X, cur_obs, mask, max_iter, test_mask=None):
 
         pop = 0
         for i in range(max_iter):
             tic = time.time()
 
-            next_idx = self.get_next_sample(mask)
+            next_idx = self.get_next_sample(mask, test_mask)
             yield next_idx
+
             cur_obs[next_idx] = X[next_idx]
             mask[next_idx] = 1
             if cur_obs[next_idx] == self.pos_val:
@@ -280,13 +288,20 @@ class PFBayesianCompRescal:
                 if self.compositionality == LOGIT_MUL:
                     cur_obs[cur_obs != 0] = 1
                     mask[self.n_pure_relations + k][np.dot(mask[k1], mask[k2]) != 0] = 1
+                # elif self.compositionality == MULTIPLICATIVE:
+                #     cur_obs[cur_obs != 0] = 1
+                #     mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
                 else:
                     mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
+
             elif next_idx == -1:
                 cur_obs[self.n_pure_relations + k] = np.dot(cur_obs[k1], cur_obs[k2])
                 if self.compositionality == LOGIT_MUL:
                     cur_obs[cur_obs != 0] = 1
                     mask[self.n_pure_relations + k][np.dot(mask[k1], mask[k2]) != 0] = 1
+                # elif self.compositionality == MULTIPLICATIVE:
+                #     cur_obs[cur_obs != 0] = 1
+                #     mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
                 else:
                     mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
 
@@ -323,10 +338,12 @@ class PFBayesianCompRescal:
         self.R = new_R
         self.p_weights = np.ones(self.n_particles) / self.n_particles
 
-    def get_next_sample(self, mask):
+    def get_next_sample(self, mask, test_mask=None):
         p = multinomial(1, self.p_weights).argmax()
         _X = self._reconstruct(self.E[p], self.R[p], False)
         _X[mask[:self.n_pure_relations] == 1] = MIN_VAL
+        if not isinstance(test_mask, type(None)):
+            _X[test_mask == 1] = MIN_VAL
         return np.unravel_index(_X.argmax(), _X.shape)
 
     def _sample_prior(self):

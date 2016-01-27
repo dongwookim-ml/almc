@@ -234,7 +234,7 @@ class AMDC:
 
         return obj
 
-    def do_active_learning(self, T, mask, max_iter, test_t):
+    def do_active_learning(self, T, mask, max_iter, test_t, query_log='', eval_log=''):
         T[T == 0] = -1
         cur_obs = np.zeros_like(T)
         cur_obs[mask == 1] = T[mask == 1]
@@ -268,6 +268,10 @@ class AMDC:
                     idx = np.abs(_T).argmin()
                     next_idx = np.unravel_index(idx, T.shape)
 
+                if len(query_log) > 0:
+                    with open(query_log, 'a') as f:
+                        f.write('%d,%d,%d\n' % (next_idx[0], next_idx[1], next_idx[2]))
+
                 seq.append(next_idx)
 
                 _T[next_idx] = MIN_VAL
@@ -288,7 +292,13 @@ class AMDC:
             log.info('[ITER %d] %d/%d, %.2f', iter, pop, (iter + 1) * pull_size,
                      auc_roc)
 
+            if len(eval_log) > 0:
+                with open(eval_log, 'a') as f:
+                    f.write('%f\n' % auc_roc)
+
             auc_scores.append(auc_roc)
+
+        return seq, auc_scores
 
 
 def test():
