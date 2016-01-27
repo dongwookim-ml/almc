@@ -1,13 +1,15 @@
 __author__ = 'Dongwoo Kim'
 
 import numpy as np
+import logging
 from sklearn.metrics import roc_auc_score
 
-from ..utils.formatted_logger import formatted_logger
-
-log = formatted_logger('AMDC', 'info')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+log = logging.getLogger(__name__)
 
 heaviside = lambda x: 1 if x >= 0 else 0
+MIN_VAL = np.iinfo(np.int32).min
+
 
 class AMDC:
     """
@@ -18,10 +20,10 @@ class AMDC:
     Construction. WWW 2015
     """
 
-    def __init__(self, D, alpha_0=0.1, gamma=0.3, gamma_p=0.9, c_e=5., c_n=1.):
+    def __init__(self, n_dim, alpha_0=0.1, gamma=0.3, gamma_p=0.9, c_e=5., c_n=1., population=False):
         """
 
-        @param D: latent dimension of entity
+        @param n_dim: latent dimension of entity
         @param alpha_0: initial learning rate
         @param gamma: hyperparameter
         @param gamma_p: hyperparameter
@@ -30,41 +32,43 @@ class AMDC:
         @param c_n: hyperparameter, importance of negative samples
         @return:
         """
-        self.D = D
+        self.n_dim = n_dim
         self.alpha_0 = alpha_0
         self.gamma = gamma
         self.gamma_p = gamma_p
         self.c_e = c_e
         self.c_n = c_n
+        self.population = population
 
-    def learn(self, T, p_idx, n_idx, max_iter, e_gap=1):
+    def fit(self, T, p_idx, n_idx, max_iter=100, e_gap=100, A=None, R=None):
         """
         Stochastic gradient descent optimization for AMDC
 
-        @param T: [E x E x K] multi-dimensional array,
+        @param T: [n_entity x n_entity x n_relation] multi-dimensional array,
                 tensor representation of knowledge graph
-                E = number of entities
-                K = number of relationships
+                n_entity = number of entities
+                n_relation = number of relationships
         @param p_idx: index of observed positive triples, all indices are raveled by np.ravel_multi_index
         @param n_idx: index of observed negative triples
         @param max_iter: maximum number of iterations
         @param e_gap: evaluation gap
         @return: A, R, r_error
-                A: [E x D] latent feature vector of entities
-                R: [D x D x K] rotation matrix for each entity
-                D = size of latent dimension
+                A: [n_entity x n_dim] latent feature vector of entities
+                R: [n_dim x n_dim x n_relation] rotation matrix for each entity
+                n_dim = size of latent dimension
                 r_error: list of reconstruction errors at each evaluation point
         """
-        E, K = T.shape[0], T.shape[2]
+        n_entity, n_relation = T.shape[0], T.shape[2]
 
         np_idx = np.setdiff1d(range(np.prod(T.shape)), p_idx)  # not positive index
         nn_idx = np.setdiff1d(range(np.prod(T.shape)), n_idx)  # not negative index
 
-        A = np.random.random([E, self.D]) - 0.5
-        A /= np.linalg.norm(A, ord=2, axis=1)[:, np.newaxis]
-        R = np.zeros([self.D, self.D, K])  # rotation matrices
-        for k in range(K):
-            R[:, :, k] = np.identity(self.D)
+        if isinstance(A, type(None)):
+            A = np.random.random([n_entity, self.n_dim]) - 0.5
+            A /= np.linalg.norm(A, ord=2, axis=1)[:, np.newaxis]
+            R = np.zeros([self.n_dim, self.n_dim, n_relation])  # rotation matrices
+            for k in range(n_relation):
+                R[:, :, k] = np.identity(self.n_dim)
 
         r_error = list()
 
@@ -135,27 +139,29 @@ class AMDC:
             if it >= max_iter:
                 converged = True
 
-            if it % e_gap == 0:
+            if it % e_gap == 0 and it != 0:
                 T_bar = self.reconstruct(A, R)
                 _T = T.copy()
-                _T[_T==-1] = 0
-                T_bar = (T_bar + 1.)/2.
+                _T[_T == -1] = 0
+                T_bar = (T_bar + 1.) / 2.
 
                 err = 0.
-                for k in range(K):
-                    err += roc_auc_score(_T[:,:,k].flatten(),T_bar[:,:,k].flatten())
-                err /= float(K)
+                for k in range(n_relation):
+                    err += roc_auc_score(_T[:, :, k].flatten(), T_bar[:, :, k].flatten())
+                err /= float(n_relation)
 
                 obj = self.evaluate_objfn(A, R, p_idx, n_idx)
 
                 r_error.append((obj, err))
 
-                log.info('Iter %d, ObjectiveFn: %.5f, ROC-AUC: %.5f' % (it, obj, err))
+                log.debug('Iter %d, ObjectiveFn: %.5f, ROC-AUC: %.5f' % (it, obj, err))
+            else:
+                log.debug('Iter %d' % (it))
+
             it += 1
             learning_rate = self.alpha_0 / np.sqrt(it)
 
         return A, R, r_error
-
 
     def reconstruct(self, A, R):
         """
@@ -171,6 +177,16 @@ class AMDC:
             T[:, :, i] = np.dot(np.dot(A, R[:, :, i]), A.T)
 
         return T
+
+    def get_next_sample(self, A, R, mask):
+        T = self.reconstruct(A, R)
+        T[mask == 1] = MIN_VAL
+        if self.population:
+            idx = T.argmax()
+            return np.unravel_index(idx, T.shape), idx
+        else:
+            idx = np.abs(T).argmin()
+            return np.unravel_index(idx, T.shape), idx
 
     def evaluate_objfn(self, A, R, p_idx, n_idx):
         """
@@ -218,6 +234,62 @@ class AMDC:
 
         return obj
 
+    def do_active_learning(self, T, mask, max_iter, test_t):
+        T[T == 0] = -1
+        cur_obs = np.zeros_like(T)
+        cur_obs[mask == 1] = T[mask == 1]
+
+        p_idx = np.ravel_multi_index((cur_obs == 1).nonzero(), T.shape)  # raveled positive index
+        n_idx = np.ravel_multi_index((cur_obs == -1).nonzero(), T.shape)  # raveled negative index
+
+        pop = 0
+        pull_size = 1
+
+        E, K = T.shape[0], T.shape[2]
+        A = np.random.random([E, self.n_dim]) - 0.5
+        A /= np.linalg.norm(A, ord=2, axis=1)[:, np.newaxis]
+        R = np.zeros([self.n_dim, self.n_dim, K])  # rotation matrices
+        for k in range(K):
+            R[:, :, k] = np.identity(self.n_dim)
+
+        seq = list()
+        auc_scores = list()
+
+        for iter in range(max_iter):
+            A, R, _ = self.fit(T, p_idx, n_idx, max_iter=1000, e_gap=1001, A=A, R=R)
+            _T = self.reconstruct(A, R)
+            _T[mask == 1] = MIN_VAL
+            _T[test_t == 1] = MIN_VAL
+            for pull_no in range(pull_size):
+                if self.population:
+                    idx = _T.argmax()
+                    next_idx = np.unravel_index(idx, T.shape)
+                else:
+                    idx = np.abs(_T).argmin()
+                    next_idx = np.unravel_index(idx, T.shape)
+
+                seq.append(next_idx)
+
+                _T[next_idx] = MIN_VAL
+                mask[next_idx] = 1
+                cur_obs[next_idx] = T[next_idx]
+                if cur_obs[next_idx] == 1:
+                    pop += 1
+
+                if T[next_idx] == 1:
+                    p_idx = np.concatenate((p_idx, (idx,)))
+                else:
+                    n_idx = np.concatenate((n_idx, (idx,)))
+
+                log.debug('[NEXT IDX] %s, %d', next_idx, cur_obs[next_idx])
+
+            _T = self.reconstruct(A, R)
+            auc_roc = roc_auc_score(T[test_t == 1], _T[test_t == 1])
+            log.info('[ITER %d] %d/%d, %.2f', iter, pop, (iter + 1) * pull_size,
+                     auc_roc)
+
+            auc_scores.append(auc_roc)
+
 
 def test():
     """
@@ -226,19 +298,25 @@ def test():
     See how the reconstruction error is reduced during training
     """
     from scipy.io.matlab import loadmat
-    mat = loadmat('../data/alyawarradata.mat')
+    mat = loadmat('../data/kinship/alyawarradata.mat')
     T = np.array(mat['Rs'], np.float32)
     T[T == 0] = -1  # set negative value to -1
     E, K = T.shape[0], T.shape[2]
     max_iter = E * E * K * 10
 
-    latent_dimension = 10
+    n_dim = 10
 
-    p_idx = np.ravel_multi_index((T == 1).nonzero(), T.shape)  # raveled positive index
-    n_idx = np.ravel_multi_index((T == -1).nonzero(), T.shape)  # raveled negative index
+    # p_idx = np.ravel_multi_index((T == 1).nonzero(), T.shape)  # raveled positive index
+    # n_idx = np.ravel_multi_index((T == -1).nonzero(), T.shape)  # raveled negative index
+    # model.fit(T, p_idx, n_idx, max_iter, e_gap=10000)
 
-    model = AMDC(latent_dimension)
-    model.learn(T, p_idx, n_idx, max_iter, e_gap=10000)
+    training = np.random.binomial(1., 0.01, T.shape)
+    testing = np.random.binomial(1., 0.5, T.shape)
+    testing[training == 1] = 0
+
+    model = AMDC(n_dim)
+    model.population = True
+    model.do_active_learning(T, training, 15000, testing)
 
 
 if __name__ == '__main__':
