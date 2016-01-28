@@ -82,9 +82,9 @@
 \end{abstract}
 
 \section{Introduction}
-Goal of this paper 1: Populating knowledge graph with an active label acquisition process corresponding to 2[B,C,A] in Figure \ref{fig:related3d}.
+Goal of this paper 1: Populating knowledge graph with an active label acquisition process corresponding to [B,C,A] in Figure \ref{fig:related3d}.
 
-3[B,C,P] could be an alternative direction (or both).
+[B,C,P] could be an alternative direction (or both).
 
 \section{Related Work}
 
@@ -95,16 +95,21 @@ Goal of this paper 1: Populating knowledge graph with an active label acquisitio
 \end{figure}
 
 \begin{itemize}
-\item 0[B,T,A] Thompson sampling. Recommendation with matrix factorisation (not for tensor) \cite{kawale2015efficient}
-\item 1[B,T,P] Bayesian Tensor Factorisation models. CANDECOMP/PARAFAC (CP) decomposition \cite{xiong2010temporal,schmidt2009probabilistic}, CP and TUCKER3 \cite{yilmaz2012algorithms}
-\item 4[N,T,A] Populating knowledge graph with active learning (IBM) \cite{kajino2015active}
-\item 5[N,T,P] Rescal \cite{nickel2011three}, TransE \cite{bordes2013translating}, and many others.
-\item 7[N,C,P] Compositional vector space model \cite{Neelakantan2015}, Path ranking algorithm (graph feature model) \cite{Lao2010}
+\item [B,A,M] Efficient Thompson Sampling for Online￼Matrix-Factorization Recommendation\cite{kawale2015efficient}. Active learning and search on low-rank matrices \cite{sutherland2013active}.
+\item [N,A,M] Matrix completion with queries \cite{ruchansky2015matrix}.
+\item [B, P, M] PMF \cite{mnih2007probabilistic} ...
+\item [N, P, M] NMF\cite{lee1999learning} ...
+\item [B,T,A] ??
+\item [B,T,P] Bayesian Tensor Factorisation models. CANDECOMP/PARAFAC (CP) decomposition \cite{xiong2010temporal,schmidt2009probabilistic}, CP and TUCKER3 \cite{yilmaz2012algorithms}
+\item [N,T,A] Populating knowledge graph with active learning (IBM) \cite{kajino2015active}
+\item [N,T,P] Rescal \cite{nickel2011three}, TransE \cite{bordes2013translating}, and many others.
+\item [N,C,P] Compositional vector space model \cite{Neelakantan2015}, 
 \end{itemize}
 
 Might be relevant, but not positioned in the figure.
 \begin{itemize}
 \item Clustering based Bayesian approach for learning relations: Infinite relational model based on entity clustering \cite{kemp2006learning}.
+\item Path ranking algorithm (graph feature model) \cite{Lao2010}
 \end{itemize}
 
 \section{Bayesian RESCAL}
