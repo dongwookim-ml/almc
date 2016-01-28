@@ -64,7 +64,6 @@ logs/
 *.blg
 *.fls
 *.gz
-*.pdf
 *.fdb_latexmk
 *.out
 result

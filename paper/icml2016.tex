@@ -50,13 +50,12 @@
 
 % The \icmltitle you define below is probably too long as a header.
 % Therefore, a short form for the running title is supplied here:
-\icmltitlerunning{Submission and Formatting Instructions for ICML 2016}
+\icmltitlerunning{Particle Thompson Sampling for Knowledge Base Completion}
 
 \begin{document}
 
 \twocolumn[
-\icmltitle{Submission and Formatting Instructions for \\
-           International Conference on Machine Learning (ICML 2016)}
+\icmltitle{Particle Thompson Sampling for Knowledge Base Completion}
 
 % It is OKAY to include author information, even for blind
 % submissions: the style file will automatically remove it for you
@@ -72,7 +71,7 @@
 % You may provide any keywords that you
 % find helpful for describing your paper; these are used to populate
 % the "keywords" metadata in the PDF but will not be shown in the document
-\icmlkeywords{boring formatting information, machine learning, ICML}
+\icmlkeywords{machine learning, ICML}
 
 \vskip 0.3in
 ]
@@ -90,7 +89,7 @@ Goal of this paper 1: Populating knowledge graph with an active label acquisitio
 
 \begin{figure}[t]
 	\centering
-	\includegraphics[width=0.9\linewidth]{images/3d_plot.pdf}			
+	\includegraphics[width=\linewidth]{images/3d_plot.pdf}			
 	\caption{\label{fig:related3d}Scope of our work}
 \end{figure}
 
@@ -128,6 +127,14 @@ For each triple $(i,k,j)$, we draw $x_{ikj}$
 x_{ikj} |e_i, e_j, R_k &\sim \mathcal{MN}(e_i^{\top} R_k e_j, \sigma_x^2)\\
 & = \mathcal{N}(r_k^{\top} e_i \otimes e_j, \sigma_x^2)
 \end{align}
+
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\linewidth]{images/rescal_vs_brescal.pdf}			
+	\caption{\label{fig:r_vs_br} ROC-AUC scores on three different datasets. BRESCAL and BLOGIT represent Bayesian RESCAL and Bayesian RESCAL with logistic regression outputs, respectively. BRESCAL consistently outperforms RESCAL across all datasets.}
+\end{figure}
+
 
 %For binary valued triples (Logistic regression):
 %\begin{align}
@@ -243,6 +250,15 @@ w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)} = 
 
 \section{Compositional Relations}
 
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\linewidth]{images/comp_training_error_kinship.pdf}
+	\includegraphics[width=\linewidth]{images/comp_training_error_umls.pdf}			
+	\includegraphics[width=\linewidth]{images/comp_training_error_nation.pdf}				
+	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. The x-axis denotes the proportion of an observed triples including negative triples used for training models. We  use another 30\% of triples to evaluate the ROC-AUC score. In general, compositional models outperform BRESCAL and BLOGIT model when the size of training set is relatively small, whereas BRESCAL and BLOGIT perform slightly better than or comparable to the compositional models when the size of training set is relatively large. For UMLS dataset, the multiplicative compositional model consistently outperforms the other models across all training proportions.}
+\end{figure}
+
+
 From two triples:
 $(i, k_1 ,j)$,  $(j, k_2, l)$
 
@@ -331,6 +347,10 @@ where
 
 Thoughts: As the length of sequence $c$ increases, a small error in the first few multiplication will result a large differences in the final compositional relation. One way to mitigate this cascading error is to increase the variance of compositional triples as length of sequences increase.
 
+\section{Experiments}
+\subsection{Synthetic data}
+\subsection{Real world data}
+
 \section{Unstructured thoughts}
 
 \begin{description}
@@ -362,14 +382,14 @@ Thoughts: As the length of sequence $c$ increases, a small error in the first fe
 
 \begin{table}
 \centering
-\caption{\label{tbl:dataset}Description of datasets}
+\caption{\label{tbl:dataset}Description of datasets.}
 \begin{tabular}{l | r | r | r | r}
 Dataset &  \# rel & \# entities & \# triples & sparsity \\ \hline
 Kinship & 26 & 104  & 10,790 & 0.038 \\
 UMLS & 49 &135  & 6,752 & 0.008 \\
 Nation & 56 & 14  & 2,024 & 0.184 \\
-Wordnet & 11 & 38,696  &123,429 & 7.5e-06\\
-Wordnet(N) & 10 & 836 & 1,766 & 2.5e-04\\
+%Wordnet & 11 & 38,696  &123,429 & 7.5e-06\\
+%Wordnet(N) & 10 & 836 & 1,766 & 2.5e-04\\
 \end{tabular}
 \end{table}
 
