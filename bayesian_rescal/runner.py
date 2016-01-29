@@ -52,13 +52,8 @@ if __name__ == '__main__':
     # destination folder where model and log files are saved
     dest = '../result/%s/%s/' % (dataset, model)
 
-
-    if dataset == 'kinship' or dataset == 'nation':
-        p_obs = 0.01
-        p_test = 0.3
-    elif dataset == 'umls':
-        p_obs = 0.05
-        p_test = 0.3
+    p_obs = 0.00
+    p_test = 0.3
 
     file = '../data/%s/train_test_%.3f_%.3f_%d.pkl' % (dataset, p_obs, p_test, nt)
 
@@ -68,13 +63,13 @@ if __name__ == '__main__':
         os.makedirs(dest, exist_ok=True)
 
     if model == 'brescal':
-        model_file = os.path.join(dest, 'sRESCAL_varx_%.2f_dim_%d_par_%d_test_%d.pkl' % (
+        model_file = os.path.join(dest, 'train_test_varx_%.2f_dim_%d_par_%d_test_%d.pkl' % (
             var_x, n_dim, n_particle, nt))
     elif model == 'logit':
-        model_file = os.path.join(dest, 'sRESCAL_dim_%d_par_%d_test_%d.pkl' % (
+        model_file = os.path.join(dest, 'train_test_dim_%d_par_%d_test_%d.pkl' % (
             n_dim, n_particle, nt))
     else:
-        model_file = os.path.join(dest, 'sRESCAL_var_%.2f_%.2f_dim_%d_par_%d_test_%d.pkl' % (
+        model_file = os.path.join(dest, 'train_test_var_%.2f_%.2f_dim_%d_par_%d_test_%d.pkl' % (
             var_x, var_comp, n_dim, n_particle, nt))
 
     if not os.path.exists(model_file):
@@ -88,7 +83,7 @@ if __name__ == '__main__':
 
         if model == 'brescal':
             _model = PFBayesianRescal(n_dim, var_x=var_x, n_particles=n_particle, compute_score=False, parallel=False,
-                                      log=log, dest=model_file, sample_all=True)
+                                      log=log, eval_log=eval_log, dest=model_file, sample_all=True)
         elif model == 'bcomp_add':
             _model = PFBayesianCompRescal(n_dim, compositionality='additive', var_x=var_x, var_comp=var_comp,
                                           n_particles=n_particle, compute_score=False, log=log, dest=model_file,

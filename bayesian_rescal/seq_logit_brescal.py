@@ -154,9 +154,6 @@ class PFBayesianLogitRescal:
         self.features = np.zeros([2 * self.n_entities * self.n_relations, self.n_dim])
         self.Y = np.zeros([2 * self.n_entities * self.n_relations])
 
-        if max_iter == 0:
-            max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask))
-
         if self.gibbs_init and np.sum(self.obs_sum) != 0:
             # initialize latent variables with gibbs sampling
             E = np.random.random([self.n_entities, self.n_dim])

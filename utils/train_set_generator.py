@@ -7,8 +7,8 @@ from scipy.io.matlab import loadmat
 from scipy.sparse import csr_matrix
 
 if __name__ == '__main__':
-    dataset = 'umls'
-    p_obs = 0.05
+    dataset = 'nation'
+    p_obs = 0.00
     p_test = 0.3
     dest = '../data/%s/' % (dataset)
     include_negative = True
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
         mask = np.random.binomial(1, p_obs, T.shape)
         test_mask = np.random.binomial(1, p_test, T.shape)
-        test_mask[mask==1] = 0
+        test_mask[mask == 1] = 0
 
         with open(os.path.join(dest, file_name), 'wb') as f:
             pickle.dump([mask, test_mask], f)

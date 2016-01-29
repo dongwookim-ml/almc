@@ -72,12 +72,20 @@ class AMDC:
 
         r_error = list()
 
+        if len(p_idx) == 0 and len(n_idx) == 0:
+            return A, R, r_error
+
         it = 0
         converged = False
         learning_rate = self.alpha_0
         while not converged:
+            selector = np.random.randint(100) % 2
+            if len(p_idx) == 0:
+                selector = 0
+            elif len(n_idx) == 0:
+                selector = 1
 
-            if np.random.randint(100) % 2 == 0:
+            if selector:
                 next_idx = np.random.randint(len(p_idx))
                 next_np_idx = np.random.randint(len(np_idx))
 

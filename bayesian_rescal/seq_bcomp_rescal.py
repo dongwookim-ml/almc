@@ -27,7 +27,7 @@ _LOGIT_SOLVER = 'lbfgs'  # {'newton-cg', 'lbfgs', 'liblinear', 'sag'}
 
 _VAR_E = 1.
 _VAR_R = 1.
-_VAR_X = 0.1
+_VAR_X = 0.01
 _VAR_COMP = 10.
 
 _DEST = ''
@@ -113,6 +113,13 @@ class PFBayesianCompRescal:
 
     def __getstate__(self):
         d = dict(self.__dict__)
+        del d['features']
+        del d['xi']
+        del d['RE']
+        del d['RTE']
+        del d['_R']
+        del d['kron']
+        del d['y']
         return d
 
     def fit(self, X, obs_mask=None, max_iter=0, test_mask=None):
@@ -152,8 +159,8 @@ class PFBayesianCompRescal:
         self.xi = np.zeros([2 * self.n_entities * self.n_relations])
         self.RE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
         self.RTE = np.zeros([self.n_relations, self.n_entities, self.n_dim])
-        self.kron = np.zeros([self.n_relations * self.n_entities ** 2, self.n_dim ** 2])
-        self.y = np.zeros([self.n_relations * self.n_entities ** 2])
+        self.kron = np.zeros([self.n_relations * self.n_entities, self.n_dim ** 2])
+        self.y = np.zeros([self.n_relations * self.n_entities])
 
         if isinstance(obs_mask, type(None)):
             # observation mask
@@ -180,7 +187,7 @@ class PFBayesianCompRescal:
 
         max_possible_iter = int(np.prod([self.n_pure_relations, self.n_entities, self.n_entities]) - np.sum(
                 obs_mask[:self.n_pure_relations]))
-        if max_iter == 0 or max_iter > max_possible_iter:
+        if max_iter > max_possible_iter:
             max_iter = max_possible_iter
 
         cur_obs[cur_obs.nonzero()] = 1

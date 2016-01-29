@@ -5,7 +5,7 @@ import numpy as np
 import scipy as sp
 import concurrent.futures
 from numpy.random import multivariate_normal, gamma, multinomial
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, roc_auc_score
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -28,9 +28,10 @@ _SAMPLE_ALL = True
 
 _VAR_E = 1.
 _VAR_R = 1.
-_VAR_X = 0.1
+_VAR_X = 0.01
 
 _DEST = ''
+_LOG = ''
 
 a = 0.001
 b = 0.01
@@ -135,7 +136,7 @@ def load_and_run(path, T, max_iter):
 class PFBayesianRescal:
     def __init__(self, n_dim, compute_score=True, sample_prior=False, rbp=False,
                  obs_var=.01, unobs_var=10., n_particles=5, selection='Thompson',
-                 eval_fn=mean_squared_error, log="", **kwargs):
+                 eval_fn=roc_auc_score, **kwargs):
         """
 
         Parameters
@@ -197,6 +198,8 @@ class PFBayesianRescal:
         self.mc_move = kwargs.pop('mc_move', _MC_MOVE)
         self.pos_val = kwargs.pop('pos_val', _POS_VAL)
         self.dest = kwargs.pop('dest', _DEST)
+        self.log = kwargs.pop('log', _LOG)
+        self.eval_log = kwargs.pop('eval_log', _LOG)
 
         if not len(kwargs) == 0:
             raise ValueError('Unknown keywords (%s)' % (kwargs.keys()))
@@ -212,13 +215,15 @@ class PFBayesianRescal:
         self.var_e = np.ones(self.n_particles) * self._var_e
         self.var_r = np.ones(self.n_particles) * self._var_r
 
-        self.log = log
-
     def __getstate__(self):
         d = dict(self.__dict__)
+        del d['features']
+        del d['xi']
+        del d['RE']
+        del d['RTE']
         return d
 
-    def fit(self, X, obs_mask=None, max_iter=0):
+    def fit(self, X, obs_mask=None, max_iter=100, test_mask=None):
         """
         Running the particle Thompson sampling with predefined parameters.
 
@@ -228,7 +233,7 @@ class PFBayesianRescal:
             Fully observed tensor with shape (n_relations, n_entities, n_entities)
         obs_mask : numpy.ndarray, default=None
             Mask tensor of observed triples
-        max_iter : int, default=0
+        max_iter : int, default=100
             Maximum number of iterations for particle Thompson sampling
         Returns
         -------
@@ -258,10 +263,7 @@ class PFBayesianRescal:
         self.features = np.zeros([2 * self.n_entities * self.n_relations, self.n_dim])
         self.xi = np.zeros([2 * self.n_entities * self.n_relations])
 
-        if max_iter == 0:
-            max_iter = int(np.prod([self.n_relations, self.n_entities, self.n_entities]) - np.sum(obs_mask))
-
-        cur_obs[cur_obs.nonzero()] = 1
+        # cur_obs[cur_obs.nonzero()] = 1
         if self.gibbs_init and np.sum(self.obs_sum) != 0:
             # initialize latent variables with gibbs sampling
             E = np.random.random([self.n_entities, self.n_dim])
@@ -284,10 +286,17 @@ class PFBayesianRescal:
 
         if len(self.log) > 0:
             seq = list()
-            for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter):
+            for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter, test_mask):
                 with open(self.log, 'a') as f:
                     f.write('%d,%d,%d\n' % (idx[0], idx[1], idx[2]))
                 seq.append(idx)
+                if len(self.eval_log) > 0:
+                    p = multinomial(1, self.p_weights).argmax()
+                    test_error = self.eval_fn(X[test_mask == 1],
+                                              self._reconstruct(self.E[p], self.R[p])[test_mask == 1])
+                    with open(self.eval_log, 'a') as f:
+                        f.write('%f\n' % (test_error))
+                    logger.info('[TEST_ERROR] %.2f', test_error)
         else:
             seq = [idx for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter)]
 
@@ -296,20 +305,20 @@ class PFBayesianRescal:
 
         return seq
 
-    def particle_filter(self, X, cur_obs, mask, max_iter):
+    def particle_filter(self, X, cur_obs, mask, max_iter, test_mask=None):
 
         pop = 0
         for i in range(max_iter):
             tic = time.time()
 
-            next_idx = self.get_next_sample(mask)
+            next_idx = self.get_next_sample(mask, test_mask)
             yield next_idx
             cur_obs[next_idx] = X[next_idx]
             mask[next_idx] = 1
             if X[next_idx] == self.pos_val:
                 pop += 1
 
-            cur_obs[cur_obs.nonzero()] = 1
+            # cur_obs[cur_obs.nonzero()] = 1
 
             logger.info('[NEXT] %s: %.3f, population: %d/%d', str(next_idx), X[next_idx], pop,
                         (i + 1))
@@ -317,7 +326,7 @@ class PFBayesianRescal:
             self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
             self.p_weights /= np.sum(self.p_weights)
 
-            cur_obs[cur_obs.nonzero()] = 1
+            # cur_obs[cur_obs.nonzero()] = 1
             self.obs_sum = np.sum(np.sum(mask, 1), 1)
 
             ESS = 1. / np.sum((self.p_weights ** 2))
@@ -407,11 +416,13 @@ class PFBayesianRescal:
         self.R = new_R
         self.p_weights = np.ones(self.n_particles) / self.n_particles
 
-    def get_next_sample(self, mask):
+    def get_next_sample(self, mask, test_mask=None):
         if self.selection == 'Thompson':
             p = multinomial(1, self.p_weights).argmax()
             _X = self._reconstruct(self.E[p], self.R[p])
             _X[mask[:self.n_relations] == 1] = MIN_VAL
+            if not isinstance(test_mask, type(None)):
+                _X[test_mask == 1] = MIN_VAL
             return np.unravel_index(_X.argmax(), _X.shape)
 
         elif self.selection == 'Random':
@@ -493,8 +504,12 @@ class PFBayesianRescal:
         # xi /= self.var_x
         # _lambda /= self.var_x
 
-        mu = np.linalg.solve(_lambda, xi)
-        E[i] = normal(mu, _lambda)
+        # mu = np.linalg.solve(_lambda, xi)
+        # E[i] = normal(mu, _lambda)
+
+        inv_lambda = np.linalg.inv(_lambda)
+        mu = np.dot(inv_lambda, xi)
+        E[i] = multivariate_normal(mu, inv_lambda)
 
     def _sample_relations(self, X, mask, E, R, var_r):
         EXE = np.kron(E, E)
@@ -516,10 +531,13 @@ class PFBayesianRescal:
             xi += np.sum(X[k, mask[k] == 1].flatten() * kron.T, 1)
 
         _lambda /= self.var_x
-        mu = np.linalg.solve(_lambda, xi) / self.var_x
+        # mu = np.linalg.solve(_lambda, xi) / self.var_x
 
+        inv_lambda = np.linalg.inv(_lambda)
+        mu = np.dot(inv_lambda, xi)
         try:
-            R[k] = normal(mu, _lambda).reshape([self.n_dim, self.n_dim])
+            # R[k] = normal(mu, _lambda).reshape([self.n_dim, self.n_dim])
+            R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
         except:
             pass
 

@@ -24,7 +24,7 @@ def load_dataset(dataset):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 8:
+    if len(sys.argv) != 7:
         print('usage: python runner.py model dataset n_dim p_obs p_test max_iter')
         raise Exception()
 
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     n_dim = int(sys.argv[3])
     p_obs = float(sys.argv[4])
     p_test = float(sys.argv[5])
-    max_iter = int(sys.argv[7])
+    max_iter = int(sys.argv[6])
     n_test = 10
 
     for nt in range(n_test):
