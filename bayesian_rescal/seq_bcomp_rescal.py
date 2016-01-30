@@ -162,6 +162,11 @@ class PFBayesianCompRescal:
         self.kron = np.zeros([self.n_relations * self.n_entities, self.n_dim ** 2])
         self.y = np.zeros([self.n_relations * self.n_entities])
 
+        self.mask_r = np.zeros([2, self.n_entities, self.n_relations * self.n_entities], dtype=int)
+        self.mask_c = np.zeros([2, self.n_entities, self.n_relations * self.n_entities], dtype=int)
+        self.nnz_r = np.zeros(self.n_entities, dtype=int)
+        self.nnz_c = np.zeros(self.n_entities, dtype=int)
+
         if isinstance(obs_mask, type(None)):
             # observation mask
             obs_mask = np.zeros_like(expand_X)
@@ -186,11 +191,25 @@ class PFBayesianCompRescal:
         del expand_X
 
         max_possible_iter = int(np.prod([self.n_pure_relations, self.n_entities, self.n_entities]) - np.sum(
-                obs_mask[:self.n_pure_relations]))
+            obs_mask[:self.n_pure_relations]))
         if max_iter > max_possible_iter:
             max_iter = max_possible_iter
 
         cur_obs[cur_obs.nonzero()] = 1
+
+        for i in range(self.n_entities):
+            nz = obs_mask[:, i, :].nonzero()
+            nnz = nz[0].size
+            self.mask_r[0, i, :nnz] = nz[0]
+            self.mask_r[1, i, :nnz] = nz[1]
+            self.nnz_r[i] = nnz
+
+            nz = obs_mask[:, :, i].nonzero()
+            nnz = nz[0].size
+            self.mask_c[0, i, :nnz] = nz[0]
+            self.mask_c[1, i, :nnz] = nz[1]
+            self.nnz_c[i] = nnz
+
         if self.gibbs_init and np.sum(self.obs_sum) != 0:
             # initialize latent variables with gibbs sampling
             E = np.random.random([self.n_entities, self.n_dim])
@@ -219,7 +238,8 @@ class PFBayesianCompRescal:
                 seq.append(idx)
                 if len(self.eval_log) > 0:
                     p = multinomial(1, self.p_weights).argmax()
-                    test_error = self.eval_fn(X[test_mask==1], self._reconstruct(self.E[p], self.R[p])[test_mask==1])
+                    test_error = self.eval_fn(X[test_mask == 1],
+                                              self._reconstruct(self.E[p], self.R[p])[test_mask == 1])
                     with open(self.eval_log, 'a') as f:
                         f.write('%f\n' % (test_error))
                     logger.info('[TEST_ERROR] %.2f', test_error)
@@ -239,6 +259,15 @@ class PFBayesianCompRescal:
 
             next_idx = self.get_next_sample(mask, test_mask)
             yield next_idx
+            r_k, e_i, e_j = next_idx
+
+            self.mask_r[0, e_i, self.nnz_r[e_i]] = r_k
+            self.mask_r[1, e_i, self.nnz_r[e_i]] = e_j
+            self.nnz_r[e_i] += 1
+
+            self.mask_c[0, e_j, self.nnz_c[e_j]] = r_k
+            self.mask_c[1, e_j, self.nnz_c[e_j]] = e_i
+            self.nnz_c[e_j] += 1
 
             cur_obs[next_idx] = X[next_idx]
             mask[next_idx] = 1
@@ -295,20 +324,29 @@ class PFBayesianCompRescal:
                 if self.compositionality == LOGIT_MUL:
                     cur_obs[cur_obs != 0] = 1
                     mask[self.n_pure_relations + k][np.dot(mask[k1], mask[k2]) != 0] = 1
-                # elif self.compositionality == MULTIPLICATIVE:
-                #     cur_obs[cur_obs != 0] = 1
-                #     mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
                 else:
+                    prev_mask = mask[self.n_pure_relations + k].copy()
+
                     mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
+
+                    nz = (mask[self.n_pure_relations + k] - prev_mask).nonzero()
+                    nnz = nz[0].size
+                    for _i in range(nnz):
+                        e_i = nz[0][_i]
+                        e_j = nz[1][_i]
+                        self.mask_r[0, e_i, self.nnz_r[e_i]] = self.n_pure_relations + k
+                        self.mask_r[1, e_i, self.nnz_r[e_i]] = e_j
+                        self.nnz_r[e_i] += 1
+
+                        self.mask_c[0, e_j, self.nnz_c[e_j]] = self.n_pure_relations + k
+                        self.mask_c[1, e_j, self.nnz_c[e_j]] = e_i
+                        self.nnz_c[e_j] += 1
 
             elif next_idx == -1:
                 cur_obs[self.n_pure_relations + k] = np.dot(cur_obs[k1], cur_obs[k2])
                 if self.compositionality == LOGIT_MUL:
                     cur_obs[cur_obs != 0] = 1
                     mask[self.n_pure_relations + k][np.dot(mask[k1], mask[k2]) != 0] = 1
-                # elif self.compositionality == MULTIPLICATIVE:
-                #     cur_obs[cur_obs != 0] = 1
-                #     mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
                 else:
                     mask[self.n_pure_relations + k][cur_obs[self.n_pure_relations + k] != 0] = 1
 
@@ -421,8 +459,14 @@ class PFBayesianCompRescal:
         E[i] = np.random.normal(mu, inv_lambda)
 
     def _sample_entity(self, X, mask, E, i, var_e, RE, RTE):
-        nz_r = mask[:, i, :].nonzero()
-        nz_c = mask[:, :, i].nonzero()
+        # nz_r = mask[:, i, :].nonzero()
+        # nz_c = mask[:, :, i].nonzero()
+        # nnz_r = nz_r[0].size
+        # nnz_c = nz_c[0].size
+        # nnz_all = nnz_r + nnz_c
+
+        nz_r = (self.mask_r[0, i][:self.nnz_r[i]], self.mask_r[1, i][:self.nnz_r[i]])
+        nz_c = (self.mask_c[0, i][:self.nnz_c[i]], self.mask_c[1, i][:self.nnz_c[i]])
         nnz_r = nz_r[0].size
         nnz_c = nz_c[0].size
         nnz_all = nnz_r + nnz_c
@@ -439,6 +483,25 @@ class PFBayesianCompRescal:
 
         inv_lambda = np.linalg.inv(_lambda)
         mu = np.dot(inv_lambda, xi)
+
+        # test_feature = np.zeros([self.nnz_r[i] + self.nnz_c[i], self.n_dim])
+        # if self.nnz_r[i] != 0:
+        #     test_feature[:self.nnz_r[i]] = RE[(self.mask_r[0, i][:self.nnz_r[i]], self.mask_r[1, i][:self.nnz_r[i]])]
+        # if self.nnz_c[i] != 0:
+        #     test_feature[self.nnz_r[i]:self.nnz_r[i] + self.nnz_c[i]] = RTE[(self.mask_c[0, i][:self.nnz_c[i]], self.mask_c[1, i][:self.nnz_c[i]])]
+        # test_lambda = np.identity(self.n_dim) / var_e
+        # test_lambda += np.dot(test_feature.T, test_feature) / self.var_x
+        # test_xi = np.zeros(self.nnz_r[i] + self.nnz_c[i])
+        # test_xi[:self.nnz_r[i]] = X[:, i, :][(self.mask_r[0, i][:self.nnz_r[i]], self.mask_r[1, i][:self.nnz_r[i]])]
+        # test_xi[self.nnz_r[i]:self.nnz_r[i]+self.nnz_c[i]] = X[:, :, i][(self.mask_c[0, i][:self.nnz_c[i]], self.mask_c[1, i][:self.nnz_c[i]])]
+        #
+        # test_xi = test_xi * test_feature.T / self.var_x
+        # test_xi = np.sum(test_xi, 1)
+        #
+        # test_inv_lambda = np.linalg.inv(test_lambda)
+        # test_mu = np.dot(test_inv_lambda, test_xi)
+        #
+        # assert np.allclose(mu, test_mu)
 
         try:
             E[i] = multivariate_normal(mu, inv_lambda)
