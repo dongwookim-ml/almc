@@ -23,7 +23,6 @@ _MC_MOVE = 1
 _SGLD = False
 _NMINI = 1
 _GIBBS_INIT = True
-_COMP = False
 _SAMPLE_ALL = True
 
 _VAR_E = 1.
@@ -478,31 +477,11 @@ class PFBayesianRescal:
         self.features[nnz_r:nnz_all] = RTE[nz_c]
         self.xi[:nnz_r] = X[:, i, :][nz_r]
         self.xi[nnz_r:nnz_all] = X[:, :, i][nz_c]
-        _xi = self.xi[:nnz_all] * self.features[:nnz_all].T / self.var_x
-        xi = np.sum(_xi, 1)
+        _xi = self.xi[:nnz_all] * self.features[:nnz_all].T
+        xi = np.sum(_xi, 1) / self.var_x
 
         _lambda = np.identity(self.n_dim) / var_e
         _lambda += np.dot(self.features[:nnz_all].T, self.features[:nnz_all]) / self.var_x
-
-        # _lambda = np.identity(self.n_dim) / var_e
-        # xi = np.zeros(self.n_dim)
-        #
-        # for k in self.obs_sum.nonzero()[0]:
-        #     # RE[k][i] *= 0
-        #     # RTE[k][i] *= 0
-        #     tmp = RE[k][mask[k, i, :] == 1]  # ExD
-        #     tmp2 = RTE[k][mask[k, :, i] == 1]
-        #     if tmp.shape[0] != 0:
-        #         xi += np.sum(X[k, i, mask[k, i, :] == 1] * tmp.T, 1) / self.var_x
-        #         _lambda += np.dot(tmp.T, tmp) / self.var_x
-        #     if tmp2.shape[0] != 0:
-        #         xi += np.sum(X[k, mask[k, :, i] == 1, i] * tmp2.T, 1) / self.var_x
-        #         _lambda += np.dot(tmp2.T, tmp2) / self.var_x
-        #
-        # assert np.allclose(xi2, xi)
-        # assert np.allclose(_lambda2, _lambda)
-        # xi /= self.var_x
-        # _lambda /= self.var_x
 
         # mu = np.linalg.solve(_lambda, xi)
         # E[i] = normal(mu, _lambda)
@@ -534,7 +513,7 @@ class PFBayesianRescal:
         # mu = np.linalg.solve(_lambda, xi) / self.var_x
 
         inv_lambda = np.linalg.inv(_lambda)
-        mu = np.dot(inv_lambda, xi)
+        mu = np.dot(inv_lambda, xi) / self.var_x
         try:
             # R[k] = normal(mu, _lambda).reshape([self.n_dim, self.n_dim])
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
