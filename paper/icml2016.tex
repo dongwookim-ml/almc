@@ -131,11 +131,11 @@ x_{ikj} |e_i, e_j, R_k &\sim \mathcal{MN}(e_i^{\top} R_k e_j, \sigma_x^2)\\
 \end{align}
 
 
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=\linewidth]{images/rescal_vs_brescal.pdf}			
-	\caption{\label{fig:r_vs_br} ROC-AUC scores on three different datasets. BRESCAL and BLOGIT represent Bayesian RESCAL and Bayesian RESCAL with logistic regression outputs, respectively. BRESCAL consistently outperforms RESCAL across all datasets.}
-\end{figure}
+%\begin{figure}[t]
+%	\centering
+%	\includegraphics[width=\linewidth]{images/rescal_vs_brescal.pdf}			
+%	\caption{\label{fig:r_vs_br} ROC-AUC scores on three different datasets. BRESCAL and BLOGIT represent Bayesian RESCAL and Bayesian RESCAL with logistic regression outputs, respectively. BRESCAL consistently outperforms RESCAL across all datasets.}
+%\end{figure}
 
 
 %For binary valued triples (Logistic regression):
@@ -254,9 +254,9 @@ w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)} = 
 
 \begin{figure}[t]
 	\centering
-	\includegraphics[width=\linewidth]{images/comp_training_error_kinship.pdf}
-	\includegraphics[width=\linewidth]{images/comp_training_error_umls.pdf}			
-	\includegraphics[width=\linewidth]{images/comp_training_error_nation.pdf}				
+	\includegraphics[width=\linewidth]{images/comp_training_error_kinship_small.pdf}
+	\includegraphics[width=\linewidth]{images/comp_training_error_umls_small.pdf}			
+	\includegraphics[width=\linewidth]{images/comp_training_error_nation_small.pdf}				
 	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. The x-axis denotes the proportion of an observed triples including negative triples used for training models. We  use another 30\% of triples to evaluate the ROC-AUC score. In general, compositional models outperform BRESCAL and BLOGIT model when the size of training set is relatively small, whereas BRESCAL and BLOGIT perform slightly better than or comparable to the compositional models when the size of training set is relatively large. For UMLS dataset, the multiplicative compositional model consistently outperforms the other models across all training proportions.}
 \end{figure}
 
