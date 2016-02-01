@@ -49,7 +49,7 @@ if __name__ == '__main__':
         test_mask = np.swapaxes(test_mask, 0, 1)
         test_mask = np.swapaxes(test_mask, 1, 2)
 
-        dest = '../result/%s/amdc/' % (dataset)
+        dest = '../result/%s/amdc_pn/' % (dataset)
         if not os.path.exists(dest):
             os.makedirs(dest, exist_ok=True)
 
@@ -65,4 +65,4 @@ if __name__ == '__main__':
 
         query_log = os.path.join(dest, log)
         auc_log = os.path.join(dest, log2)
-        amdc.do_active_learning(T, train_mask, max_iter, test_mask, query_log, auc_log)
+        amdc.do_active_learning(T, train_mask, max_iter, test_mask, query_log, auc_log, obs_only=True)

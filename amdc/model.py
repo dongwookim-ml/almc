@@ -40,7 +40,7 @@ class AMDC:
         self.c_n = c_n
         self.population = population
 
-    def fit(self, T, p_idx, n_idx, max_iter=100, e_gap=100, A=None, R=None):
+    def fit(self, T, p_idx, n_idx, max_iter=100, e_gap=100, A=None, R=None, obs_only=False):
         """
         Stochastic gradient descent optimization for AMDC
 
@@ -52,6 +52,8 @@ class AMDC:
         @param n_idx: index of observed negative triples
         @param max_iter: maximum number of iterations
         @param e_gap: evaluation gap
+        @param obs_only: When this parameter is True, the stochastic gradient step uses the
+                observed positive and negative triples only.
         @return: A, R, r_error
                 A: [n_entity x n_dim] latent feature vector of entities
                 R: [n_dim x n_dim x n_relation] rotation matrix for each entity
@@ -79,58 +81,84 @@ class AMDC:
         converged = False
         learning_rate = self.alpha_0
         while not converged:
-            selector = np.random.randint(100) % 2
-            if len(p_idx) == 0:
-                selector = 0
-            elif len(n_idx) == 0:
-                selector = 1
+            if not obs_only:
+                selector = np.random.randint(100) % 2
+                if len(p_idx) == 0:
+                    selector = 0
+                elif len(n_idx) == 0:
+                    selector = 1
 
-            if selector:
-                next_idx = np.random.randint(len(p_idx))
-                next_np_idx = np.random.randint(len(np_idx))
+                if selector:
+                    next_idx = np.random.randint(len(p_idx))
+                    next_np_idx = np.random.randint(len(np_idx))
 
-                i, j, k = np.unravel_index(p_idx[next_idx], T.shape)
-                i_bar, j_bar, k_bar = np.unravel_index(np_idx[next_np_idx], T.shape)
+                    i, j, k = np.unravel_index(p_idx[next_idx], T.shape)
+                    i_bar, j_bar, k_bar = np.unravel_index(np_idx[next_np_idx], T.shape)
+
+                    I_1 = heaviside(self.gamma - np.dot(np.dot(A[i], R[:, :, k]), A[j])
+                                    + np.dot(np.dot(A[i_bar], R[:, :, k_bar]), A[j_bar]))
+                    I_2 = heaviside(self.gamma_p - np.dot(np.dot(A[i], R[:, :, k]), A[j]))
+
+                    # updating parameters
+                    if I_1 != 0 or I_2 != 0:
+                        a_i, a_j, r_k = A[i].copy(), A[j].copy(), R[:, :, k].copy()
+                        A[i] -= learning_rate * (-(I_1 + I_2 * self.c_e) * np.dot(r_k, a_j))
+                        A[j] -= learning_rate * (-(I_1 + I_2 * self.c_e) * np.dot(r_k.T, a_i))
+                        R[:, :, k] -= learning_rate * (-(I_1 + I_2 * self.c_e) * np.outer(a_i, a_j))
+
+                    if I_1 != 0:
+                        a_i_bar, a_j_bar, r_k_bar = A[i_bar].copy(), A[j_bar].copy(), R[:, :, k_bar].copy()
+                        A[i_bar] -= learning_rate * (I_1 * np.dot(r_k_bar, a_j_bar))
+                        A[j_bar] -= learning_rate * (I_1 * np.dot(r_k_bar.T, a_i_bar))
+                        R[:, :, k_bar] -= learning_rate * (I_1 * np.outer(a_i_bar, a_j_bar))
+
+                else:
+                    next_idx = np.random.randint(len(n_idx))
+                    next_nn_idx = np.random.randint(len(nn_idx))
+
+                    i, j, k = np.unravel_index(n_idx[next_idx], T.shape)
+                    i_bar, j_bar, k_bar = np.unravel_index(nn_idx[next_nn_idx], T.shape)
+
+                    I_3 = heaviside(self.gamma + np.dot(np.dot(A[i], R[:, :, k]), A[j])
+                                    - np.dot(np.dot(A[i_bar], R[:, :, k_bar]), A[j_bar]))
+                    I_4 = heaviside(self.gamma_p + np.dot(np.dot(A[i], R[:, :, k]), A[j]))
+
+                    if I_3 != 0 or I_4 != 0:
+                        a_i, a_j, r_k = A[i].copy(), A[j].copy(), R[:, :, k].copy()
+                        A[i] -= learning_rate * ((I_3 * self.c_n + I_4 * self.c_e) * np.dot(r_k, a_j))
+                        A[j] -= learning_rate * ((I_3 * self.c_n + I_4 * self.c_e) * np.dot(r_k.T, a_i))
+                        R[:, :, k] -= learning_rate * ((I_3 * self.c_n + I_4 * self.c_e) * np.outer(a_i, a_j))
+
+                    if I_3 != 0:
+                        a_i_bar, a_j_bar, r_k_bar = A[i_bar].copy(), A[j_bar].copy(), R[:, :, k_bar].copy()
+                        A[i_bar] -= learning_rate * (I_3 * self.c_n * np.dot(r_k_bar, a_j_bar))
+                        A[j_bar] -= learning_rate * (I_3 * self.c_n * np.dot(r_k_bar.T, a_i_bar))
+                        R[:, :, k_bar] -= learning_rate * (I_3 * self.c_n * np.outer(a_i_bar, a_j_bar))
+
+            elif obs_only:
+                next_p_idx = np.random.randint(len(p_idx))
+                next_n_idx = np.random.randint(len(n_idx))
+
+                i, j, k = np.unravel_index(p_idx[next_p_idx], T.shape)
+                i_bar, j_bar, k_bar = np.unravel_index(np_idx[next_n_idx], T.shape)
 
                 I_1 = heaviside(self.gamma - np.dot(np.dot(A[i], R[:, :, k]), A[j])
                                 + np.dot(np.dot(A[i_bar], R[:, :, k_bar]), A[j_bar]))
                 I_2 = heaviside(self.gamma_p - np.dot(np.dot(A[i], R[:, :, k]), A[j]))
 
-                # updating parameters
+                I_4 = heaviside(self.gamma_p + np.dot(np.dot(A[i_bar], R[:, :, k_bar]), A[j_bar]))
+
                 if I_1 != 0 or I_2 != 0:
                     a_i, a_j, r_k = A[i].copy(), A[j].copy(), R[:, :, k].copy()
                     A[i] -= learning_rate * (-(I_1 + I_2 * self.c_e) * np.dot(r_k, a_j))
                     A[j] -= learning_rate * (-(I_1 + I_2 * self.c_e) * np.dot(r_k.T, a_i))
                     R[:, :, k] -= learning_rate * (-(I_1 + I_2 * self.c_e) * np.outer(a_i, a_j))
 
-                if I_1 != 0:
-                    a_i_bar, a_j_bar, r_k_bar = A[i_bar].copy(), A[j_bar].copy(), R[:, :, k_bar].copy()
-                    A[i_bar] -= learning_rate * (I_1 * np.dot(r_k_bar, a_j_bar))
-                    A[j_bar] -= learning_rate * (I_1 * np.dot(r_k_bar.T, a_i_bar))
-                    R[:, :, k_bar] -= learning_rate * (I_1 * np.outer(a_i_bar, a_j_bar))
-
-            else:
-                next_idx = np.random.randint(len(n_idx))
-                next_nn_idx = np.random.randint(len(nn_idx))
-
-                i, j, k = np.unravel_index(n_idx[next_idx], T.shape)
-                i_bar, j_bar, k_bar = np.unravel_index(nn_idx[next_nn_idx], T.shape)
-
-                I_3 = heaviside(self.gamma + np.dot(np.dot(A[i], R[:, :, k]), A[j])
-                                - np.dot(np.dot(A[i_bar], R[:, :, k_bar]), A[j_bar]))
-                I_4 = heaviside(self.gamma_p + np.dot(np.dot(A[i], R[:, :, k]), A[j]))
-
-                if I_3 != 0 or I_4 != 0:
-                    a_i, a_j, r_k = A[i].copy(), A[j].copy(), R[:, :, k].copy()
-                    A[i] -= learning_rate * ((I_3 * self.c_n + I_4 * self.c_e) * np.dot(r_k, a_j))
-                    A[j] -= learning_rate * ((I_3 * self.c_n + I_4 * self.c_e) * np.dot(r_k.T, a_i))
-                    R[:, :, k] -= learning_rate * ((I_3 * self.c_n + I_4 * self.c_e) * np.outer(a_i, a_j))
-
-                if I_3 != 0:
-                    a_i_bar, a_j_bar, r_k_bar = A[i_bar].copy(), A[j_bar].copy(), R[:, :, k_bar].copy()
-                    A[i_bar] -= learning_rate * (I_3 * self.c_n * np.dot(r_k_bar, a_j_bar))
-                    A[j_bar] -= learning_rate * (I_3 * self.c_n * np.dot(r_k_bar.T, a_i_bar))
-                    R[:, :, k_bar] -= learning_rate * (I_3 * self.c_n * np.outer(a_i_bar, a_j_bar))
+                if I_1 != 0 or I_4 != 0:
+                    a_i, a_j, r_k = A[i_bar].copy(), A[j_bar].copy(), R[:, :, k_bar].copy()
+                    A[i] -= learning_rate * ((I_1 + I_4 * self.c_e) * np.dot(r_k, a_j))
+                    A[j] -= learning_rate * ((I_1 + I_4 * self.c_e) * np.dot(r_k.T, a_i))
+                    R[:, :, k] -= learning_rate * ((I_1 + I_4 * self.c_e) * np.outer(a_i, a_j))
 
             # unit vector projection (this could be improved by using l1 projection alg.)
             # converting learned matrix to rotational matrix
@@ -242,7 +270,7 @@ class AMDC:
 
         return obj
 
-    def do_active_learning(self, T, mask, max_iter, test_t, query_log='', eval_log=''):
+    def do_active_learning(self, T, mask, max_iter, test_t, query_log='', eval_log='', obs_only=False):
         T[T == 0] = -1
         cur_obs = np.zeros_like(T)
         cur_obs[mask == 1] = T[mask == 1]
@@ -264,7 +292,7 @@ class AMDC:
         auc_scores = list()
 
         for iter in range(max_iter):
-            A, R, _ = self.fit(T, p_idx, n_idx, max_iter=1000, e_gap=1001, A=A, R=R)
+            A, R, _ = self.fit(T, p_idx, n_idx, max_iter=1000, e_gap=1001, A=A, R=R, obs_only=obs_only)
             _T = self.reconstruct(A, R)
             _T[mask == 1] = MIN_VAL
             _T[test_t == 1] = MIN_VAL
