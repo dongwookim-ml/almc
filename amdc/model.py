@@ -77,6 +77,9 @@ class AMDC:
         if len(p_idx) == 0 and len(n_idx) == 0:
             return A, R, r_error
 
+        if obs_only and (len(p_idx) == 0 or len(n_idx) == 0):
+            return A, R, r_error
+
         it = 0
         converged = False
         learning_rate = self.alpha_0
