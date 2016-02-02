@@ -27,6 +27,19 @@ where $x^*_t$ is the highest triple among triples that have not been chosen up t
 Figure \ref{fig:synthetic} shows the cumulative regret of the algorithm on the synthetic data with varying size of entities and relations. We compare the cumulative regret of the particle Thompson sampling with the passive learning method where the model choose a random triple at each time. All results are averaged over 10 individual runs with different initializations. For every experiment, the cumulative regret of the Thompson sampling method was bounded after a certain number of interactions whereas the cumulative regret of passive learning increases linearly. This result indicates the particle sampling correctly inferred latent features of entities and relations as the interaction increases.
 
 \subsection{particle Thompson sampling}
+\begin{table}[t]
+\centering
+\caption{\label{tbl:dataset}Description of datasets.}
+\begin{tabular}{l | r | r | r | r}
+Dataset &  \# rel & \# entities & \# triples & sparsity \\ \hline
+Kinship & 26 & 104  & 10,790 & 0.038 \\
+UMLS & 49 &135  & 6,752 & 0.008 \\
+Nation & 56 & 14  & 2,024 & 0.184 \\
+%Wordnet & 11 & 38,696  &123,429 & 7.5e-06\\
+%Wordnet(N) & 10 & 836 & 1,766 & 2.5e-04\\
+\end{tabular}
+\end{table}
+
 \begin{figure}[t]
 	\centering
 	
