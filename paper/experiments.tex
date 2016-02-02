@@ -26,10 +26,10 @@ where $x^*_t$ is the highest triple among triples that have not been chosen up t
 
 Figure \ref{fig:synthetic} shows the cumulative regret of the algorithm on the synthetic data with varying size of entities and relations. We compare the cumulative regret of the particle Thompson sampling with the passive learning method where the model choose a random triple at each time. All results are averaged over 10 individual runs with different initializations. For every experiment, the cumulative regret of the Thompson sampling method was bounded after a certain number of interactions whereas the cumulative regret of passive learning increases linearly. This result indicates the particle sampling correctly inferred latent features of entities and relations as the interaction increases.
 
-\subsection{particle Thompson sampling}
+\subsection{Thompson sampling on real datasets}
 \begin{table}[t]
 \centering
-\caption{\label{tbl:dataset}Description of datasets.}
+\caption{\label{tbl:dataset}Description of datasets. Sparsity denotes the ration of valid triples to all possible number of triples.}
 \begin{tabular}{l | r | r | r | r}
 Dataset &  \# rel & \# entities & \# triples & sparsity \\ \hline
 Kinship & 26 & 104  & 10,790 & 0.038 \\
@@ -52,15 +52,26 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 	\subfigure[NATION]{
 	\includegraphics[width=\linewidth]{images/thompson_nation.pdf}				
 	}	
-	\caption{Placeholder for the future results. Will include the cumulative gain and ROC-AUC score of the developed models with the active and passive learning methods. We will see how the compositional model performs to compare with other models without any initial observation (May include the IBM model without any initial observation).}
+	\caption{The cumulative gain and ROC-AUC score of the Thompson sampling with various baseline approaches. AMDC model uses two different querying strategies }
 \end{figure}
 
-\subsection{Compositional ...}
+Next, we evaluate our algorithms on real datasets and compare the performance to the various baseline algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each dataset is shown in Table \ref{tbl:dataset}.
+
+\textbf{Experimental settings}: For the particle Thompson sampling 
+
+AMDC model uses two different querying strategies to chose a triple to be queried at time $t$. AMDC-POP is a population strategy and chose a triple which has the highest expected value at time each $t$. AMDC-PRED is a predictive model construction strategy and chose a triple which is the most ambiguous triples (close to the decision boundary) at each time $t$ \cite{kajino2015active}.
+
+\textbf{Evaluation metric}: We use two different evaluation metrics, ROC-AUC score, and cumulative gain, for the performance comparison. 
+
+\subsection{Compositional Structure}
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=\linewidth]{images/comp_training_error_kinship_small.pdf}
 	\includegraphics[width=\linewidth]{images/comp_training_error_umls_small.pdf}			
 	\includegraphics[width=\linewidth]{images/comp_training_error_nation_small.pdf}				
-	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. The x-axis denotes the proportion of an observed triples including negative triples used for training models. We  use another 30\% of triples to evaluate the ROC-AUC score. In general, compositional models outperform BRESCAL and BLOGIT model when the size of training set is relatively small, whereas BRESCAL and BLOGIT perform slightly better than or comparable to the compositional models when the size of training set is relatively large. For UMLS dataset, the multiplicative compositional model consistently outperforms the other models across all training proportions.}
+	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. The x-axis denotes the proportion of an observed triples including negative triples used for training models. We use other 20\% of triples as a validation set and another 30\% of triples as a test set. 
+%waiting result now...
+%In general, compositional models outperform BRESCAL and BLOGIT model when the size of training set is relatively small, whereas BRESCAL and BLOGIT perform slightly better than or comparable to the compositional models when the size of training set is relatively large. For UMLS dataset, the multiplicative compositional model consistently outperforms the other models across all training proportions.
+}
 \end{figure} 
 
