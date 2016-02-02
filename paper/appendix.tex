@@ -1,0 +1,22 @@
+%!TEX root = ./icml2016.tex
+
+\section*{Appendix}
+\subsection*{Detailed derivation of Equation \ref{eqn:comp_cond_r}}
+
+\begin{align*}
+&p(R_k | E, R_{-k}, \mathcal{X}) \propto p(\mathcal{X} | R, E)p(R_k)&\\
+&\propto \prod_{x_{ikj}}\exp\bigg\{-\frac{(x_{ikj} - e_i^\top R_k e_j)^2}{2\sigma_x^2}\bigg\} &\\
+& \quad\prod_{x_{icj}} \exp\bigg\{-\frac{(x_{icj} - e_i^\top R_c e_j)^2}{2\sigma_c^2}\bigg\} \exp\bigg\{-\frac{r_k^\top r_k}{2\sigma_r^2}\bigg\}&\\
+&= \exp\bigg\{-\frac{\sum_{x_{ikj}}(x_{ikj} - \bar{e}_{ij}^\top r_k)^2}{2\sigma_x^2} &\\
+&\quad- \frac{\sum_{x_{icj}}(x_{icj} - \bar{e}_{ij}^\top r_c)^2}{2\sigma_c^2} -\frac{r_k^\top r_k}{2\sigma_r^2} \bigg\}&\\
+&= \exp\bigg\{-\frac{\sum_{x_{ikj}}(x_{ikj} - \bar{e}_{ij}^\top r_k)^2}{2\sigma_x^2} &\\ 
+&\quad-\frac{\sum_{x_{icj}}(x_{icj} - \bar{e}_{ij}^\top (\frac{1}{|c|}r_k + \frac{|c|-1}{|c|})r_{c/k})^2}{2\sigma_c^2} -\frac{r_k^\top r_k}{2\sigma_r^2} \bigg\}&\\
+&= \exp\bigg\{ -\frac{\sum_{x_{ikj}}- 2 x_{ikj} \bar{e}_{ij}^\top r_k + r_k^\top \bar{e}_{ij} \bar{e}_{ij}^\top r_k }{2\sigma_x^2} &\\
+&\quad-\frac{\sum_{x_{icj}} \frac{2}{|c|} r_k ^\top (x_{icj} - \frac{(|c|-1)}{|c|} \bar{e}_{ij}^\top r_{c/k}) + (\frac{1}{|c|^2}r_k^\top \bar{e}_{ij} \bar{e}_{ij}^\top r_k)}{2\sigma_c^2} &\\
+&\quad-\frac{r_k^\top r_k}{2\sigma_r^2} + const \bigg\}&\\
+&\propto \exp\bigg\{ - \frac{1}{2}r_k^\top(\frac{1}{\sigma_x^2}\sum_{x_{ikj}} \bar{e}_{ij}\bar{e}_{ij}^\top + \frac{1}{|c|^2\sigma_c^2}\sum_{x_{icj}} \bar{e}_{ij}\bar{e}_{ij}^\top + \frac{1}{\sigma_r^2}I) r_k  &\\
+&- r_k^\top \Big(\frac{\sum_{x_{ikj}}-x_{ikj}\bar{e}_{ij}}{\sigma_x^2} + \frac{\sum_{x_{icj}} |c|^{-1} (x_{icj} - \frac{(|c|-1)}{|c|} \bar{e}_{ij}^\top r_{c/k})}{\sigma_c^2} \Big)&
+\end{align*}
+Completing the square results Equation \ref{eqn:comp_cond_r}.
+
+
