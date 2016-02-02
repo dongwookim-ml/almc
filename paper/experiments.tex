@@ -1,5 +1,9 @@
 %!TEX root = ./icml2016.tex
 \section{Experiments}
+In this section, we verify the Thompson sampling model through the synthetic dataset, and show how 
+the active knowledge acquisition using Thompson sampling benefits the balance exploitation and exploration
+tradeoff to compare with the exploitation only algorithms. And then, we show how the compositional model
+improves the non-compositional models for finding a latent vector representation of knowledge bases.
 
 \subsection{Synthetic data}
 \begin{figure}[t]
@@ -21,7 +25,7 @@ model obtained more and more labeled samples from Thompson sampling, the cumulat
 converged. }
 \end{figure}
 
-To verify the particle Thompson sampling, we first synthesize data based on the model assumptions and run 
+To verify the particle Thompson sampling, we first synthesise data based on the model assumptions and run 
 the Thompson sampling algorithm. By following the model assumptions in Eq. \ref{eqn:entity_gen} to 
 \ref{eqn:triple_gen}, we randomly generate triples based on randomly sampled entities and relations. Every 
 entities and relations are generated from zero-mean isotropic multivariate normal distribution, where we set 
@@ -40,7 +44,7 @@ triples.
 Figure \ref{fig:synthetic} shows the cumulative regret of the algorithm on the synthetic data with varying size of 
 entities and relations. We compare the cumulative regret of the particle Thompson sampling with the passive 
 learning method where the model choose a random triple at each time. All results are averaged over 10 
-individual runs with different initializations. For every experiment, the cumulative regret of the Thompson 
+individual runs with different initialisations. For every experiment, the cumulative regret of the Thompson 
 sampling method was bounded after a certain number of interactions whereas the cumulative regret of 
 passive learning increases linearly. This result indicates the particle sampling correctly inferred latent features 
 of entities and relations as the interaction increases.
@@ -72,33 +76,47 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 	\subfigure[NATION]{
 	\includegraphics[width=\linewidth]{images/thompson_nation.pdf}				
 	}	
-	\caption{The cumulative gain and ROC-AUC score of the Thompson sampling with various baseline 
-approaches. AMDC model uses two different querying strategies }
+	\caption{\label{fig:c_gain}The cumulative gain and ROC-AUC score of the Thompson sampling 
+	with various baseline approaches. Thompson sampling with BRESCAL (BRESCAL) model achieves the highest cumulative gain to compare with other active and passive learning algorithms and comparable performance on ROC-AUC scores.}
 \end{figure}
 
 Next, we evaluate our algorithms on real datasets and compare the performance to the various baseline 
 algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each 
-dataset is shown in Table \ref{tbl:dataset}.
+dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washington.edu/papers/kok07/}.
 
-\textbf{Experimental settings}: For the particle Thompson sampling 
+\textbf{Experimental settings}: 
+We compare our model with AMDC, and passive learning with BRESCAL.  
+AMDC model has been proposed to achieve two different active learning goals, constructing a predictive
+model and maximising the valid triples in a knowledge base, with two different querying strategies
+ \cite{kajino2015active}. 
+AMDC-PRED is a predictive model construction strategy and chooses a triple which is the most ambiguous triples (close to the decision boundary) at each time $t$.
+AMDC-POP is a population strategy which aims to maximise the number of valid triples in a knowledge base. AMDC-POP chooses a triple which has the highest expected value at time each $t$.  
+To train AMDC models we only use the observed triples up to time $t$. For the passive learning with BRESCAL, we generate a random sample at each time period.
+For the particle Thompson sampling, we set both variance parameter $\sigma_e$ and $\sigma_r$ to 1, and $
+\sigma_x$ to 0.1. 
+Finally, at each time period, each model is allowed to query one triples to an oracle, obtains a label of the
+queried triples from the oracle, and then updates the parameters of the model. 
 
-AMDC model uses two different querying strategies to chose a triple to be queried at time $t$. AMDC-POP is 
-a population strategy and chose a triple which has the highest expected value at time each $t$. AMDC-PRED 
-is a predictive model construction strategy and chose a triple which is the most ambiguous triples (close to the 
-decision boundary) at each time $t$ \cite{kajino2015active}.
-
-\textbf{Evaluation metric}: We use two different evaluation metrics, ROC-AUC score, and cumulative gain, for 
-the performance comparison. 
+\textbf{Evaluation metric}: We use two different evaluation metrics, ROC-AUC score, and cumulative gain,
+for the performance comparison. One goal of the Thompson sampling is to maximise the knowledge 
+acquisition through the balanced querying strategy between exploration and exploitation. 
+To measure how much knowledge are obtained through the querying stage, we fist compute the cumulative 
+gain which is the number of obtained valid triple up to time $t$, and then compute the ROC-AUC score on 
+test set to understand how this balanced querying strategy results in making a predictive model.
+ 
+\textbf{Exploitation and exploration}: Figure \ref{fig:c_gain} shows the results of Thompson sampling.
 
 \subsection{Compositional Structure}
+
+
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=\linewidth]{images/comp_training_error_kinship_small.pdf}
 	\includegraphics[width=\linewidth]{images/comp_training_error_umls_small.pdf}			
 	\includegraphics[width=\linewidth]{images/comp_training_error_nation_small.pdf}				
-	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. The x-axis denotes the proportion 
-of an observed triples including negative triples used for training models. We use other 20\% of triples as a 
-validation set and another 30\% of triples as a test set. 
+	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. 
+	The x-axis denotes the proportion of an observed triples including negative triples used for training 
+	models. We use other 20\% of triples as a validation set and another 30\% of triples as a test set. 
 %waiting result now...
 %In general, compositional models outperform BRESCAL and BLOGIT model when the size of training set is 
 %relatively small, whereas BRESCAL and BLOGIT perform slightly better than or comparable to the 
