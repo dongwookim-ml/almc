@@ -6,35 +6,60 @@ for question understanding and answering problems \cite{Dong2015},
 or it can be integrated into a search engine
 to improve the users' search experiment \cite{dong2014knowledge}.
 
-However, most of previous work does not consider a systemic way of constructing
-a knowledge graph from scratch. Distant supervision algorithms
+However, most of previous latent feature models lack the consideration
+of constructing a knowledge graph with the latent features.
+As an alternative approach, distant supervision algorithms
 \cite{Mintz2009} suggest a way to fill a missing part of knowledge graph
 through the extensive NLP processing, however, this method inherently
 requires a set of initial observations used as a distant supervision.
 
+Here, we tackle the problem of knowledge base construction with the
+statistical relational model.
 A goal of knowledge base construction is to acquire a maximum number
-of valid triples within a limited budget.
-The goal corresponds to a general objective of the multi-armed bandit (MAP)
+of valid triples with a limited budget.
+This goal corresponds to a general objective of the multi-armed bandit (MAP)
 problem where we want to minimise the cumulative regret or maximise
-the cumulative reward over time. Here, we tackle the problem of knowledge 
-base construction through Thompson sampling which provides a principled
-way to find an optimal trade off between exploration and exploitation.
+the cumulative reward over time. 
+In recent years, Thompson sampling has been emerged as  
+an competitive solution in MAP problems.
+We borrow Thompson sampling, which provides a principled
+way to find an optimal trade off between exploration and exploitation,
+to solve the knowledge base construction problem.
 
+Thompson sampling has been gaining an increasing attention 
+because of a competitive empirical performance as well as its conceptual 
+simplicity. Let $y_{1:t}$ be a sequence of rewards up to time $t$, and $\theta$ is an underlying parameter governing the rewards. With Thompson sampling, an agent choose action $a$ according to its probability of being optimal:
+\begin{align}
+\arg\max_a \int \mathbb{I}\bigg[ \mathbb{E}(r|a, \theta) 
+= \max_{a'}\mathbb{E}(r|a',\theta) \bigg] p(\theta|y_{1:t-1}) d\theta, \notag
+\end{align}
+where $\mathbb{I}$ is an indicator function. Note that it is sufficient 
+to draw a random sample from the posterior instead computing the integral.
 
-Thompson sampling 
-$\prod_n p(x_i|\theta)p(\theta)$
+We formulate Thompson sampling for knowledge base construction
+system as follows. 
+First, we assume there are optimal latent features $E^*$ and $R^*$, and 
+the triples are generated through Equation \ref{eqn:entity_gen}$-$
+\ref{eqn:triple_gen}. At time $t$, the system draw sample $E^t$ and $R^t$ 
+from the posterior distribution, and then choose an optimal triple $(i,k,j) 
+= \arg\max_{i,k,j} e_i^\top R_k e_j$ to be queried. Finally, with the newly
+observed triple $x_{i,k,j}$, the system updates the posterior of latent 
+features.
 
-With a slight abuse of notations, we now let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$.
+The main difficulty of applying Thompson sampling to this task is a sequential update of the posterior distribution of the latent features with new observations over time. Unlike the point estimate algorithms such as
+the variational inference, computing a full posterior method, MCMC, 
+requires extensive computational cost. To make the algorithm feasible, we employ a sequential Monte-Carlo (SMC) method for online posterior inference.
 
 $H$ be the number of particles, and $\Theta= \{E, \mathcal{R}\}$ be a set of latent features.
 %Algorithm \ref{alg:smc} describes basic particle Thompson sampling for the tensor factorisation.
-Algorithm \ref{alg:rbsmc} describes Rao-Blackwellized particle Thompson sampling where relation matrix $R_k$ is marginalized out.
+Algorithm \ref{alg:smc} describes a particle Thompson sampling.
 
 Under the mild assumption where $p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$, the weight of each particle at time $t$ can be computed as follows \cite{del2006sequential,chopin2002sequential}:
 \begin{align}
 w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)} = p(x^{t} | \Theta, \mathcal{X}^{t-1})
 \end{align}
 
+%With a slight abuse of notations, let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$. 
 
 %\subsection{(?)Particle Thompson sampling with SGLD kernel}
 %Above two algorithms are not well suitable for large scale dataset because the sample requires quantities estimated over all possible triples.
@@ -46,7 +71,7 @@ w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)} = 
 %where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
 
 \begin{algorithm}[t!]
-   \caption{Particle Thompson Sampling for Tensor Factorisation}
+   \caption{Particle Thompson sampling for Bayesian RESCAL}
    \label{alg:smc}
 \begin{algorithmic}
    \STATE {\bfseries Input:} $\mathcal{X}, \sigma_x, \sigma_e, \sigma_r$.
