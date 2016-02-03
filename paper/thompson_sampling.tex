@@ -43,23 +43,34 @@ the triples are generated through Equation \ref{eqn:entity_gen}$-$
 \ref{eqn:triple_gen}. At time $t$, the system draw sample $E^t$ and $R^t$ 
 from the posterior distribution, and then choose an optimal triple $(i,k,j) 
 = \arg\max_{i,k,j} e_i^\top R_k e_j$ to be queried. Finally, with the newly
-observed triple $x_{i,k,j}$, the system updates the posterior of latent 
+observed triple $x_{i,k,j}$, the system updates the posterior of the latent 
 features.
 
 The main difficulty of applying Thompson sampling to this task is a sequential update of the posterior distribution of the latent features with new observations over time. Unlike the point estimate algorithms such as
-the variational inference, computing a full posterior method, MCMC, 
+the variational inference, computing a full posterior with MCMC 
 requires extensive computational cost. To make the algorithm feasible, we employ a sequential Monte-Carlo (SMC) method for online posterior inference.
 
-$H$ be the number of particles, and $\Theta= \{E, \mathcal{R}\}$ be a set of latent features.
-%Algorithm \ref{alg:smc} describes basic particle Thompson sampling for the tensor factorisation.
-Algorithm \ref{alg:smc} describes a particle Thompson sampling.
-
-Under the mild assumption where $p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$, the weight of each particle at time $t$ can be computed as follows \cite{del2006sequential,chopin2002sequential}:
+The SMC starts with $H$ number of particles, each of which starts with weight $w_{h} = 1/H$, and a set of randomly sampled latent features $E^{h_0}$ and $R^{h_0}$. With a slight abuse of notations, let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$. 
+At time $t$, the system choose one particle according to weights of particles, 
+and then generate a new query via Thompson sampling from the selected particle.
+After observing a new variable, the system updates the posterior samples of 
+every particles through the MCMC kernels with the new observation.
+We first sample the relation matrices using Equation \ref{eqn:sample_r}, and sample the entity vectors using Equation \ref{eqn:sample_e}.
+Under the mild assumption where 
+$p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$, 
+the weight of each particle at time $t$ can be computed as follows 
+\cite{del2006sequential,chopin2002sequential}:
 \begin{align}
-w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)} = p(x^{t} | \Theta, \mathcal{X}^{t-1})
+w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)}
+ = p(x^{t} | \Theta, \mathcal{X}^{t-1})
 \end{align}
-
-%With a slight abuse of notations, let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$. 
+SMC may suffer from the degeneracy problem. To keep the posterior samples
+on regions of high probability mass, we resample the particles whenever 
+an effective sample size (ESS) is less than a predefined threshold. 
+The ESS can be computed as $(\sum_h w_h^2)^{-1}$, and we set the threshold 
+to $N/2$. This resampling step allows to remove the particles with 
+low weights with a high probability, while keep the samples from the posterior.
+We summarise the particle Thompson sampling for Bayesian RESCAL with the Gaussian output variable in Algorithm \ref{alg:smc}.
 
 %\subsection{(?)Particle Thompson sampling with SGLD kernel}
 %Above two algorithms are not well suitable for large scale dataset because the sample requires quantities estimated over all possible triples.
@@ -74,23 +85,24 @@ w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)} = 
    \caption{Particle Thompson sampling for Bayesian RESCAL}
    \label{alg:smc}
 \begin{algorithmic}
-   \STATE {\bfseries Input:} $\mathcal{X}, \sigma_x, \sigma_e, \sigma_r$.
+   \STATE {\bfseries Input:} $\mathcal{X}^{0}, \sigma_x, \sigma_e, \sigma_r$.
    \FOR{$t=1,2, \dots$}
    \STATE \textit{Thompson Sampling}:
-   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
-   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t}, \mathcal{R}^{h_t})$
-   \STATE Observe $x_{ikj}$ and update $\mathcal{X}$
+   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t-1})$
+   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_{t-1}}, \mathcal{R}^{h_{t-1}})$
+   \STATE Query $(i,k,j)$ and observe $x_{ikj}$
+   \STATE $\mathcal{X}^{t} \leftarrow \mathcal{X}^{t-1} \cup \{x_{ikj}\}$
 
    \STATE \textit{Particle Filtering}:
-   \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighting
-   \IF{ESS$(\mathbf{w}^{t+1}) \leq N$}
+   \STATE $\forall h, w_h^{t} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighting
+   \IF{ESS$(\mathbf{w}^{t}) \leq N$}
    \STATE resample particles
-   \STATE $w_h^{t+1} \leftarrow 1/H$
+   \STATE $w_h^{t} \leftarrow 1/H$
    \ENDIF
 
    \FOR{$h=1$ {\bfseries to} $H$}
-   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}, E^{h})$   \hfill $\triangleright$ see Eq. (\ref{eqn:sample_r})
-   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
+   \STATE $\forall k, R_k^{h_t} \sim p(R_k | \mathcal{X}^{t}, E^{h_{t-1}}, R_{-k})$   \hfill $\triangleright$ see Eq. (\ref{eqn:sample_r})
+   \STATE $\forall i, e^{h_t}_i \sim p(e_i | \mathcal{X}^{t}, E_{-i}, \mathcal{R}^{h_{t}})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
    \ENDFOR
 
    \ENDFOR
