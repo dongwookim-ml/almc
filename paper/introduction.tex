@@ -1,6 +1,35 @@
 %!TEX root = ./icml2016.tex
 
 \section{Introduction}
+
+As the amount of information codified in a computer readable fashion increases, the management
+of knowledge bases need to become increasingly more automated. In this paper, we study
+the problem of acquiring new knowledge, given an existing knowledge base. Knowledge bases
+are modeled as a set of relations between pairs of entities, for example the factoid
+``Barack Obama is the 44th president of the United States''
+is modeled as two entities (Barack Obama, United States) being related by ``president of''.
+Such relations have a natural representation as a sparse graph or a tensor of order 3.
+Given this representation, we model the acquisition of new knowledge as the
+identification of new triples that capture particular relations between two entities.
+
+There are several challenges when we apply machine learning methods to completing
+existing knowledge bases, namely:
+sparse, noisy, and incomplete annotations.
+There has been recent success in transferring ideas from matrix completion problems to
+the tensor domain to overcome the challenge of sparsity~\cite{unknown}.
+We follow this thread of research by using a low rank approximation model for tensor
+factorisation. Such low rank approximations can also be seen as a latent variable probabilistic
+model, which additionally captures the inherent uncertainty of noisy annotations.
+We propose a probabilistic model for tensor factorisation and explore both the Gaussian
+and Logistic model. The probabilistic model provides a natural way of implementing
+randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
+Thompson sampling is an approach for solving the multi-armed bandit problem,
+which allows us to trade off exploration and exploitation when identifying new triples.
+This provides a principled approach to identify promising candidates for knowledge base
+completion.
+We additionally consider compositional relations as an additional source of weak information
+to further utilise the existing (incomplete) knowledge items.
+
 Goal of this paper 1: Populating knowledge graph with an active label acquisition process corresponding to [B,C,A] in Figure \ref{fig:related3d}.
 
 [B,C,P] could be an alternative direction (or both).
