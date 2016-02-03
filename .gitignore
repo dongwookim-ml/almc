@@ -67,3 +67,5 @@ logs/
 *.fdb_latexmk
 *.out
 result
+notes/*.pdf
+paper/*.pdf

@@ -41,8 +41,9 @@ R_k \sim \mathcal{MN}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
 Finally, we have an observable variable $x_{ikj}$ for each triple in the 
 knowledge base. We model this variable in two different ways as follows:
 
-\textbf{Logistic output variable}: First, the variable $x_{ikj}$ of a triple is a 
-binary indicator variable. One natural choice to model the binary variable is to 
+\textbf{Logistic output variable}: The variable $x_{ikj}$ is a 
+binary indicator variable which tells the triple is valid or not.
+One natural choice to model the binary variable is to 
 place a logistic regression model.
 \begin{align}
 p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
@@ -60,9 +61,10 @@ Although this is not a trivial choice, through the variance parameter $
 \sigma_x^2$, we can control the confidence about certain observations. We will 
 discuss more about the role of the variance in the compositional model section.
 
-Given the modelling choice, computing the posterior of latent features $p(E, R|
+Given a modelling choice, computing the posterior of latent features $p(E, R|
 \mathcal{X})$ is generally intractable. Here, we provide two conditional 
 posteriors to develop an efficient Gibbs sampler.
+
 For the logistic regression output, we approximate the conditional posterior of 
 $E$ and $R$ by Laplace approximation \cite{bishop2006pattern}. The maximum a 
 posterior estimate of $e_i$ or $R_k$ given the rest can be computed through the 
@@ -70,16 +72,16 @@ standard logistic regression solvers with regularisation parameters. Given the
 maximum a posterior parameters $e_i^*$, the posterior covariance $S_i$ of entity 
 $i$ takes the form
 \begin{align}
-S_i^{-1}& = I\sigma_e^{-1} + \sum_{x_{ikj}} \sigma(e_{i}^{*\top} R_k e_{j}) R_k 
+S_i^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{*\top} R_k e_{j}) (1 - \sigma(e_{i}^{*\top} R_k e_{j})) R_k
 e_{j}(R_k e_{j})^\top \notag \\
-& + \sum_{x_{jki}} \sigma(e_{j}^{\top} R_k e_{i}^*) R_k^\top e^*_{i}(R_k^\top 
-e^*_{i})^\top.
+ + \sum_{x_{jki}} \sigma(e_{j}^{\top} R_k e_{i}^*) ( 1- \sigma(e_{j}^{\top} R_k e_{i}^*)) R_k^\top e^*_{i}(R_k^\top + I\sigma_e^{-1}
+e^*_{i})^\top. \notag 
 \end{align}
 The posterior covariance of $R_k$ can be computed in the same way.
 
 For the gaussian output case, the conditional posterior of $e_i$ given $E_{-i}$ 
 and $R$ or $R_k$ given $E$ are straight forward. We use the negative subscript $-
-i$ to indicate the every other entity variables except $e_i$. First, the 
+i$ to indicate the every other entity variables except $e_i$. The 
 conditional distribution of $e_i$ given $\mathcal{R}$ and other entities $E_{-i}$ 
 is
 \begin{align} \label{eqn:sample_e}

@@ -1,39 +1,32 @@
 %!TEX root = ./icml2016.tex
 \section{Particle Thompson Sampling}
-Let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$.
+Statistical relational models have been proposed to tackle
+various problems of knowledge bases. For example, it can be used 
+for question understanding and answering problems \cite{Dong2015},
+or it can be integrated into a search engine
+to improve the users' search experiment \cite{dong2014knowledge}.
 
-The conditional distribution of $e_i$ given $\mathcal{R}$ and other entities $E_{-i}$
-\begin{align} \label{eqn:sample_e}
-p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1}),
-\end{align}
-where
-\begin{align*}
-\mu_i &= \frac{1}{\sigma_x^2}\Lambda_i^{-1}\xi_i \\
-\Lambda_i &= \frac{1}{\sigma_x^2} \sum_{jk : x_{ikj} \in \mathcal{X}^{t}} (R_k e_j)(R_k e_j)^\top \\
-&\quad+ \frac{1}{\sigma_x^2} \sum_{jk : x_{jki} \in \mathcal{X}^{t}} (R_k^\top e_j)(R_k^\top e_j)^\top+ \frac{1}{\sigma_e^2} {I}_D \\
-\xi_i &= \sum_{jk : x_{ikj} \in \mathcal{X}^{t}}  x_{ikj} R_{k} e_{j} + \sum_{jk : x_{jki} \in \mathcal{X}^{t}} x_{jki} R_{k}^\top e_{j}.
-\end{align*}
-The conditional distribution of $R_k$ given $E$
-\begin{align}
-\label{eqn:sample_r}
-p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_k, \Lambda_k^{-1}),
-\end{align}
-where
-\begin{align*}
-\mu_k &= \frac{1}{\sigma_x^2}\Lambda_k^{-1}\xi_k \\
-\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
-\xi_k &= \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{i} \otimes e_{j}).
-\end{align*}
+However, most of previous work does not consider a systemic way of constructing
+a knowledge graph from scratch. Distant supervision algorithms
+\cite{Mintz2009} suggest a way to fill a missing part of knowledge graph
+through the extensive NLP processing, however, this method inherently
+requires a set of initial observations used as a distant supervision.
 
-The posterior marginal predictive distribution of $x_{ikj}$ given $\mathcal{X}$ and $E$.
-\begin{align}
-\label{eqn:marginal_predict}
-&p(x_{ikj}| E, \mathcal{X}^{t}, \sigma_x, \sigma_r) \\
-&= \mathcal{N}(x_{ikj}| \mu_k ^\top (e_i \otimes e_j), \frac{1}{\sigma_x^2} +  (e_i \otimes e_j)^\top \Lambda_k (e_i \otimes e_j)) \notag
-\end{align}
+A goal of knowledge base construction is to acquire a maximum number
+of valid triples within a limited budget.
+The goal corresponds to a general objective of the multi-armed bandit (MAP)
+problem where we want to minimise the cumulative regret or maximise
+the cumulative reward over time. Here, we tackle the problem of knowledge 
+base construction through Thompson sampling which provides a principled
+way to find an optimal trade off between exploration and exploitation.
 
-\subsection{Particle Thompson sampling with MCMC kernel}
-Let $H$ be the number of particles, and $\Theta= \{E, \mathcal{R}\}$ be a set of latent features.
+
+Thompson sampling 
+$\prod_n p(x_i|\theta)p(\theta)$
+
+With a slight abuse of notations, we now let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$.
+
+$H$ be the number of particles, and $\Theta= \{E, \mathcal{R}\}$ be a set of latent features.
 %Algorithm \ref{alg:smc} describes basic particle Thompson sampling for the tensor factorisation.
 Algorithm \ref{alg:rbsmc} describes Rao-Blackwellized particle Thompson sampling where relation matrix $R_k$ is marginalized out.
 
@@ -52,57 +45,57 @@ w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)} = 
 %\end{align}
 %where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
 
-%\begin{algorithm}[t!]
-%   \caption{Particle Thompson Sampling for Tensor Factorisation}
-%   \label{alg:smc}
-%\begin{algorithmic}
-%   \STATE {\bfseries Input:} $\mathcal{X}, \sigma_x, \sigma_e, \sigma_r$.
-%   \FOR{$t=1,2, \dots$}
-%   \STATE \textit{Thompson Sampling}:
-%   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
-%   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t}, \mathcal{R}^{h_t})$
-%   \STATE Observe $x_{ikj}$ and update $\mathcal{X}$
-%
-%   \STATE \textit{Particle Filtering}:
-%   \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighting
-%   \IF{ESS$(\mathbf{w}^{t+1}) \leq N$}
-%   \STATE resample particles
-%   \STATE $w_h^{t+1} \leftarrow 1/H$
-%   \ENDIF
-%
-%   \FOR{$h=1$ {\bfseries to} $H$}
-%   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}, E^{h})$   \hfill $\triangleright$ see Eq. (\ref{eqn:sample_r})
-%   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
-%   \ENDFOR
-%
-%   \ENDFOR
-%\end{algorithmic}
-%\end{algorithm}
-
 \begin{algorithm}[t!]
-   \caption{Rao-Blackwallized Particle Thompson Sampling for Tensor Factorisation}
-   \label{alg:rbsmc}
+   \caption{Particle Thompson Sampling for Tensor Factorisation}
+   \label{alg:smc}
 \begin{algorithmic}
-   \STATE {\bfseries Input:} $\sigma_x, \sigma_e, \sigma_r$.
+   \STATE {\bfseries Input:} $\mathcal{X}, \sigma_x, \sigma_e, \sigma_r$.
    \FOR{$t=1,2, \dots$}
    \STATE \textit{Thompson Sampling}:
    \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
-   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t})$    \hfill $\triangleright$ see Eq. (\ref{eqn:marginal_predict})
-   \STATE Observe $x_{ikj}$ and update $\mathcal{X}^{t}$
+   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t}, \mathcal{R}^{h_t})$
+   \STATE Observe $x_{ikj}$ and update $\mathcal{X}$
 
    \STATE \textit{Particle Filtering}:
-   \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h})$   \hfill $\triangleright$ Reweighting, Eq. (\ref{eqn:marginal_predict})
+   \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighting
    \IF{ESS$(\mathbf{w}^{t+1}) \leq N$}
    \STATE resample particles
    \STATE $w_h^{t+1} \leftarrow 1/H$
    \ENDIF
 
    \FOR{$h=1$ {\bfseries to} $H$}
-   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}^{t}, E^{h})$   \hfill $\triangleright$ Auxiliary sampling, see Eq. (\ref{eqn:sample_r})
-   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}^{t}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
+   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}, E^{h})$   \hfill $\triangleright$ see Eq. (\ref{eqn:sample_r})
+   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
    \ENDFOR
 
    \ENDFOR
 \end{algorithmic}
 \end{algorithm}
 
+%\begin{algorithm}[t!]
+%   \caption{Rao-Blackwallized Particle Thompson Sampling for Tensor Factorisation}
+%   \label{alg:rbsmc}
+%\begin{algorithmic}
+%   \STATE {\bfseries Input:} $\sigma_x, \sigma_e, \sigma_r$.
+%   \FOR{$t=1,2, \dots$}
+%   \STATE \textit{Thompson Sampling}:
+%   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
+%   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t})$    \hfill $\triangleright$ see Eq. (\ref{eqn:marginal_predict})
+%   \STATE Observe $x_{ikj}$ and update $\mathcal{X}^{t}$
+%
+%   \STATE \textit{Particle Filtering}:
+%   \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h})$   \hfill $\triangleright$ Reweighting, Eq. (\ref{eqn:marginal_predict})
+%   \IF{ESS$(\mathbf{w}^{t+1}) \leq N$}
+%   \STATE resample particles
+%   \STATE $w_h^{t+1} \leftarrow 1/H$
+%   \ENDIF
+%
+%   \FOR{$h=1$ {\bfseries to} $H$}
+%   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}^{t}, E^{h})$   \hfill $\triangleright$ Auxiliary sampling, see Eq. (\ref{eqn:sample_r})
+%   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}^{t}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
+%   \ENDFOR
+%
+%   \ENDFOR
+%\end{algorithmic}
+%\end{algorithm}
+%
