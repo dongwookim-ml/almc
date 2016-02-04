@@ -69,11 +69,17 @@ through the variance parameter $\sigma_x^2$.
 \eat{We will discuss more about}
 The role of \rev{this parameter will be further discussed} in the compositional model section.
 
-Given a modelling choice, computing the posterior of latent features $p(E, R|
+\eat{Given a modelling choice, computing the posterior of latent features $p(E, R|
 \mathcal{X})$ is generally intractable. Here, we provide two conditional 
 posteriors to develop an efficient Gibbs sampler.
-
-For the logistic regression output, we approximate the conditional posterior of 
+} %%LX: flip the sequence/emphasis of the narrative
+\rev{We develop an efficient Gibbs sampler to perform inference for Bayesian RESCAL.
+The key for achieving efficiency are the two conditional posteriors for latent features. 
+%This is made possible by two conditional posteriors of latent features, 
+%as $p(E, R|\mathcal{X})$ is generally intractable. 
+}
+\rev{The posteriors for Gaussian output are listed in Table~\ref{tab:brescalposterior}.}
+For \eat{the }logistic regression output, we approximate the conditional posterior of 
 $E$ and $R$ by Laplace approximation \cite{bishop2006pattern}. The maximum a 
 posterior estimate of $e_i$ or $R_k$ given the rest can be computed through the 
 standard logistic regression solvers with regularisation parameters. Given the 
@@ -87,8 +93,8 @@ e^*_{i})^\top. \notag
 \end{align}
 The posterior covariance of $R_k$ can be computed in the same way.
 
-\begin{table*}[t]
-\caption{Conditional posteriors for Gaussian output. Negative subscript $-i$ indicates the every other entity variables except $e_i$, $\otimes$ is Kronecker product.}
+\begin{table*}[tb]
+\caption{Conditional posteriors for Gaussian output. Negative subscript $-i$ indicates the every other entity variables except $e_i$, $\otimes$ is Kronecker product.}\label{tab:brescalposterior}
 \begin{tabu}{l}
 $p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) = \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1})$ \\ 
 with
@@ -110,8 +116,6 @@ $p(x_{ikj}| E, \mathcal{X}^{t}, \sigma_x, \sigma_r)
 (e_i \otimes e_j)^\top \Lambda_k (e_i \otimes e_j))$ 
 \end{tabu}
 \end{table*}
-
-\rev{The posteriors for Gaussian output are listed in Table 1.}
 
 \eat{%LX: these are all in the table now. 
 For the gaussian output case, the conditional posterior of $e_i$ given $E_{-i}$ 
