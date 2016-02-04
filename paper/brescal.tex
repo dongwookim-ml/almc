@@ -1,27 +1,32 @@
-%!TEX root = ./icml2016.tex
+%!TEX root = icml2016.tex
 \section{Bayesian RESCAL}
 A relational knowledge base consists of a set triples in the form of $(i, k, j)$ 
 where $i$, $j$ are entities, and $k$ is a relation. A triple can be distinguished 
 in a valid triple and invalid triple based on a semantic meaning of a triple. An 
 example of valid triple in Freebase is (Barack Obama, president of, U.S.), and an 
 example of invalid triple is (Barack Obama, president of, U.K.).
+\eat{
 Typically, a knowledge base only contains a set of valid triples, but in this 
 research, we assume that the knowledge base contains a set of invalid triples as 
-well. The knowledge base can also be represented in a three-way tensor 
+well. }
+The knowledge base can also be represented in a three-way tensor 
 $\mathcal{X} \in \{0, 1\}^{N \times K \times N}$, where $K$ is a number of 
 relations, $N$ is a number of entities, and $x_{ikj}$ is an indicator variable 
 representing a validity of the triple. 
 
-The goal of the statistical relational learning is to factorise the tensor into a 
-set of latent vector representations. The bilinear model (RESCAL) is a common 
-vector space model for knowledge base completion \cite{nickel2011three}. RESCAL 
-aims to factorise each relational slice $X_{:k:}$ into a set of $D$-rank latent 
+\eat{The goal of the }
+\rev{One model for} statistical relational learning is to factorise the tensor into a 
+set of latent vector representations, \rev{such as} the bilinear model RESCAL~\cite{nickel2011three}.
+\eat{ is a common vector space model for knowledge base completion} 
+RESCAL 
+aims to factorise each relational slice $X_{:k:}$ into a set of \eat{$D$-rank}\rev{rank-$D$} latent 
 features as follows:
 \begin{align}
 \mathcal{X}_{:k:} \approx E R_k E^\top, \qquad \text{for } k = 1, \dots, K
 \end{align}
-Here, $E$ is a $N\times D$ matrix that contains the latent features of the 
-entities and $R_k$ is a $D \times D$ matrix that models the interaction of the 
+%%LX: saving one line here, minor
+Here, $E$ \rev{$\in {\mathbb R}^{N \times D}$}\eat{is a $N\times D$ matrix that }contains the latent features of the 
+entities and $R_k$ \eat{is a $D \times D$ matrix that}\rev{$\in {\mathbb R}^{D \times D}$} models the interaction of the 
 latent features between entities in relation $k$.
 
 We generalise RESCAL in a probabilistic framework by placing priors over the 
@@ -31,35 +36,38 @@ latent features. For each entity $i$, the latent feature of an entity $e_i \in
 \label{eqn:entity_gen}
 e_i \sim {N}(\mathbf{0}, \sigma_e^2{I}_D)
 \end{align}
-For each relation $k$, we draw matrix $R_k \in \mathbb{R}^{D\times D}$ from zero-
-mean isotropic matrix normal distribution.
+For each relation $k$, we draw matrix $R_k$ from 
+a zero-mean isotropic matrix normal distribution.
 \begin{align}
 \label{eqn:relation_gen}
 R_k \sim \mathcal{MN}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
-\text{vec}(R_k) = r_k \sim N(\mathbf{0}, \sigma_r^2 I_{D^2}) \notag
-\end{align}
-Finally, we have an observable variable $x_{ikj}$ for each triple in the 
-knowledge base. We model this variable in two different ways as follows:
+\text{or}\enspace \rev{r_k  =} \text{vec}(R_k) \sim N(\mathbf{0}, \sigma_r^2 I_{D^2}) \notag
+\end{align} %%LX: pull r_k to the front so that it's easy to find
+Finally,\eat{we have an observable variable $x_{ikj}$ for each triple in the 
+knowledge base, We model this variable in two different ways as follows:} 
+\rev{there are two reasonable distributions for the observable variable $x_{ikj}$.}
 
-\textbf{Logistic output variable}: The variable $x_{ikj}$ is a 
+\textbf{Logistic output \eat{variable}}: The variable $x_{ikj}$ is a 
 binary indicator variable which tells the triple is valid or not.
-One natural choice to model the binary variable is to 
-place a logistic regression model.
+\eat{One natural choice to model the binary variable is to 
+place a logistic regression model.}
+\rev{One natural model for this is a binomial on the output of a logistic regression.}
 \begin{align}
 p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
 \end{align}
 where $\sigma$ is a sigmoid function.
 
-\textbf{Gaussian output variable}:
-Second, we place a normal distribution over $x_{ikj}$.
+\textbf{Gaussian output \eat{variable}}:
+\eat{Second, we}\rev{We can also} place a normal distribution over $x_{ikj}$.
 \begin{align}
-\label{eqn:triple_gen}
-x_{ikj} |e_i, e_j, R_k &\sim \mathcal{N}(e_i^{\top} R_k e_j, \sigma_x^2)\\
-& = \mathcal{N}(r_k^{\top} e_i \otimes e_j, \sigma_x^2) \notag
-\end{align}
-Although this is not a trivial choice, through the variance parameter $
-\sigma_x^2$, we can control the confidence about certain observations. We will 
-discuss more about the role of the variance in the compositional model section.
+x_{ikj} |e_i, e_j, R_k \sim \mathcal{N}(e_i^{\top} R_k e_j, \sigma_x^2) = \mathcal{N}(r_k^{\top} e_i \otimes e_j, \sigma_x^2)  \notag %\label{eqn:triple_gen}
+\end{align} %%LX: moved this into one line, hopefully not breaking crossrefs
+\eat{Although this is not a trivial choice, through the variance parameter $
+\sigma_x^2$, we can control the confidence about certain observations. }
+\rev{Note that we can control the confidence on different observations}
+through the variance parameter $\sigma_x^2$. 
+\eat{We will discuss more about}
+The role of \rev{this parameter will be further discussed} in the compositional model section.
 
 Given a modelling choice, computing the posterior of latent features $p(E, R|
 \mathcal{X})$ is generally intractable. Here, we provide two conditional 
@@ -79,6 +87,33 @@ e^*_{i})^\top. \notag
 \end{align}
 The posterior covariance of $R_k$ can be computed in the same way.
 
+\begin{table*}[t]
+\caption{Conditional posteriors for Gaussian output. Negative subscript $-i$ indicates the every other entity variables except $e_i$, $\otimes$ is Kronecker product.}
+\begin{tabu}{l}
+$p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) = \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1})$ \\ 
+with
+$~\mu_i = \frac{1}{\sigma_x^2}\Lambda_i^{-1}\xi_i$, 
+$\Lambda_i = \frac{1}{\sigma_x^2} \sum_{jk : x_{ikj} \in \mathcal{X}^{t}} (R_k e_j)(R_k e_j)^\top$, 
+$\xi_i = \sum_{jk : x_{ikj} \in \mathcal{X}^{t}}  x_{ikj} R_{k} e_{j} + 
+\sum_{jk : x_{jki} \in \mathcal{X}^{t}} x_{jki} R_{k}^\top e_{j}.$
+\\ \hline
+$p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  = \mathcal{N}(\text{vec}(R_k) | 
+\mu_k, \Lambda_k^{-1})$ \\
+with 
+$\mu_k = \frac{1}{\sigma_x^2}\Lambda_k^{-1}\xi_k$,  
+$\Lambda_k = \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i 
+\otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2}$, 
+$\xi_k = \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{i} \otimes e_{j}).$ 
+\\ \hline
+$p(x_{ikj}| E, \mathcal{X}^{t}, \sigma_x, \sigma_r) 
+= \mathcal{N}(x_{ikj}| \mu_k ^\top (e_i \otimes e_j), \frac{1}{\sigma_x^2} +  
+(e_i \otimes e_j)^\top \Lambda_k (e_i \otimes e_j))$ 
+\end{tabu}
+\end{table*}
+
+\rev{The posteriors for Gaussian output are listed in Table 1.}
+
+\eat{%LX: these are all in the table now. 
 For the gaussian output case, the conditional posterior of $e_i$ given $E_{-i}$ 
 and $R$ or $R_k$ given $E$ are straight forward. We use the negative subscript $-
 i$ to indicate the every other entity variables except $e_i$. The 
@@ -120,3 +155,4 @@ $x_{ikj}$ given $\mathcal{X}$ and $E$ is
 &= \mathcal{N}(x_{ikj}| \mu_k ^\top (e_i \otimes e_j), \frac{1}{\sigma_x^2} +  
 (e_i \otimes e_j)^\top \Lambda_k (e_i \otimes e_j)). \notag
 \end{align}
+}

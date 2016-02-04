@@ -48,7 +48,16 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 
-\usepackage{multirow}
+\usepackage[svgnames]{xcolor}
+\usepackage{tabu}
+\definecolor{navy}{rgb}{0.1, 0.1, 0.8}
+\definecolor{gray}{rgb}{0.6, 0.6, 0.6}
+\taburulecolor{gray}
+
+\newcommand{\eat}[1]{}
+\newcommand{\rev}[1]{{\color{blue}{#1}}}
+\newcommand{\verify}[1]{{\color{red}{#1}}}
+\newcommand{\TODO}[2]{ {\bf [{#1}:~{#2}]}}
 
 % The \icmltitle you define below is probably too long as a header.
 % Therefore, a short form for the running title is supplied here:
