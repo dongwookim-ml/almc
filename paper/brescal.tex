@@ -48,10 +48,10 @@ knowledge base, We model this variable in two different ways as follows:}
 \rev{there are two reasonable distributions for the observable variable $x_{ikj}$.}
 
 \textbf{Logistic output \eat{variable}}: The variable $x_{ikj}$ is a 
-binary indicator variable which tells the triple is valid or not.
+binary \eat{indicator} variable \rev{indicating whether} the triple is valid or not.
 \eat{One natural choice to model the binary variable is to 
 place a logistic regression model.}
-\rev{One natural model for this is a binomial on the output of a logistic regression.}
+\rev{One natural way to model this is a binomial with its probability determined by logistic regression.}
 \begin{align}
 p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
 \end{align}
