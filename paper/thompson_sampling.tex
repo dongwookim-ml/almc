@@ -1,30 +1,5 @@
 %!TEX root = ./icml2016.tex
 \section{Particle Thompson Sampling}
-Statistical relational models have been proposed to tackle
-various problems of knowledge bases. For example, it can be used 
-for question understanding and answering problems \cite{Dong2015},
-or it can be integrated into a search engine
-to improve the users' search experiment \cite{dong2014knowledge}.
-
-However, most of previous latent feature models lack the consideration
-of constructing a knowledge graph with the latent features.
-As an alternative approach, distant supervision algorithms
-\cite{Mintz2009} suggest a way to fill a missing part of knowledge graph
-through the extensive NLP processing, however, this method inherently
-requires a set of initial observations used as a distant supervision.
-
-Here, we tackle the problem of knowledge base construction with the
-statistical relational model.
-A goal of knowledge base construction is to acquire a maximum number
-of valid triples with a limited budget.
-This goal corresponds to a general objective of the multi-armed bandit (MAP)
-problem where we want to minimise the cumulative regret or maximise
-the cumulative reward over time. 
-In recent years, Thompson sampling has been emerged as  
-an competitive solution in MAP problems.
-We borrow Thompson sampling, which provides a principled
-way to find an optimal trade off between exploration and exploitation,
-to solve the knowledge base construction problem.
 
 Thompson sampling has been gaining an increasing attention 
 because of a competitive empirical performance as well as its conceptual 

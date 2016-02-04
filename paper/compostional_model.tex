@@ -4,18 +4,7 @@ In this section, we propose a compositional relation model that exploit the comp
 knowledge graph to capture the latent semantic structure of the entities and relations. 
 While previously suggested vector space models provide a statistical way to infer the latent semantic 
 structure of entities and relations, but lack consideration of a graph structure of a knowledge base itself.
-
-In a separate way from the vector space models, graph feature algorithms such as the path ranking algorithm 
-are suggested to fill a missing part of a knowledge graph \cite{Lao2010}. The graph feature algorithms 
-directly include graph structures, such as edge type, node type, and node degree, to learn and predict new 
-triples, however, the absence of latent structure makes the models failed to predict a new triple when the 
-target entities does not have rich structural background\cite{nickel2015review}.
-
-We propose a compositional vector space model that benefits the latent representation of vector space model 
-along with the graph structure of the graph feature models. Recently, Guu et. al. suggest a compositional 
-training framework for vector space models \cite{gu2015traversing}, where paths over a knowledge graph act 
-as a new form of structural regularisation of the models. Based on their work, we extend the compositional 
-approach within a probabilistic framework with two compositional structures.
+%%LX: the above para is also in intro right now.
 
 The compositionality represents a semantic meaning of a path over a knowledge graph that corresponds to a 
 sequence of composable triples. 
