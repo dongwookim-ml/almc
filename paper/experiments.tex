@@ -64,6 +64,42 @@ Figure \ref{fig:syn3} and \ref{fig:syn4} also reveal the capability of BNORMAL w
 Both results indicate the particle sampling is capable of inferring latent features 
 of entities and relations as the interaction increases.
 
+\TODO{TODO}{swapped 6.2 and 6.3 as discussed. smooth the text, look out for inconsistencies.}
+
+\subsection{Training with compositional relations}
+Applying Thompson sampling to the compositional models is not straight forward. 
+Because, in the compositional model, adding one valid triple in a knowledge base will 
+change the accompanying compositional paths over the extended tensor $\mathcal{X}^L$. 
+Therefore, the system requires to compute potential gains in the 
+compositional structure for every candidate query triple. This computational complexity 
+will increase exponentially as we increase the length of the composition.
+
+In this experiment, instead running the Thompson sampling for the compositional models,
+we follow the standard train/validation/test approach to measure the performance of the compositional models, since the computational complexity of the standard MCMC for the compositional models is endurable. 
+The results between active acquisition and training and testing are not always coincident, but if the Thompson sampling samples latent features from true posterior of the compositional model, the samples corresponds to the true posterior samples from the training set.
+
+For all experiments, we set the compositional length $L$ to 2, split datasets into 20\% of validation set and 30\% of test set. We vary the proportion of training triples
+from 1\% to 13\% of datasets. Based on the trained model, we measure the ROC-AUC scores on the test set.
+
+Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, the multiplicative compositional model (BCOMP\_MUL) outperforms the additive compositional model (BCOMP\_ADD), and outperforms the other baseline models when the proportion of training set is relatively small. For UMLS and NATION, BCOMP\_MUL outperforms across the all training proportions, however for KINSHIP, the model performs better when the training proportion is less than 7\%.
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\linewidth]{images/comp_training_error_kinship_small.pdf}
+	\includegraphics[width=\linewidth]{images/comp_training_error_umls_small.pdf}			
+	\includegraphics[width=\linewidth]{images/comp_training_error_nation_small.pdf}				
+	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. 
+	The x-axis denotes the proportion of an observed triples including negative triples used for training 
+	models. We use other 20\% of triples as a validation set and another 30\% of triples as a test set. 
+%waiting result now...
+%In general, compositional models outperform BRESCAL and BLOGIT model when the size of training set is 
+%relatively small, whereas BRESCAL and BLOGIT perform slightly better than or comparable to the 
+%compositional models when the size of training set is relatively large. For UMLS dataset, the multiplicative 
+%compositional model consistently outperforms the other models across all training proportions.
+}
+\end{figure} 
+
+
 \subsection{Thompson sampling on real datasets}
 \begin{table}[t]
 \centering
@@ -141,37 +177,4 @@ from a small set of training data so the model can exploit a certain latent stru
 given an initially trained model, whereas in our experiment, we start from zero 
 observation which makes the model hard to exploit the structure. This result shows 
 the importance of balancing between exploitation and exploration.
-
-\subsection{Training with compositional relations}
-Applying Thompson sampling to the compositional models is not straight forward. 
-Because, in the compositional model, adding one valid triple in a knowledge base will 
-change the accompanying compositional paths over the extended tensor $\mathcal{X}^L$. 
-Therefore, the system requires to compute potential gains in the 
-compositional structure for every candidate query triple. This computational complexity 
-will increase exponentially as we increase the length of the composition.
-
-In this experiment, instead running the Thompson sampling for the compositional models,
-we follow the standard train/validation/test approach to measure the performance of the compositional models, since the computational complexity of the standard MCMC for the compositional models is endurable. 
-The results between active acquisition and training and testing are not always coincident, but if the Thompson sampling samples latent features from true posterior of the compositional model, the samples corresponds to the true posterior samples from the training set.
-
-For all experiments, we set the compositional length $L$ to 2, split datasets into 20\% of validation set and 30\% of test set. We vary the proportion of training triples
-from 1\% to 13\% of datasets. Based on the trained model, we measure the ROC-AUC scores on the test set.
-
-Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, the multiplicative compositional model (BCOMP\_MUL) outperforms the additive compositional model (BCOMP\_ADD), and outperforms the other baseline models when the proportion of training set is relatively small. For UMLS and NATION, BCOMP\_MUL outperforms across the all training proportions, however for KINSHIP, the model performs better when the training proportion is less than 7\%.
-
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=\linewidth]{images/comp_training_error_kinship_small.pdf}
-	\includegraphics[width=\linewidth]{images/comp_training_error_umls_small.pdf}			
-	\includegraphics[width=\linewidth]{images/comp_training_error_nation_small.pdf}				
-	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. 
-	The x-axis denotes the proportion of an observed triples including negative triples used for training 
-	models. We use other 20\% of triples as a validation set and another 30\% of triples as a test set. 
-%waiting result now...
-%In general, compositional models outperform BRESCAL and BLOGIT model when the size of training set is 
-%relatively small, whereas BRESCAL and BLOGIT perform slightly better than or comparable to the 
-%compositional models when the size of training set is relatively large. For UMLS dataset, the multiplicative 
-%compositional model consistently outperforms the other models across all training proportions.
-}
-\end{figure} 
 
