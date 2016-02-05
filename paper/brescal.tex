@@ -72,12 +72,12 @@ The role of this parameter will be further discussed in the compositional model 
 We develop an efficient Gibbs sampler to perform inference for Bayesian RESCAL.
 The key for achieving efficiency are the two conditional posteriors for latent features.
 The Gibbs updates are given by:
-\begin{align*}
+\begin{align}
 p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}(e_i | \mu_i,
-\Lambda_i^{-1}) \\
+\Lambda_i^{-1})  \label{eqn:sample_e} \\
 p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x) &= \mathcal{N}(\text{vec}(R_k) |
-\mu_k, \Lambda_k^{-1})
-\end{align*}
+\mu_k, \Lambda_k^{-1}) \label{eqn:sample_r}
+\end{align}
 where the egative subscript $-i$ indicates the every other entity variables except $e_i$.
 The means and precision matrices are listed in Table~\ref{tab:brescalposterior}, where we have
 used the identity $e_i^{\top} R_k e_j = r_k^{\top} e_i \otimes e_j$.
@@ -95,10 +95,18 @@ posterior estimate of $e_i$ or $R_k$ given the rest can be computed through the
 standard logistic regression solvers with regularisation parameters. Given the
 maximum a posteriori parameters $e_i^*$, the posterior covariance $S_i$ of entity
 $i$ takes the form
-\begin{align}
+\begin{align*}
 S_i^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{*\top} R_k e_{j}) (1 - \sigma(e_{i}^{*\top} R_k e_{j})) R_k
-e_{j}(R_k e_{j})^\top \label{eqn:sample_e} \\
+e_{j}(R_k e_{j})^\top\\
  + \sum_{x_{jki}} \sigma(e_{j}^{\top} R_k e_{i}^*) ( 1- \sigma(e_{j}^{\top} R_k e_{i}^*)) R_k^\top e^*_{i}(R_k^\top e^*_{i})^\top + I\sigma_e^{-1}
-. \label{eqn:sample_r}
-\end{align}
-The posterior covariance of $R_k$ can be computed in the same way.
+.
+\end{align*}
+The posterior covariance of $R_k$ can be computed in the same way, and is shown in the appendix.
+
+There are many advantages to a Bayesian view of tensor factorisation, such as
+the quantification of uncertainty by the predictive distribution,
+the ability to utilise priors, and
+the availability of principled model selection.
+We show in the empirical experiments that Bayesian RESCAL outperforms standard RESCAL.
+In the following, we focus on the predictive distribution, which enables us to
+improve sequential knowledge acquisition.
