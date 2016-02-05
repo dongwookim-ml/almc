@@ -1,10 +1,61 @@
-%!TEX root = ./icml2016.tex
+%!TEX root = icml2016.tex
 
 \section{Introduction}
+\label{sec:intro}
 
+%KG background from text, completion
+Relational knowledge bases support reasoning, information retrieval, 
+or question-answering tasks about entities and their relations.
+Most of them contact facts in the form of (entity1, entity2, relation) triples, 
+such as (CarlFriedrichGauss, Braunschweig, BornIn).
+%(ThomasBayes, London, BornIn).
+Automatically acquiring, maintaining, and reasoning in
+knowledge bases is a very active topic area with many important and challenging research questions. 
+%, has sustained attention from both academia and industry. 
+Even the largest of such databases are known to be incomplete~\cite{dong2014knowledge}. %min2013distant
+There are two main ways to fill in the missing facts,
+the first learning new relations from large collections of text or hyper-text,
+%~\cite{Mintz2009,carlson2010toward}, 
+known as knowledge extraction, 
+the second is inferring facts from existing relations,%~\cite{Lao2010,nickel2015review} 
+known as knowledge completion. 
+
+%There are two open 
+One challenge in knowledge base completion is 
+its disconnect from the knowledge extraction setting. 
+It would be nice, for example, to know which question to query for in 
+a search-based method for gathering triples~\cite{west2014knowledge}. 
+Recently \cite{kajino2015active} an active learning strategy for completing 
+knowledge triples, however the employed algorithm find it difficult to achieve 
+high recall and high reconstruction at the same time. 
+Having an active exploit-explore strategy would more effectively 
+connect knowledge completion and extraction problems. 
+Another challenge is leveraging compositional knowledge from existing triples. 
+Also known as paths in knowledge graphs, composition of facts is key to 
+achieving common reasoning tasks. 
+For example, the two triples (CarlFriedrichGauss, Braunschweig, BornIn)
+and (Braunschweig, Germany, LocatedIn) implies (CarlFriedrichGauss, Germany, BornIn). 
+Path ranking~\cite{Lao2010}, vector space traversal~\cite{guu2015traversing}
+and composition~\cite{Neelakantan2015} techniques 
+are recently developed to leverage such information for knowledge completion. 
+We note, however, that a principled formulation that can address 
+both open challenges is still missing -- namely, a relational model 
+that can model knowledge compositions in an active setting. 
+
+\TODO{TODO}{revise summary-of-our-approach to be consistent w. the above}
+There are many advantages to a probabilistic formulation of tensor factorisation, 
+such as the quantification of uncertainty by the predictive distribution, 
+the ability to utilise priors, and the availability of principled model selection
+
+The probabilistic model provides a natural way of implementing
+randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
+Thompson sampling is an approach for solving the multi-armed bandit problem,
+which allows us to trade off exploration and exploitation when identifying new triples.
+
+\eat{
 As the amount of information codified in a computer readable fashion increases, the management
 of knowledge bases need to become increasingly more automated. In this paper, we study
-the problem of acquiring new knowledge, given an existing knowledge base. Knowledge bases
+the problem of acquiring new knowledge given an existing knowledge base. Knowledge bases
 are modeled as a set of relations between pairs of entities, for example the factoid
 ``Barack Obama is the 44th president of the United States''
 is modeled as two entities (Barack Obama, United States) being related by ``president of''.
@@ -30,15 +81,16 @@ completion.
 We additionally consider compositional relations as an additional source of weak information
 to further utilise the existing (incomplete) knowledge items.
 
-Goal of this paper 1: Populating knowledge graph with an active label acquisition process corresponding to [B,C,A] in Figure \ref{fig:related3d}.
+Goal of this paper 1: Populating knowledge graph with an active label acquisition process 
+corresponding to [B,C,A] in Figure \ref{fig:related3d}.
 
 [B,C,P] could be an alternative direction (or both).
+}
 
-\TODO{TODO}{integrate these background discussions and citations}
-\rev{
+\eat{
 Statistical relational models have been proposed to tackle
 various problems of knowledge bases. For example, it can be used 
-for question understanding and answering problems \cite{Dong2015},
+for question understanding and answering problems ,
 or it can be integrated into a search engine
 to improve the users' search experiment \cite{dong2014knowledge}.
 
