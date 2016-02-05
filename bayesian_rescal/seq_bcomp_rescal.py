@@ -122,7 +122,7 @@ class PFBayesianCompRescal:
         del d['y']
         return d
 
-    def fit(self, X, obs_mask=None, max_iter=0, test_mask=None):
+    def fit(self, X, obs_mask=None, max_iter=0, test_mask=None, givenR=None):
         """
         Running the particle Thompson sampling with predefined parameters.
 
@@ -214,6 +214,7 @@ class PFBayesianCompRescal:
             # initialize latent variables with gibbs sampling
             E = np.random.random([self.n_entities, self.n_dim])
             R = np.random.random([self.n_pure_relations, self.n_dim, self.n_dim])
+            R = givenR
 
             for gi in range(self.gibbs_iter):
                 tic = time.time()
