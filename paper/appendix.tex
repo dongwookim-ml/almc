@@ -1,8 +1,18 @@
 %!TEX root = ./icml2016.tex
-
+\newpage
 \section*{Appendix}
-\subsection*{Detailed derivation of Equation \ref{eqn:comp_cond_r}}
+\subsection*{Posterior covariance of logistic output}
+Let $R_k^*$ is a maximum a posterior solution of $R_k$ given $E$. Then, the conditional posterior covariance of relation matrix $R_k$ has the form of:
 
+\begin{align}
+S_i^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{\top} R_k^* e_{j}) (1 - \sigma(e_{i}^{*\top} R_k^* e_{j})) 
+\bar{e}_{ij}\bar{e}_{ij}^\top \notag \\
+ + \sum_{x_{jki}} \sigma(e_{j}^{\top} R_k^* e_{i}) ( 1- \sigma(e_{j}^{\top} R_k^* e_{i})) \bar{e}_{ij} \bar{e}_{ij}^\top + I\sigma_r^{-1}, \notag
+\end{align}
+where $\bar{e}_{ij} = e_i \otimes e_j$.
+
+\subsection*{Detailed derivation of Equation \ref{eqn:comp_cond_r}}
+The conditional posterior distribution of the additive compositional model can be computed as follows:
 \begin{align*}
 &p(R_k | E, R_{-k}, \mathcal{X}) \propto p(\mathcal{X} | R, E)p(R_k)&\\
 &\propto \prod_{x_{ikj}}\exp\bigg\{-\frac{(x_{ikj} - e_i^\top R_k e_j)^2}{2\sigma_x^2}\bigg\} &\\
@@ -20,3 +30,32 @@
 Completing the square results Equation \ref{eqn:comp_cond_r}.
 
 
+\subsection*{Rao-Blackwellisation particle Thompson sampling}
+We also develop Rao-Blackwellisation particle Thompson sampling algorithm for the RESCAL with the Gaussian output model. The outline of the algorithm is described in Algorithm \ref{alg:rbsmc}. With the Rao-Blackwellisation, we marginalise out the relation matrix $R_k$ while computing the weight of each particle, but we still keep the same MCMC kernel to generate the samples. In theory, this will reduce the degeneracy problems for long running particles, but in our experiment, the difference between two models is not significant.
+\begin{algorithm}[t!]
+   \caption{Rao-Blackwellised Particle Thompson Sampling for Gaussian output}
+   \label{alg:rbsmc}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} $\sigma_x, \sigma_e, \sigma_r$.
+   \FOR{$t=1,2, \dots$}
+   \STATE \textit{Thompson Sampling}:
+   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t-1})$
+   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t})$   % \hfill $\triangleright$ see Table. (\ref{tab:brescalposterior})
+   \STATE Query $(i,k,j)$ and observe $x_{ikj}$
+   \STATE $\mathcal{X}^{t} \leftarrow \mathcal{X}^{t-1} \cup x_{ikj}$
+
+   \STATE \textit{Particle Filtering}:
+   \STATE $\forall h, w_h^{t} \propto p(x_{ikj} | E^{h_t})$   \hfill $\triangleright$ Reweighting%, Table. (\ref{tab:brescalposterior})
+   \IF{ESS$(\mathbf{w}^{t}) \leq N$}
+   \STATE resample particles
+   \STATE $w_h^{t} \leftarrow 1/H$
+   \ENDIF
+
+   \FOR{$h=1$ {\bfseries to} $H$}
+   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}^{t}, E^{h_{t-1}})$   \hfill $\triangleright$ Auxiliary sampling%, see Table. (\ref{tab:brescalposterior})
+   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}^{t}, E^{h}_{-i}, \mathcal{R}^{h_t})$ %\hfill $\triangleright$ see Table. (\ref{tab:brescalposterior})
+   \ENDFOR
+
+   \ENDFOR
+\end{algorithmic}
+\end{algorithm}
