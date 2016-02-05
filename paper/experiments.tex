@@ -1,5 +1,6 @@
 %!TEX root = ./icml2016.tex
 \section{Experiments}
+
 In this section, we 
 \rev{show results for Thomson sampling and compositions for BRESCAL. 
 First on two synthetic datasets, and then on three common benchmarks for knowledge graphs.}
@@ -11,6 +12,17 @@ improves the non-compositional models for finding a latent vector representation
  with exploitation only algorithms, and also show how the compositional model
 improves the entity embedding upon the non-compositional models. }
 %%LX: second sentence can be cut if we need space.
+
+\eat{
+In this section, we verify the Thompson sampling for Bayesian RESCAL (BRESCAL) 
+through the synthetic dataset. We fit the compositional model in general
+passive learning settings and show how the compositionality helps to find the 
+latent features.
+And then, we show how the active knowledge acquisition using Thompson sampling 
+benefits the balance between exploitation and exploration to compare with the 
+exploitation only algorithms. 
+>>>>>>> bd7f11cb775339cba3a538a6f68351c2251ea530
+}
 
 \subsection{\rev{Thompson Sampling on }synthetic data}
 \begin{figure}[t]
@@ -73,7 +85,6 @@ of entities and relations as the interaction increases.}
 
 \subsection{Training with compositional relations}
 
-
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=\linewidth]{images/comp_training_error_kinship_small.pdf}
@@ -88,7 +99,7 @@ of entities and relations as the interaction increases.}
 Applying Thompson sampling to the compositional models is not straight forward. 
 Because, in the compositional model, adding one valid triple in a knowledge base will 
 change the accompanying compositional paths over the extended tensor $\mathcal{X}^L$. 
-Therefore, the system requires to compute potential gains in the 
+Therefore, the system requires to compute potential changes in the 
 compositional structure for every candidate query triple. This computational complexity 
 will increase exponentially as we increase the length of the composition.
 
@@ -99,7 +110,7 @@ The results between active acquisition and training and testing are not always c
 For all experiments, we set the compositional length $L$ to 2, split datasets into 20\% of validation set and 30\% of test set. We vary the proportion of training triples
 from 1\% to 13\% of datasets. Based on the trained model, we measure the ROC-AUC scores on the test set.
 
-Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, the multiplicative compositional model (BCOMP\_MUL) outperforms the additive compositional model (BCOMP\_ADD), and outperforms the other baseline models when the proportion of training set is relatively small. For UMLS and NATION, BCOMP\_MUL outperforms across the all training proportions, however for KINSHIP, the model performs better when the training proportion is less than 7\%.
+Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, the multiplicative compositional model (BCOMP-MUL) outperforms the additive compositional model (BCOMP-ADD), and outperforms the other baseline models when the proportion of training set is relatively small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions, however for KINSHIP, the model performs better when the training proportion is less than 7\%.
 
 
 \subsection{Thompson sampling on real datasets}
@@ -156,8 +167,8 @@ We leave 30 \% of triples as a test set to measure test error.
 At each time period, each model choose one triples to query, 
 if the selected triple is in the test set then we choose the next highest expected triple which is not in the test set.
 All models start from zero observation. 
-After every querying, the system obtains a label of the queried triples from an oracle,
-then the system updates the parameters of the model. 
+After every querying, the model obtains a label of the queried triples from an oracle,
+then the model updates the parameters. 
 
 \textbf{Evaluation metric}: We use two different evaluation metrics, ROC-AUC score, and cumulative gain,
 for the performance comparison. One goal of the Thompson sampling is to maximise the knowledge 
@@ -169,7 +180,7 @@ test set to understand how this balanced querying strategy results in making a p
 \textbf{Exploitation and exploration}: 
 Figure \ref{fig:c_gain} shows 
 the cumulative gain and ROC-AUC scores of the Thompson sampling on three real datasets.
-BNORMAL performs better than other baseline models for the cumulative gain, and shows comparable result for the ROC-AUC scores.
+BNORMAL performs better than other baseline models for the cumulative gain, and shows comparable result for the ROC-AUC scores. Both compositional models perform worse than BNORMAL across all datasets.
 
 In the original AMDC work \cite{kajino2015active}, AMDC-POP model obtains more 
 valid triples than AMDC-PRED, and AMDC-PRED shows high ROC-AUC scores than AMDC-POP. 
