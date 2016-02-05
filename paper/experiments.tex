@@ -1,16 +1,11 @@
 %!TEX root = ./icml2016.tex
 \section{Experiments}
 
-In this section, we 
-\rev{show results for Thomson sampling and compositions for BRESCAL. 
-First on two synthetic datasets, and then on three common benchmarks for knowledge graphs.}
-\eat{verify the Thompson sampling for Bayesian RESCAL (BRESCAL) 
-through a synthetic dataset, and show how the active knowledge acquisition using Thompson sampling benefits the balance between exploitation and exploration
-to compare with the exploitation only algorithms. And then, we show how the compositional model
-improves the non-compositional models for finding a latent vector representation of knowledge bases.
-}\rev{These experiments compare exploitation and exploration
- with exploitation only algorithms, and also show how the compositional model
-improves the entity embedding upon the non-compositional models. }
+In this section, we show results for Thomson sampling and compositions for BRESCAL. 
+First on two synthetic datasets, and then on three common benchmarks for knowledge graphs.
+%\rev{These experiments compare exploitation and exploration
+% with exploitation only algorithms, and also show how the compositional model
+%improves the entity embedding upon the non-compositional models. }
 %%LX: second sentence can be cut if we need space.
 
 \eat{
@@ -200,7 +195,7 @@ Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models wi
 	passive learning algorithms and shows comparable performance on ROC-AUC scores.}
 \end{figure*}
 
-Next, we evaluate the Thompson sampling for both compositional and non-compositional models on real datasets.
+Next, we evaluate particle Thompson sampling for both compositional and non-compositional models on real datasets.
 
 \textbf{Experimental settings}: 
 We compare our model with AMDC, and passive learning with BRESCAL.  
@@ -208,7 +203,7 @@ AMDC model has been proposed to achieve two different active learning goals, con
 model and maximising the valid triples in a knowledge base, with two different querying strategies
  \cite{kajino2015active}. 
 AMDC-PRED is a predictive model construction strategy and chooses a triple which is the most ambiguous (close to the decision boundary) at each time $t$.
-AMDC-POP is a population strategy which aims to maximise the number of valid triples in a knowledge base. AMDC-POP chooses a triple that has the highest expected value at each time.  
+AMDC-POP is a population strategy which aims to maximise the number of valid triples in a knowledge base, choosing a triple with the highest expected value at each time.  
 To train all models we only use the observed triples up to the current time. For the passive learning with BRESCAL, we generate a random sample at each time period. For the particle Thompson sampling models, we set variance parameter $\sigma_e$ and $\sigma_r$ to 1, $\sigma_x$ to 0.1, and vary $\sigma_c$ from 1 to 100.
 
 We leave 30 \% of triples as a test set to measure test error. 
@@ -235,8 +230,9 @@ valid triples than AMDC-PRED, and AMDC-PRED shows high ROC-AUC scores than AMDC-
 In our experiment, however, AMDC-POP shows comparable cumulative gain to AMDC-PRED 
 and even worse than AMDC-PRED for the UMLS. We conjecture the initial observation 
 results in the  different performances: in the original experiment, the model starts
-from a small set of training data so the model can exploit a certain latent structure 
-given an initially trained model, whereas in our experiment, we start from zero 
+from a small set of training data so this gives the model focusing on exploit and advantage, 
+%a certain latent structure given an initially trained model
+whereas in our experiment, we start from zero 
 observation which makes the model hard to exploit the structure. This result shows 
 the importance of balancing between exploitation and exploration.
 
