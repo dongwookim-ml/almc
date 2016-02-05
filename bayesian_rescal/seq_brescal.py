@@ -222,7 +222,7 @@ class PFBayesianRescal:
         del d['RTE']
         return d
 
-    def fit(self, X, obs_mask=None, max_iter=100, test_mask=None, givenR=None):
+    def fit(self, X, obs_mask=None, max_iter=100, test_mask=None):
         """
         Running the particle Thompson sampling with predefined parameters.
 
@@ -266,15 +266,12 @@ class PFBayesianRescal:
         if self.gibbs_init and np.sum(self.obs_sum) != 0:
             # initialize latent variables with gibbs sampling
             E = np.random.random([self.n_entities, self.n_dim])
-            E = np.identity(self.n_entities)
             R = np.random.random([self.n_relations, self.n_dim, self.n_dim])
 
             for gi in range(20):
                 tic = time.time()
-                if isinstance(givenR, type(None)):
-                    self._sample_relations(cur_obs, obs_mask, E, R, self._var_r)
-                else:
-                    self._sample_entities(cur_obs, obs_mask, E, R, self._var_e)
+                self._sample_entities(cur_obs, obs_mask, E, R, self._var_e)
+                self._sample_relations(cur_obs, obs_mask, E, R, self._var_r)
                 logger.info("Gibbs Init %d: %f", gi, time.time() - tic)
 
             for p in range(self.n_particles):

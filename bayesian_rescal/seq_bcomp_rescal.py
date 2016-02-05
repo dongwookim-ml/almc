@@ -122,7 +122,7 @@ class PFBayesianCompRescal:
         del d['y']
         return d
 
-    def fit(self, X, obs_mask=None, max_iter=0, test_mask=None, givenR=None):
+    def fit(self, X, obs_mask=None, max_iter=0, test_mask=None, realT=None):
         """
         Running the particle Thompson sampling with predefined parameters.
 
@@ -181,7 +181,7 @@ class PFBayesianCompRescal:
         for k in range(self.n_pure_relations):
             cur_obs[k][obs_mask[k] == 1] = X[k][obs_mask[k] == 1]
 
-        self.expand_obsmask(obs_mask, cur_obs)
+        #self.expand_obsmask(obs_mask, cur_obs)
 
         # sum of the observed values for each relation
         self.obs_sum = np.sum(np.sum(obs_mask, 1), 1)
@@ -190,12 +190,12 @@ class PFBayesianCompRescal:
 
         del expand_X
 
-        max_possible_iter = int(np.prod([self.n_pure_relations, self.n_entities, self.n_entities]) - np.sum(
-            obs_mask[:self.n_pure_relations]))
-        if max_iter > max_possible_iter:
-            max_iter = max_possible_iter
+        # max_possible_iter = int(np.prod([self.n_pure_relations, self.n_entities, self.n_entities]) - np.sum(
+        #     obs_mask[:self.n_pure_relations]))
+        # if max_iter > max_possible_iter:
+        #     max_iter = max_possible_iter
 
-        cur_obs[cur_obs.nonzero()] = 1
+        # cur_obs[cur_obs.nonzero()] = 1
 
         for i in range(self.n_entities):
             nz = obs_mask[:, i, :].nonzero()
@@ -214,7 +214,6 @@ class PFBayesianCompRescal:
             # initialize latent variables with gibbs sampling
             E = np.random.random([self.n_entities, self.n_dim])
             R = np.random.random([self.n_pure_relations, self.n_dim, self.n_dim])
-            R = givenR
 
             for gi in range(self.gibbs_iter):
                 tic = time.time()
@@ -231,6 +230,7 @@ class PFBayesianCompRescal:
                 self.E[p] = np.random.random([self.n_entities, self.n_dim])
                 self.R[p] = np.random.random([self.n_pure_relations, self.n_dim, self.n_dim])
 
+        X = realT
         if len(self.log) > 0:
             seq = list()
             for idx in self.particle_filter(X, cur_obs, obs_mask, max_iter, test_mask):
@@ -272,12 +272,12 @@ class PFBayesianCompRescal:
 
             cur_obs[next_idx] = X[next_idx]
             mask[next_idx] = 1
-            if cur_obs[next_idx] == self.pos_val:
-                self.expand_obsmask(mask, cur_obs, next_idx[0])
+            # if cur_obs[next_idx] == self.pos_val:
+            #     self.expand_obsmask(mask, cur_obs, next_idx[0])
             if X[next_idx] == self.pos_val:
                 pop += 1
 
-            cur_obs[cur_obs.nonzero()] = 1
+            # cur_obs[cur_obs.nonzero()] = 1
 
             logger.info('[NEXT](%s) %s: %.3f, population: %d/%d', self.compositionality, str(next_idx), X[next_idx],
                         pop, i + 1)
@@ -285,7 +285,7 @@ class PFBayesianCompRescal:
             self.p_weights *= self.compute_particle_weight(next_idx, cur_obs, mask)
             self.p_weights /= np.sum(self.p_weights)
 
-            cur_obs[cur_obs.nonzero()] = 1
+            # cur_obs[cur_obs.nonzero()] = 1
             self.obs_sum = np.sum(np.sum(mask, 1), 1)
 
             logger.debug('[Additional Points] %d', np.sum(self.obs_sum[self.n_pure_relations:]))
@@ -357,7 +357,17 @@ class PFBayesianCompRescal:
 
         log_weight = np.zeros(self.n_particles)
         for p in range(self.n_particles):
-            mean = np.dot(np.dot(self.E[p][e_i], self.R[p][r_k]), self.E[p][e_j])
+            if r_k < self.n_pure_relations:
+                mean = np.dot(np.dot(self.E[p][e_i], self.R[p][r_k]), self.E[p][e_j])
+            else:
+                if self.compositionality == ADDITIVE:
+                    for _k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
+                        if _k+self.n_pure_relations == r_k:
+                            mean = np.dot(np.dot(self.E[p][e_i], 0.5*self.R[p][k1] + 0.5*self.R[p][k2]), self.E[p][e_j])
+                elif self.compositionality == MULTIPLICATIVE:
+                    for _k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
+                        if _k+self.n_pure_relations == r_k:
+                            mean = np.dot(np.dot(self.E[p][e_i], np.dot(self.R[p][k1], self.R[p][k2])), self.E[p][e_j])
             log_weight[p] = norm.logpdf(X[next_idx], mean, self.var_x)
 
         log_weight -= np.max(log_weight)
@@ -386,8 +396,8 @@ class PFBayesianCompRescal:
 
     def get_next_sample(self, mask, test_mask=None):
         p = multinomial(1, self.p_weights).argmax()
-        _X = self._reconstruct(self.E[p], self.R[p], False)
-        _X[mask[:self.n_pure_relations] == 1] = MIN_VAL
+        _X = self._reconstruct(self.E[p], self.R[p], True)
+        _X[mask[:self.n_relations] == 1] = MIN_VAL
         if not isinstance(test_mask, type(None)):
             _X[test_mask == 1] = MIN_VAL
         return np.unravel_index(_X.argmax(), _X.shape)
@@ -655,8 +665,13 @@ class PFBayesianCompRescal:
     def _reconstruct(self, E, R, include_comp=False):
         if include_comp:
             _X = np.zeros([self.n_relations, self.n_entities, self.n_entities])
-            for k in range(self.n_relations):
+            for k in range(self.n_pure_relations):
                 _X[k] = np.dot(np.dot(E, R[k]), E.T)
+            for k, (k1, k2) in enumerate(itertools.product(range(self.n_pure_relations), repeat=2)):
+                if self.compositionality == ADDITIVE:
+                    _X[self.n_pure_relations + k] = np.dot(np.dot(E, 0.5*R[k1] + 0.5*R[k2]), E.T)
+                elif self.compositionality == MULTIPLICATIVE:
+                    _X[self.n_pure_relations + k] = np.dot(np.dot(E, np.dot(R[k1], R[k2])), E.T)
         else:
             _X = np.zeros([self.n_pure_relations, self.n_entities, self.n_entities])
             for k in range(self.n_pure_relations):
