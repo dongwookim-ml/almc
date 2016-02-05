@@ -60,8 +60,20 @@ For inference, we design Gibbs sampling for BRESCAL with and without and composi
 with by computing conditional posteriors. 
 We employ a sequential Monte-Carlo method for the active querying of new triples, 
 called particle Thompson sampling. 
-We study the performance of proposed models with both synthetic and real relational datasets. 
+We first test the proposed models with synthetic datasets. 
+We observe that Thompson sampling provide significant gain over random sampling of triples, 
+we also observe a clear gain in tensors with known composition structure. 
+We then evaluated the model on three real-world relation datasets. In passive learning setting, 
+we find BRESCAL out-performing the non-probabilistic version of tensor factorisation, 
+and that compositions help when training set is sparse. 
+In the active learning scenario, 
+we find that BRESCAL achieves the highest cumulative gain across all datasets. 
+it is encouraging to see the exploit-explore strategy with uncertainty outperform 
+active learning strategies that focus on exploit or favours uncertainty. 
 
+We are pleased to be able to learn a vector-space model for entities and relations with uncertainty, 
+bridging the gaps of probabilistic active sampling and knowledge compositions. 
+We look forward to follow-on work with better sampling strategies and computational scalability. 
 
 \eat{
 Statistical relational models have been proposed to tackle
