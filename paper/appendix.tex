@@ -6,8 +6,7 @@ Let $R_k^*$ is a maximum a posterior solution of $R_k$ given $E$. Then, the cond
 
 \begin{align}
 S_i^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{\top} R_k^* e_{j}) (1 - \sigma(e_{i}^{*\top} R_k^* e_{j})) 
-\bar{e}_{ij}\bar{e}_{ij}^\top \notag \\
- + \sum_{x_{jki}} \sigma(e_{j}^{\top} R_k^* e_{i}) ( 1- \sigma(e_{j}^{\top} R_k^* e_{i})) \bar{e}_{ij} \bar{e}_{ij}^\top + I\sigma_r^{-1}, \notag
+\bar{e}_{ij}\bar{e}_{ij}^\top + I\sigma_r^{-1}, \notag
 \end{align}
 where $\bar{e}_{ij} = e_i \otimes e_j$.
 

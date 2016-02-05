@@ -1,51 +1,61 @@
 %!TEX root = ./icml2016.tex
 \section{Particle Thompson Sampling}
 
-Thompson sampling has been gaining an increasing attention 
-because of a competitive empirical performance as well as its conceptual 
-simplicity. Let $y_{1:t}$ be a sequence of rewards up to time $t$, and $\theta$ is an underlying parameter governing the rewards. With Thompson sampling, an agent choose action $a$ according to its probability of being optimal:
+Thompson sampling has been gaining an increasing attention
+because of a competitive empirical performance as well as its conceptual
+simplicity~\cite{scott10bandit,li11thompson}. Let $y_{1:t}$ be a sequence of rewards up to time $t$, and $\theta$ is an underlying parameter governing the rewards. With Thompson sampling, an agent choose action $a$ according to its probability of being optimal:
 \begin{align}
-\arg\max_a \int \mathbb{I}\bigg[ \mathbb{E}(r|a, \theta) 
+\arg\max_a \int \mathbb{I}\bigg[ \mathbb{E}(r|a, \theta)
 = \max_{a'}\mathbb{E}(r|a',\theta) \bigg] p(\theta|y_{1:t-1}) d\theta, \notag
 \end{align}
-where $\mathbb{I}$ is an indicator function. Note that it is sufficient 
+where $\mathbb{I}$ is an indicator function. Note that it is sufficient
 to draw a random sample from the posterior instead computing the integral.
 
 We formulate Thompson sampling for knowledge base construction
-system as follows. 
-First, we assume there are optimal latent features $E^*$ and $R^*$, and 
+system as follows.
+First, we assume there are optimal latent features $E^*$ and $R^*$, and
 the triples are generated through Equation \ref{eqn:entity_gen}$-$
-\ref{eqn:triple_gen}. At time $t$, the system draw sample $E^t$ and $R^t$ 
-from the posterior distribution, and then choose an optimal triple $(i,k,j) 
+\ref{eqn:triple_gen}. At time $t$, the system draws samples $E^t$ and $R^t$
+from the posterior distribution, and then chooses an optimal triple $(i,k,j)^*
 = \arg\max_{i,k,j} e_i^\top R_k e_j$ to be queried. Finally, with the newly
-observed triple $x_{i,k,j}$, the system updates the posterior of the latent 
+observed triple $x_{(i,k,j)^*}$, the system updates the posterior of the latent
 features.
 
-The main difficulty of applying Thompson sampling to this task is a sequential update of the posterior distribution of the latent features with new observations over time. Unlike the point estimate algorithms such as
-the variational inference, computing a full posterior with MCMC 
-requires extensive computational cost. To make the algorithm feasible, we employ a sequential Monte-Carlo (SMC) method for online posterior inference.
+The main difficulty of applying Thompson sampling to this task is a sequential update of the posterior distribution of the latent features with new observations over time. Unlike the point estimation algorithms such as
+the maximum likelihood estimate, computing a full posterior with MCMC
+requires extensive computational cost. To make the algorithm feasible, we employ a sequential Monte-Carlo (SMC) method for online posterior inference, generalising an algorithm proposed
+in~\cite{kawale2015efficient} to tensors.
 
-The SMC starts with $H$ number of particles, each of which starts with weight $w_{h} = 1/H$, and a set of randomly sampled latent features $E^{h_0}$ and $R^{h_0}$. With a slight abuse of notations, let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$. 
-At time $t$, the system choose one particle according to weights of particles, 
-and then generate a new query via Thompson sampling from the selected particle.
-After observing a new variable, the system updates the posterior samples of 
-every particles through the MCMC kernels with the new observation.
+The SMC starts with $H$ number of particles, each of which starts with likelihood
+weight $w_{h} = 1/H$, and a set of randomly sampled latent features $E^{h_0}$ and $R^{h_0}$.
+With a slight abuse of notation, let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$.
+At time $t$, the system chooses one particle according to the particle weights,
+and then generates a new query via Thompson sampling from the selected particle.
+After observing a new variable, the system updates the posterior samples of
+every particle through the MCMC kernels with the new observation.
 We first sample the relation matrices using Equation \ref{eqn:sample_r}, and sample the entity vectors using Equation \ref{eqn:sample_e}.
-Under the mild assumption where 
-$p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$, 
-the weight of each particle at time $t$ can be computed as follows 
+Under the mild assumption where
+$p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$,
+the weight of each particle at time $t$ can be computed as follows
 \cite{del2006sequential,chopin2002sequential}:
 \begin{align}
 w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)}
  = p(x^{t} | \Theta, \mathcal{X}^{t-1})
 \end{align}
-SMC may suffer from the degeneracy problem. To keep the posterior samples
-on regions of high probability mass, we resample the particles whenever 
-an effective sample size (ESS) is less than a predefined threshold. 
-The ESS can be computed as $(\sum_h w_h^2)^{-1}$, and we set the threshold 
-to $N/2$. This resampling step allows to remove the particles with 
-low weights with a high probability, while keep the samples from the posterior.
-We summarise the particle Thompson sampling for Bayesian RESCAL with the Gaussian output variable in Algorithm \ref{alg:smc}.
+To keep the posterior samples
+on regions of high probability mass, we resample the particles whenever
+an effective sample size (ESS) is less than a predefined threshold.
+The ESS can be computed as $(\sum_h w_h^2)^{-1}$, and we set the threshold
+to $N/2$. Resampling removes low weight particles with high probability,
+while keeping samples from the posterior.
+We summarise the particle Thompson sampling for Bayesian RESCAL with the
+Gaussian output variable in Algorithm \ref{alg:smc}.
+
+We show that the Thompson sampling approach improves over passive Bayesian RESCAL in
+experiments with real and synthetic data.
+We also investigated the extension of the Rao-Blackwellisation approach as proposed
+in~\cite{kawale2015efficient}, but we did not observe any significant performance improvements.
+We describe our extension in the appendix.
 
 %\subsection{(?)Particle Thompson sampling with SGLD kernel}
 %Above two algorithms are not well suitable for large scale dataset because the sample requires quantities estimated over all possible triples.
@@ -83,31 +93,3 @@ We summarise the particle Thompson sampling for Bayesian RESCAL with the Gaussia
    \ENDFOR
 \end{algorithmic}
 \end{algorithm}
-
-%\begin{algorithm}[t!]
-%   \caption{Rao-Blackwallized Particle Thompson Sampling for Tensor Factorisation}
-%   \label{alg:rbsmc}
-%\begin{algorithmic}
-%   \STATE {\bfseries Input:} $\sigma_x, \sigma_e, \sigma_r$.
-%   \FOR{$t=1,2, \dots$}
-%   \STATE \textit{Thompson Sampling}:
-%   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t})$
-%   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_t})$    \hfill $\triangleright$ see Eq. (\ref{eqn:marginal_predict})
-%   \STATE Observe $x_{ikj}$ and update $\mathcal{X}^{t}$
-%
-%   \STATE \textit{Particle Filtering}:
-%   \STATE $\forall h, w_h^{t+1} \propto p(x_{ikj} | E^{h})$   \hfill $\triangleright$ Reweighting, Eq. (\ref{eqn:marginal_predict})
-%   \IF{ESS$(\mathbf{w}^{t+1}) \leq N$}
-%   \STATE resample particles
-%   \STATE $w_h^{t+1} \leftarrow 1/H$
-%   \ENDIF
-%
-%   \FOR{$h=1$ {\bfseries to} $H$}
-%   \STATE $\forall k, R_k^{h} \sim p(R_k | \mathcal{X}^{t}, E^{h})$   \hfill $\triangleright$ Auxiliary sampling, see Eq. (\ref{eqn:sample_r})
-%   \STATE $\forall i, e^{h}_i \sim p(e_i | \mathcal{X}^{t}, E^{h}_{-i}, \mathcal{R}^{h})$ \hfill $\triangleright$ see Eq. (\ref{eqn:sample_e})
-%   \ENDFOR
-%
-%   \ENDFOR
-%\end{algorithmic}
-%\end{algorithm}
-%
