@@ -2,11 +2,13 @@
 
 \section{Related Work}
 
-The literature on data factorisation or low-rank approximation is vast. 
-We give a brief overview of related work with respect to three
-orthogonal dimensions, a statistical method, learning strategy, and 
-representation of data, which are helpful to formulate our problem.
-We review important perspectives within each dimension below:
+The literature on data factorisation and vector space models for 
+relational data is vast. 
+%or low-rank approximation is vast. 
+We give a brief overview of related work along three design choices:
+%with respect to three orthogonal dimensions, 
+the method, the learning strategy, and the data representation. 
+We then use these dimensions to help position our work. 
 \begin{description}
 %\item[Statistical method] With an statistical assumption used to develop 
 %underlying model structure, we broadly categorise models into Bayesian 
@@ -32,14 +34,36 @@ relation2 -- entity3.
 %represented as a matrix or tensor. A graph representation of tensor reveals
 %a compositional structure of the data.
 \end{description}
-In Table \ref{tbl:relatedwork}, we summarise the previous work based on 
-the combination of the different perspectives of each dimension.
-
-The knowledge base construction has been widely focused in the natural 
-language processing communities. Manual data acquisition with human crafted 
+In Table \ref{tbl:relatedwork}, we summarise a sample of related recent work 
+along all combinations in each dimension. 
+Note that N,A,C, or Non-Bayesian Active Composition model, can be done by 
+simply using the query strategies from \citet{kajino2015active} on the 
+compositional model by \citet{guu2015traversing}. Our work address a critical gap 
+in Bayesian Tensor factorisation capable of learning in the 
+Active setting with relation Compositions.
+\eat{The knowledge base construction has been widely focused in the natural 
+language processing communities. 
+Manual data acquisition with human crafted 
 or automatically inferred synthetic rules or distant supervision on a large
-amount of unlabelled text are the main tools to construct \cite{fader2011identifying,Mintz2009}.
-Recently, \citet{kajino2015active} show active knowledge base construction
+amount of unlabelled text are the main tools to construct \cite{fader2011identifying,Mintz2009}.}
+
+Given this position, our work is inspired by, and most closely related to:
+%Recently, 
+active multi-relational data construction (AMDC) 
+with tensor factorisation~\cite{kajino2015active}, 
+Thomson sampling for matrix factorisation~\cite{kawale2015efficient}, 
+and compositions objectives in vector space~\cite{guu2015traversing}.
+Note that we re-formulate the compositions objectives in the 
+probabilistially such that it can be used in an active setting; 
+our approach for active learning is a generalisation of
+Thomson sampling from matrixes to tensors; 
+AMDC find that reconstruction accuracy and recall 
+cannot be achieved at the same time with strategies geared towards 
+either exploit or reducing uncertainty, 
+we show that the two objectives can be achieved at the same time with 
+a properly designed exploration and exploitation scheme. 
+
+\eat{show active knowledge base construction
 algorithm based on the low-rank structure. They proposed active 
 multi-relational data construction (AMDC) with two separate problems: 
 a knowledge base population and predictive model construction, and show 
@@ -47,7 +71,7 @@ that these two goals cannot be achieved at the same time. In this work,
 we show that it can be achieved at the same time with a properly designed
 exploration and exploitation scheme that has been shown in the matrix 
 factorisation problem \cite{kawale2015efficient}.
-
+}
 
 
 %\begin{itemize}
