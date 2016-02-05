@@ -99,7 +99,7 @@ p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_
 where
 the mean and precision are obtained by expanding out the product across $\mathcal{X}^{t}$ and
 $\mathcal{X}^{L(t)}$. The details of the parameters are shown in the appendix.
-The conditional distribution of $e_i$ given the rest is the same as Equation $\ref{eqn:sample_e}$.
+The conditional distribution of $e_i$ given the rest is the same as Equation $\ref{eqn:comp_sample_e}$.
 
 As the length of sequence $c$ increases, a small error in the first few multiplication will result a large
 differences in the final compositional relation. One way to mitigate the cascading error is to increase variance
@@ -107,8 +107,8 @@ of compositional triples $\sigma_c$ as the length of the sequence increases.
 
 With the conditional distributions, both compositional models can use the same
 particle Thompson sampling scheme described in Algorithm \ref{alg:smc}.
-However, the expanded triples cannot be queried since the expanded triples 
-may not be observable.
+However, the model can only query the triples in the original tensor and 
+not in the expanded tensor because the triples are not observable.
 
 %If the determinant of latent relation $R_k$ is greater than 1, the compositional latent relation $R_c$ might
 %be exploded after multiplying a long sequence of relations. To obtain a stable scale of compositional
