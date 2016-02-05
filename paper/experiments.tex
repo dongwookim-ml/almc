@@ -33,11 +33,11 @@ exploitation only algorithms.
 	\subfigure[\scriptsize Logistic: N=20, K=10, D=5\label{fig:syn2}]{
 	\includegraphics[width=0.445\linewidth]{images/toy_logit_vs_normal_20_10_5.pdf}
 	}
-	\subfigure[\scriptsize Gaussian: N=5, K=5, D=5\label{fig:syn3}]{
-	\includegraphics[width=0.42\linewidth]{images/toy_5_5_5.pdf}
+	\subfigure[\scriptsize Gaussian: N=10, K=10, D=5\label{fig:syn3}]{
+	\includegraphics[width=0.42\linewidth]{images/toy_10_10_5.pdf}
 	}
-	\subfigure[\scriptsize Gaussian: N=10, K=10, D=5\label{fig:syn4}]{
-	\includegraphics[width=0.45\linewidth]{images/toy_10_10_5.pdf}				
+	\subfigure[\scriptsize Gaussian: N=20, K=10, D=5\label{fig:syn4}]{
+	\includegraphics[width=0.45\linewidth]{images/toy_20_10_5.pdf}				
 	}
 %	\includegraphics[width=0.32\linewidth]{images/toy_5_10_5.pdf}			
 %	\includegraphics[width=0.32\linewidth]{images/toy_10_5_5.pdf}				
@@ -46,7 +46,7 @@ exploitation only algorithms.
 	%We compared the particle Thompson sampling with passive sampling method. 
 	The averaged cumulative regrets over 10 runs are plotted with one standard error. 
 	As the model obtained more and more labeled samples from Thompson sampling, 
-	the cumulative regrets increase sub-linearly.\TODO{TODO if time}{update the Gaussian case w. N=20.}}
+	the cumulative regrets increase sub-linearly.}
 \end{figure}
 
 \eat{To verify the particle Thompson sampling, }We first synthesise two \eat{sets of }datasets 
@@ -55,7 +55,7 @@ following the model assumptions in Eq. \ref{eqn:entity_gen} to
 \verify{\ref{eqn:triple_gen}}. 
 \eat{We randomly generate triples based on randomly sampled entities and relations. Every }
 \rev{First, }entities and relations are generated from zero-mean isotropic multivariate normal distribution, \eat{where we set }\rev{with } 
-variance parameters \verify{$\sigma_e=??$, $\sigma_r=??$}, respectively.
+variance parameters $\sigma_e=10$, $\sigma_r=10$, respectively.
 \rev{We generate two sets of \eat{the final}output triples,}
 \eat{we generate two sets of datasets with }
 \rev{with} the logistic output \eat{output variable }and the Gaussian \rev{with $\sigma_x$ set to 0.1}\eat{ variable}, respectively (Sec~\ref{sec:brescal}). 
