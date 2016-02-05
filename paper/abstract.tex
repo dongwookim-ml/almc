@@ -1,10 +1,26 @@
 %!TEX root = ./icml2016.tex
 \begin{abstract}
-  Automated processes for knowledge base completion benefit from models that account for
-  statistical uncertainty. We propose a probabilistic model for low rank tensor factorisation,
-  which generalises the RESCAL model to explicitly model distributions of relations. This
-  enables us to extend the particle Thompson sampling approach to knowledge bases, and we
-  demonstrate the benefit of active knowledge acquisition. We explore additive and multiplicative
-  approaches for composing relations, and show the regimes where compositional models are
-  beneficial for knowledge base completion.
+  %Automated processes for knowledge base completion benefit from models that account for
+  %statistical uncertainty. 
+  We are concerned with the problem of knowledge base completion, or inferring missing facts 
+  from known relations. 
+  It is desirable to take into account paths and compositions, and 
+  able to connect to the knowledge extraction problem by actively 
+  acquiring labeled data points. 
+  Recent knowledge completion algorithms could do either, but not both. 
+  We propose a probabilistic model to bridge this gap. 
+  We start from a new formulation of vector space embedding for knowledge tensors, 
+  %which generalises the RESCAL model to 
+  that explicitly model distributions of relations. This
+  enables us to extend Thompson sampling approach to knowledge bases, and 
+  %we demonstrate the benefit of active knowledge acquisition. We 
+  also incorporate additive and multiplicative
+  approaches for composing relations. 
+  On synthetic and real world datasets, 
+  we find that learning with composition is helpful 
+  when training data is sparse,
+  and that Thompson sampling provide effective exploit-explore strategies 
+  that balance recall and reconstruction accuracy. 
+  % and show the regimes where compositional models are
+  %beneficial for knowledge base completion.
 \end{abstract}
