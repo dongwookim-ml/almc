@@ -119,23 +119,42 @@ To measure how much knowledge are obtained through the querying stage, we fist c
 gain which is the number of obtained valid triple up to time $t$, and then compute the ROC-AUC score on 
 test set to understand how this balanced querying strategy results in making a predictive model.
 
-\begin{figure}[t]
+%\begin{figure}[t]
+%	\centering
+%	
+%	\subfigure[KINSHIP]{
+%	\includegraphics[width=\linewidth]{images/thompson_kinship.pdf}
+%	}
+%	\subfigure[UMLS]{
+%	\includegraphics[width=\linewidth]{images/thompson_umls.pdf}				
+%	}
+%	\subfigure[NATION]{
+%	\includegraphics[width=\linewidth]{images/thompson_nation.pdf}				
+%	}	
+%	\caption{\label{fig:c_gain}The cumulative gain and ROC-AUC score of the Thompson sampling 
+%	with various baseline approaches. Thompson sampling with Bayesian RESCAL (BNORMAL)
+%	model achieves the highest cumulative gain to compare with other active and 
+%	passive learning algorithms and shows comparable performance on ROC-AUC scores.}
+%\end{figure}
+
+\begin{figure*}[t]
 	\centering
 	
 	\subfigure[KINSHIP]{
-	\includegraphics[width=\linewidth]{images/thompson_kinship.pdf}
+	\includegraphics[width=0.3\linewidth]{images/thompson_kinship_vertical.pdf}
 	}
 	\subfigure[UMLS]{
-	\includegraphics[width=\linewidth]{images/thompson_umls.pdf}				
+	\includegraphics[width=0.3\linewidth]{images/thompson_umls_vertical.pdf}				
 	}
 	\subfigure[NATION]{
-	\includegraphics[width=\linewidth]{images/thompson_nation.pdf}				
+	\includegraphics[width=0.3\linewidth]{images/thompson_nation_vertical.pdf}				
 	}	
 	\caption{\label{fig:c_gain}The cumulative gain and ROC-AUC score of the Thompson sampling 
 	with various baseline approaches. Thompson sampling with Bayesian RESCAL (BNORMAL)
 	model achieves the highest cumulative gain to compare with other active and 
 	passive learning algorithms and shows comparable performance on ROC-AUC scores.}
-\end{figure}
+\end{figure*}
+
 
 \textbf{Exploitation and exploration}: 
 Figure \ref{fig:c_gain} shows 
