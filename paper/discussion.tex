@@ -1,6 +1,6 @@
 %!TEX root = ./icml2016.tex
 \section{Discussion}
-We will leave the active acquisition of the compositional model a future work.
+We have proposed a novel compositional relational model and presented the Thompson sampling for proposed models to solve the active knowledge acquisition problem. The compositional model aims to infer the latent features of knowledge bases by incorporating a graph structure of the knowledge. In the passive learning scenario, the compositional model outperforms the other models, especially, when training size is relatively small. In the active learning scenario, however, the compositional model performs worse than the model without composition. If the samples of the compositional model follows the posterior distribution, it may show the similar performance with the passive learning scenario, but this assumption does not always hold. One possible explanation is that the naive particle Thompson sampling may not capture the posterior of the complex compositional structure.
 
 %\begin{description}
 %  \item[Not useful theorem] In \cite{kawale2015efficient}, the theorem does not really give
