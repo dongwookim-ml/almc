@@ -6,8 +6,8 @@
 %KG background from text, completion
 Relational knowledge bases support reasoning, information retrieval, 
 or question-answering tasks about entities and their relations.
-Most of them contact facts in the form of (entity1, entity2, relation) triples, 
-such as (CarlFriedrichGauss, Braunschweig, BornIn).
+Most of them contact facts in the form of (entity1, relation, entity2) triples, 
+such as (CarlFriedrichGauss, BornIn, Braunschweig).
 %(ThomasBayes, London, BornIn).
 Automatically acquiring, maintaining, and reasoning in
 knowledge bases is a very active topic area with many important and challenging research questions. 
@@ -33,8 +33,8 @@ connect knowledge completion and extraction problems.
 Another challenge is leveraging compositional knowledge from existing triples. 
 Also known as paths in knowledge graphs, composition of facts is key to 
 achieving common reasoning tasks. 
-For example, the two triples (CarlFriedrichGauss, Braunschweig, BornIn)
-and (Braunschweig, Germany, LocatedIn) implies (CarlFriedrichGauss, Germany, BornIn). 
+For example, the two triples (CarlFriedrichGauss, BornIn, Braunschweig)
+and (Braunschweig, LocatedIn, Germany) implies (CarlFriedrichGauss, BornIn Germany). 
 Path ranking~\cite{Lao2010}, vector space traversal~\cite{guu2015traversing}
 and composition~\cite{Neelakantan2015} techniques 
 are recently developed to leverage such information for knowledge completion. 
@@ -56,10 +56,11 @@ which allows us to trade-off exploration and exploitation when identifying new t
 %randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
 We also perform compositional training for the probabilistic model, 
 by modeling relation compositions as algebraic operations in the probabilistic embedding space. 
-For inference, we design Gibbs sampling for BRESCAL with and without and compositions 
-with by computing conditional posteriors. 
+For inference, we design Gibbs sampling for BRESCAL with and without and compositions. 
+%with by computing conditional posteriors. 
 We employ a sequential Monte-Carlo method for the active querying of new triples, 
 called particle Thompson sampling. 
+
 We first test the proposed models with synthetic datasets. 
 We observe that Thompson sampling provide significant gain over random sampling of triples, 
 we also observe a clear gain in tensors with known composition structure. 

@@ -10,9 +10,9 @@ structure of entities and relations, but lack consideration of a graph structure
 
 The compositionality represents a semantic meaning of a path over a knowledge graph that corresponds to a
 sequence of composable triples.
-For example, given two triples, ``Barack Obama is a 44th president of U.S.'' (Barack Obama / president of /
-U.S) and ``Joe Biden was a running mate of Barack Obama'' (Joe Biden / running mate of / Barack Obama),
-one can naturally deduce that the ``Joe Biden is a vice president of U.S.'' (Joe Biden / vice president of / U.S.).
+For example, given two triples, ``Barack Obama is a 44th president of U.S.'' (BarackObama, PresidentOf,
+U.S) and ``Joe Biden was a running mate of Barack Obama'' (JoeBiden, RunningMateOf, BarackObama),
+one can naturally deduce that the ``Joe Biden is a vice president of U.S.'' (JoeBiden, VicePresidentOf, U.S.).
 Here the composition of two relations, president of, and running mate of, yield to a compositional relation,
 vice president of.
 % Is every running mate always a vice president? maybe this is not a proper example.
