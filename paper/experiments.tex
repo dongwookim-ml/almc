@@ -29,10 +29,10 @@ improves the entity embedding upon the non-compositional models. }
 	}
 %	\includegraphics[width=0.32\linewidth]{images/toy_5_10_5.pdf}			
 %	\includegraphics[width=0.32\linewidth]{images/toy_10_5_5.pdf}				
-	\caption{\label{fig:synthetic} Cumulative regret of particle Thompson sampling 
+	\caption{\label{fig:synthetic} Cumulative regret of particle Thompson sampling with Gaussian and logistic output ({\sc BNORMAL, BLOGIT}) against Passive learning. 
 	on synthetic datasets with logistic	(top row, a, b) and Gaussian (bottom row, c, d) output variables.
 	%We compared the particle Thompson sampling with passive sampling method. 
-	The averaged cumulative regrets \verify{over X runs} are plotted with one standard error. 
+	The averaged cumulative regrets over 10 runs are plotted with one standard error. 
 	As the model obtained more and more labeled samples from Thompson sampling, 
 	the cumulative regrets increase sub-linearly.\TODO{TODO if time}{update the Gaussian case w. N=20.}}
 \end{figure}
@@ -63,18 +63,16 @@ Figure \ref{fig:synthetic} shows the cumulative regret of the algorithm on the s
 entities and relations. We compare the cumulative regret of the particle Thompson sampling with the passive 
 learning method where the model choose a random triple at each time. All results are averaged over 10 
 individual runs with different initialisations. 
-Note that the dataset with the logistic output variables can be used to train both Bayesian logistic RESCAL (BLOGIT) and Bayesian Gaussian RESCAL (BNORMAL) whereas the dataset with the Gaussian output can only be trained by BNORMAL.
-Figure \ref{fig:syn1} and \ref{fig:syn2} show that with the logistic synthetic dataset both models are capable to learn the latent features of the generated triples. 
-Figure \ref{fig:syn3} and \ref{fig:syn4} also reveal the capability of BNORMAL with respect to the real valued dataset.
+Note that the dataset with binary logistic output variables can be used to train both Bayesian logistic RESCAL (BLOGIT) and Bayesian Gaussian RESCAL (BNORMAL) whereas the dataset with the Gaussian output can only be trained by BNORMAL.
+Figure \ref{fig:syn1} and \ref{fig:syn2} show that with the logistic synthetic dataset both models are capable to learn the latent features of the generated triples, with logistic out-performing the Gaussian; Figure \ref{fig:syn3} and \ref{fig:syn4} show that BNORMAL \rev{out-perform passive learning in} the real valued dataset. 
 %For every experiment, the cumulative regret of the Thompson 
 %sampling method was bounded after a certain number of interactions whereas the cumulative regret of 
 %passive learning increases linearly. 
-Both results indicate the particle sampling is capable of inferring latent features 
-of entities and relations as the interaction increases.
+\eat{Both results indicate the particle sampling is capable of inferring latent features 
+of entities and relations as the interaction increases.}
 
 \subsection{Training with compositional relations}
 
-\TODO{TODO}{swapped 6.2 and 6.3 as discussed. smooth the text, look out for inconsistencies.}
 
 \begin{figure}[t]
 	\centering
