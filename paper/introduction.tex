@@ -22,10 +22,10 @@ known as knowledge completion.
 
 %There are two open 
 One challenge in knowledge base completion is 
-its disconnect from the knowledge extraction setting. 
+its disconnection from the knowledge extraction setting. 
 It would be nice, for example, to know which question to query for in 
 a search-based method for gathering triples~\cite{west2014knowledge}. 
-Recently \cite{kajino2015active} an active learning strategy for completing 
+Recently \citet{kajino2015active} propose an active learning strategy for completing 
 knowledge triples, however the algorithm find it difficult to achieve 
 high recall and high reconstruction at the same time. 
 Having an active exploit-explore strategy would more effectively 
@@ -45,12 +45,14 @@ that can model knowledge compositions in an active setting.
 %\TODO{TODO}{revise summary-of-our-approach to be consistent w. the above}
 We propose a novel probabilistic re-formulation of tensor factorisation,  
 one of the main competitive variants for knowledge completion~\cite{nickel2015review}. 
-There are many advantages to a probabilistic formulation of tensor factorisation, 
-such as the quantification of uncertainty by the predictive distribution, 
-the ability to utilise priors, and the availability of principled model selection. 
+%There are many advantages to a probabilistic formulation of tensor factorisation, 
+%such as the quantification of uncertainty by the predictive distribution, 
+%the ability to utilise priors, and the availability of principled model selection. 
 We name our model Bayesian RESCAL (BRESCAL).
-The probabilistic model provides a natural way of implementing 
-active triple selection for knowledge completion, using 
+The probabilistic model provides a natural way of 
+embracing uncertainty of triples that is crucial to develop 
+%implementing
+an active triple selection for knowledge completion, using 
 Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
 which allows us to trade-off exploration and exploitation when identifying new triples.
 %randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
@@ -69,7 +71,7 @@ we find BRESCAL out-performing the non-probabilistic version of tensor factorisa
 and that compositions help when training set is sparse. 
 In the active learning scenario, 
 we find that BRESCAL achieves the highest cumulative gain across all datasets. 
-it is encouraging to see the exploit-explore strategy with uncertainty outperform 
+It is encouraging to see the exploit-explore strategy with uncertainty out-performs 
 active learning strategies that focus on exploit or favours uncertainty. 
 
 We are pleased to be able to learn a vector-space model for entities and relations with uncertainty, 
