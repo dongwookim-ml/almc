@@ -169,7 +169,7 @@ we follow the standard train/validation/test approach to measure the performance
 For all experiments, we set the compositional length $L$ to 2, split datasets into 20\% of validation set and 30\% of test set. We vary the proportion of training triples
 from 1\% to 13\% of datasets. Based on the trained model, we measure the ROC-AUC scores on the test set.
 
-Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, BCOMP-MUL outperforms BCOMP-ADD, and outperforms the other baseline models when the proportion of training set is relatively small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions, however for KINSHIP, the model performs better when the training proportion is less than 7\%.
+Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, BCOMP-MUL out-performs BCOMP-ADD, and performs better the other baseline models when the proportion of training set is relatively small. For UMLS and NATION, BCOMP-MUL out-performs across the all training proportions, however for KINSHIP, the model performs better when the training proportion is less than 7\%.
 
 
 \subsection{Thompson sampling on real datasets}
@@ -201,7 +201,7 @@ model and maximising the valid triples in a knowledge base, with two different q
  \cite{kajino2015active}. 
 AMDC-PRED is a predictive model construction strategy and chooses a triple which is the most ambiguous (close to the decision boundary) at each time $t$.
 AMDC-POP is a population strategy which aims to maximise the number of valid triples in a knowledge base. AMDC-POP chooses a triple that has the highest expected value at each time.  
-To train all models we only use the observed triples up to the current time. For the passive learning with BRESCAL, we generate a random sample at each time period. For the particle Thompson sampling models, we set variance parameter $\sigma_e$ and $\sigma_r$ to 1, and $\sigma_x$ to 0.1.
+To train all models we only use the observed triples up to the current time. For the passive learning with BRESCAL, we generate a random sample at each time period. For the particle Thompson sampling models, we set variance parameter $\sigma_e$ and $\sigma_r$ to 1, $\sigma_x$ to 0.1, and vary $\sigma_c$ from 1 to 100.
 
 We leave 30 \% of triples as a test set to measure test error. 
 At each time period, each model choose one triples to query, 
