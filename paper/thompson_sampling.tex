@@ -36,8 +36,7 @@ every particle through the MCMC kernels with the new observation.
 We first sample the relation matrices using Equation \ref{eqn:sample_r}, and sample the entity vectors using Equation \ref{eqn:sample_e}.
 Under the mild assumption where
 $p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$, $\Theta = \{E, \mathcal{R}\}$,
-the weight of each particle at time $t$ can be computed as follows
-\cite{del2006sequential,chopin2002sequential}:
+the weight of each particle at time $t$ can be computed as follows~\cite{del2006sequential,chopin2002sequential}:
 \begin{align}
 w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)}
  = p(x^{t} | \Theta, \mathcal{X}^{t-1})
@@ -46,7 +45,7 @@ To keep the posterior samples
 on regions of high probability mass, we resample the particles whenever
 an effective sample size (ESS) is less than a predefined threshold.
 The ESS can be computed as $(\sum_h w_h^2)^{-1}$, and we set the threshold
-to $N/2$ \cite{Doucet2011}. Resampling removes low weight particles with high probability,
+to $N/2$~\cite{Doucet2011}. Resampling removes low weight particles with high probability,
 while keeping samples from the posterior.
 We summarise the particle Thompson sampling for BRESCAL with the
 Gaussian output variable in Algorithm \ref{alg:smc}.
