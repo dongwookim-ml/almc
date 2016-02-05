@@ -1,5 +1,25 @@
 %!TEX root = icml2016.tex
 \section{Bayesian RESCAL}
+
+\begin{table*}[bt]
+\caption{Parameters for Gibbs updates. $\otimes$ is the Kronecker product.}
+\label{tab:brescalposterior}
+\begin{tabu}{l|l|l}
+$\mu$&$\Lambda$&$\xi$\\
+\hline
+$\frac{1}{\sigma_x^2}\Lambda_i^{-1}\xi_i$&
+$\frac{1}{\sigma_x^2} \sum_{jk : x_{ikj} \in \mathcal{X}^{t}} (R_k e_j)(R_k e_j)^\top$&
+$\sum_{jk : x_{ikj} \in \mathcal{X}^{t}}  x_{ikj} R_{k} e_{j} +
+\sum_{jk : x_{jki} \in \mathcal{X}^{t}} x_{jki} R_{k}^\top e_{j}.$
+\\
+$\frac{1}{\sigma_x^2}\Lambda_k^{-1}\xi_k$&
+$\frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i
+\otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2}$&
+$\sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{i} \otimes e_{j}).$
+\end{tabu}
+\end{table*}
+
+
 A relational knowledge base consists of a set triples in the form of $(i, k, j)$
 where $i$, $j$ are entities, and $k$ is a relation. A triple can be distinguished
 in a valid triple and invalid triple based on a semantic meaning of a triple. An
@@ -37,121 +57,48 @@ a zero-mean isotropic matrix normal distribution.
 \label{eqn:relation_gen}
 R_k \sim \mathcal{MN}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
 \text{or equivalently}\enspace r_k  = \text{vec}(R_k) \sim N(\mathbf{0}, \sigma_r^2 I_{D^2}) \notag
-\end{align} %%LX: pull r_k to the front so that it's easy to find
-Finally,\eat{we have an observable variable $x_{ikj}$ for each triple in the
-knowledge base, We model this variable in two different ways as follows:}
-\rev{there are two reasonable distributions for the observable variable $x_{ikj}$.}
-
-\textbf{Logistic output \eat{variable}}: The variable $x_{ikj}$ is a
-binary \eat{indicator} variable \rev{indicating whether} the triple is valid or not.
-\eat{One natural choice to model the binary variable is to
-place a logistic regression model.}
-\rev{One natural way to model this is a binomial with its probability determined by logistic regression.}
-\begin{align}
-p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
 \end{align}
-where $\sigma$ is a sigmoid function.
+where $\text{vec}(R_k)$ denotes the flattening of the matrix.
 
-\textbf{Gaussian output \eat{variable}}:
-\eat{Second, we}\rev{We can also} place a normal distribution over $x_{ikj}$.
+We consider two models for $x_{ikj}$: a real or random variable. By placing a
+normal distribution over $x_{ikj}$,
 \begin{align}
-x_{ikj} |e_i, e_j, R_k \sim \mathcal{N}(e_i^{\top} R_k e_j, \sigma_x^2) = \mathcal{N}(r_k^{\top} e_i \otimes e_j, \sigma_x^2)  \notag %\label{eqn:triple_gen}
-\end{align} %%LX: moved this into one line, hopefully not breaking crossrefs
-\eat{Although this is not a trivial choice, through the variance parameter $
-\sigma_x^2$, we can control the confidence about certain observations. }
-\rev{Note that we can control the confidence on different observations}
+  x_{ikj} |e_i, e_j, R_k \sim \mathcal{N}(e_i^{\top} R_k e_j, \sigma_x^2) \label{eqn:triple_gen}
+\end{align}
+we can control the confidence on different observations
 through the variance parameter $\sigma_x^2$.
-\eat{We will discuss more about}
-The role of \rev{this parameter will be further discussed} in the compositional model section.
+The role of this parameter will be further discussed in the compositional model section.
 
-\eat{Given a modelling choice, computing the posterior of latent features $p(E, R|
-\mathcal{X})$ is generally intractable. Here, we provide two conditional
-posteriors to develop an efficient Gibbs sampler.
-} %%LX: flip the sequence/emphasis of the narrative
-\rev{We develop an efficient Gibbs sampler to perform inference for Bayesian RESCAL.
+We develop an efficient Gibbs sampler to perform inference for Bayesian RESCAL.
 The key for achieving efficiency are the two conditional posteriors for latent features.
-%This is made possible by two conditional posteriors of latent features,
-%as $p(E, R|\mathcal{X})$ is generally intractable.
-}
-\rev{The posteriors for Gaussian output are listed in Table~\ref{tab:brescalposterior}.}
-For \eat{the }logistic regression output, we approximate the conditional posterior of
+The Gibbs updates are given by:
+\begin{align*}
+p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}(e_i | \mu_i,
+\Lambda_i^{-1}) \\
+p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x) &= \mathcal{N}(\text{vec}(R_k) |
+\mu_k, \Lambda_k^{-1})
+\end{align*}
+where the egative subscript $-i$ indicates the every other entity variables except $e_i$.
+The means and precision matrices are listed in Table~\ref{tab:brescalposterior}, where we have
+used the identity $e_i^{\top} R_k e_j = r_k^{\top} e_i \otimes e_j$.
+
+Alternatively, we may want to more closely model the fact that the observations are binary.
+Therefore we model $x_{ikj}$ as a binomial distributed random variable whose
+probability is determined by logistic regression.
+\[
+p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
+\]
+where $\sigma$ is a sigmoid function.
+e approximate the conditional posterior of
 $E$ and $R$ by Laplace approximation \cite{bishop2006pattern}. The maximum a
 posterior estimate of $e_i$ or $R_k$ given the rest can be computed through the
 standard logistic regression solvers with regularisation parameters. Given the
-maximum a posterior parameters $e_i^*$, the posterior covariance $S_i$ of entity
+maximum a posteriori parameters $e_i^*$, the posterior covariance $S_i$ of entity
 $i$ takes the form
 \begin{align}
 S_i^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{*\top} R_k e_{j}) (1 - \sigma(e_{i}^{*\top} R_k e_{j})) R_k
-e_{j}(R_k e_{j})^\top \notag \\
+e_{j}(R_k e_{j})^\top \label{eqn:sample_e} \\
  + \sum_{x_{jki}} \sigma(e_{j}^{\top} R_k e_{i}^*) ( 1- \sigma(e_{j}^{\top} R_k e_{i}^*)) R_k^\top e^*_{i}(R_k^\top + I\sigma_e^{-1}
-e^*_{i})^\top. \notag
+e^*_{i})^\top. \label{eqn:sample_r}
 \end{align}
 The posterior covariance of $R_k$ can be computed in the same way.
-
-\begin{table*}[tb]
-\caption{Conditional posteriors for Gaussian output. Negative subscript $-i$ indicates the every other entity variables except $e_i$, $\otimes$ is Kronecker product.}\label{tab:brescalposterior}
-\begin{tabu}{l}
-$p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) = \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1})$ \\
-with
-$~\mu_i = \frac{1}{\sigma_x^2}\Lambda_i^{-1}\xi_i$,
-$\Lambda_i = \frac{1}{\sigma_x^2} \sum_{jk : x_{ikj} \in \mathcal{X}^{t}} (R_k e_j)(R_k e_j)^\top$,
-$\xi_i = \sum_{jk : x_{ikj} \in \mathcal{X}^{t}}  x_{ikj} R_{k} e_{j} +
-\sum_{jk : x_{jki} \in \mathcal{X}^{t}} x_{jki} R_{k}^\top e_{j}.$
-\\ \hline
-$p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  = \mathcal{N}(\text{vec}(R_k) |
-\mu_k, \Lambda_k^{-1})$ \\
-with
-$\mu_k = \frac{1}{\sigma_x^2}\Lambda_k^{-1}\xi_k$,
-$\Lambda_k = \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i
-\otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2}$,
-$\xi_k = \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{i} \otimes e_{j}).$
-\\ \hline
-$p(x_{ikj}| E, \mathcal{X}^{t}, \sigma_x, \sigma_r)
-= \mathcal{N}(x_{ikj}| \mu_k ^\top (e_i \otimes e_j), \frac{1}{\sigma_x^2} +
-(e_i \otimes e_j)^\top \Lambda_k (e_i \otimes e_j))$
-\end{tabu}
-\end{table*}
-
-\eat{%LX: these are all in the table now.
-For the gaussian output case, the conditional posterior of $e_i$ given $E_{-i}$
-and $R$ or $R_k$ given $E$ are straight forward. We use the negative subscript $-
-i$ to indicate the every other entity variables except $e_i$. The
-conditional distribution of $e_i$ given $\mathcal{R}$ and other entities $E_{-i}$
-is
-\begin{align} \label{eqn:sample_e}
-p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}
-(e_i | \mu_i, \Lambda_i^{-1}),
-\end{align}
-where
-\begin{align*}
-\mu_i &= \frac{1}{\sigma_x^2}\Lambda_i^{-1}\xi_i \\
-\Lambda_i &= \frac{1}{\sigma_x^2} \sum_{jk : x_{ikj} \in \mathcal{X}^{t}} (R_k
-e_j)(R_k e_j)^\top \\
-&\quad+ \frac{1}{\sigma_x^2} \sum_{jk : x_{jki} \in \mathcal{X}^{t}} (R_k^\top
-e_j)(R_k^\top e_j)^\top+ \frac{1}{\sigma_e^2} {I}_D \\
-\xi_i &= \sum_{jk : x_{ikj} \in \mathcal{X}^{t}}  x_{ikj} R_{k} e_{j} +
-\sum_{jk : x_{jki} \in \mathcal{X}^{t}} x_{jki} R_{k}^\top e_{j}.
-\end{align*}
-Let $\otimes$ be a Kronecker product. The conditional distribution of $R_k$ given
-$E$ is
-\begin{align}
-\label{eqn:sample_r}
-p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) |
-\mu_k, \Lambda_k^{-1}),
-\end{align}
-where
-\begin{align*}
-\mu_k &= \frac{1}{\sigma_x^2}\Lambda_k^{-1}\xi_k \\
-\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i
-\otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2} \\
-\xi_k &= \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{i} \otimes e_{j}).
-\end{align*}
-With the gaussian output, the posterior marginal predictive distribution of
-$x_{ikj}$ given $\mathcal{X}$ and $E$ is
-\begin{align}
-\label{eqn:marginal_predict}
-&p(x_{ikj}| E, \mathcal{X}^{t}, \sigma_x, \sigma_r) \\
-&= \mathcal{N}(x_{ikj}| \mu_k ^\top (e_i \otimes e_j), \frac{1}{\sigma_x^2} +
-(e_i \otimes e_j)^\top \Lambda_k (e_i \otimes e_j)). \notag
-\end{align}
-}
