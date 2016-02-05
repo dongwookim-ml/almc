@@ -3,17 +3,19 @@
 \label{sec:brescal}
 
 \begin{table*}[bt]
-\caption{Parameters for Gibbs updates. $\otimes$ is the Kronecker product.}
+\caption{Parameters for Gibbs updates. The posterior of $e_i$ and $R_k$ follows the normal distribution with mean $\mu$ and precision matrix $\Lambda$. $\otimes$ is the Kronecker product.}
 \label{tab:brescalposterior}
 \vskip 0.05in
-\begin{tabu}{l|l|l}
-$\mu$&$\Lambda$&$\xi$\\
+\begin{tabu}{l|l|l|l}
+var&$\mu$&$\Lambda$&$\xi$\\
 \hline
+$e_i$&
 $\frac{1}{\sigma_x^2}\Lambda_i^{-1}\xi_i$&
 $\frac{1}{\sigma_x^2} \sum_{jk : x_{ikj} \in \mathcal{X}^{t}} (R_k e_j)(R_k e_j)^\top$&
 $\sum_{jk : x_{ikj} \in \mathcal{X}^{t}}  x_{ikj} R_{k} e_{j} +
 \sum_{jk : x_{jki} \in \mathcal{X}^{t}} x_{jki} R_{k}^\top e_{j}.$
 \\
+$vec(R_k)$&
 $\frac{1}{\sigma_x^2}\Lambda_k^{-1}\xi_k$&
 $\frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i
 \otimes e_j)(e_i \otimes e_j)^\top + \frac{1}{\sigma_r^2} {I}_{D^2}$&
