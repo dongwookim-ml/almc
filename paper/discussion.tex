@@ -9,7 +9,8 @@ especially, when training size is relatively small. In the active learning
 scenario, however, the compositional model performs worse than the model without 
 composition. If the samples of the compositional model follows the posterior 
 distribution, it may show the similar performance with the passive learning 
-scenario, but this assumption does not always hold. One possible explanation is 
+scenario, but this assumption does not always hold since the active sampling
+path does not correspond to the passive scenario. One possible explanation is 
 that the naive particle Thompson sampling may not capture the posterior of the 
 complex compositional structure, so the particle degenerates over time. Recent
  advances in sequential Monte Carlo may help to solve the problem\cite{gu2015neural,naesseth2014sequential,lindsten2014divide}. 
@@ -21,9 +22,9 @@ importance of being balanced between exploration and exploitation. One
 important finding of the previous work is that the knowledge population 
 and predictive model construction are separate problem, and we need to 
 decide which strategy we will use \cite{kajino2015active}. This finding
-may hold for some scenarios where their is already proper amount of 
+may hold for some scenarios where their is already a proper amount of 
 information to exploit the structure we want to maximise, but the finding 
-does not hold for more conservative cases.
+is not consistence in more conservative cases.
 
 The Thompson sampling has been studied in the context of multi-armed bandit 
 problems where the goal is to maximise cumulative gains or minimise cumulative 
