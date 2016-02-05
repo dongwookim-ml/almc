@@ -55,14 +55,14 @@ following the model assumptions in Eq. \ref{eqn:entity_gen} to
 \verify{\ref{eqn:triple_gen}}. 
 \eat{We randomly generate triples based on randomly sampled entities and relations. Every }
 \rev{First, }entities and relations are generated from zero-mean isotropic multivariate normal distribution, \eat{where we set }\rev{with } 
-variance parameters $\sigma_e=10$, $\sigma_r=10$, respectively.
+variance parameters $\sigma_e=1$, $\sigma_r=1$, respectively.
 \rev{We generate two sets of \eat{the final}output triples,}
 \eat{we generate two sets of datasets with }
 \rev{with} the logistic output \eat{output variable }and the Gaussian \rev{with $\sigma_x$ set to 0.1}\eat{ variable}, respectively (Sec~\ref{sec:brescal}). 
 \eat{The variance of gaussian $\sigma_x$ set to 0.1.}
 
 To measure performance\eat{ on synthetic dataset}, we compute cumulative regret 
-\eat{of proposed algorithm }at each time $n$ as $R(n) = \sum_{t=1}^{n} x_t - x^{*}_t,$, 
+\eat{of proposed algorithm }at each time $n$ as $R(n) = \sum_{t=1}^{n} x_t - x^{*}_t$, 
 %\begin{align}
 %R(n) = \sum_{t=1}^{n} x_t - x^{*}_t,
 %\end{align}
