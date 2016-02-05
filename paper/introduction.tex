@@ -26,7 +26,7 @@ its disconnect from the knowledge extraction setting.
 It would be nice, for example, to know which question to query for in 
 a search-based method for gathering triples~\cite{west2014knowledge}. 
 Recently \cite{kajino2015active} an active learning strategy for completing 
-knowledge triples, however the employed algorithm find it difficult to achieve 
+knowledge triples, however the algorithm find it difficult to achieve 
 high recall and high reconstruction at the same time. 
 Having an active exploit-explore strategy would more effectively 
 connect knowledge completion and extraction problems. 
@@ -42,17 +42,75 @@ We note, however, that a principled formulation that can address
 both open challenges is still missing -- namely, a relational model 
 that can model knowledge compositions in an active setting. 
 
-\TODO{TODO}{revise summary-of-our-approach to be consistent w. the above}
+%\TODO{TODO}{revise summary-of-our-approach to be consistent w. the above}
+We propose a novel probabilistic re-formulation of tensor factorisation,  
+one of the main competitive variants for knowledge completion~\cite{nickel2015review}. 
 There are many advantages to a probabilistic formulation of tensor factorisation, 
 such as the quantification of uncertainty by the predictive distribution, 
-the ability to utilise priors, and the availability of principled model selection
+the ability to utilise priors, and the availability of principled model selection. 
+We name our model Bayesian RESCAL (BRESCAL).
+The probabilistic model provides a natural way of implementing 
+active triple selection for knowledge completion, using 
+Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
+which allows us to trade-off exploration and exploitation when identifying new triples.
+%randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
+We also perform compositional training for the probabilistic model, 
+by modeling relation compositions as algebraic operations in the probabilistic embedding space. 
+For inference, we design Gibbs sampling for BRESCAL with and without and compositions 
+with by computing conditional posteriors. 
+We employ a sequential Monte-Carlo method for the active querying of new triples, 
+called particle Thompson sampling. 
+We study the performance of proposed models with both synthetic and real relational datasets. 
 
-The probabilistic model provides a natural way of implementing
-randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
-Thompson sampling is an approach for solving the multi-armed bandit problem,
-which allows us to trade off exploration and exploitation when identifying new triples.
 
 \eat{
+Statistical relational models have been proposed to tackle
+various problems of knowledge bases. For example, it can be used 
+for question understanding and answering problems ,
+or it can be integrated into a search engine
+to improve the users' search experiment \cite{dong2014knowledge}.
+
+However, most of previous latent feature models lack the consideration
+of constructing a knowledge graph with the latent features.
+As an alternative approach, distant supervision algorithms
+\cite{Mintz2009} suggest a way to fill a missing part of knowledge graph
+through the extensive NLP processing, however, this method inherently
+requires a set of initial observations used as a distant supervision.
+
+Here, we tackle the problem of knowledge base construction with the
+statistical relational model.
+A goal of knowledge base construction is to acquire a maximum number
+of valid triples with a limited budget.
+This goal corresponds to a general objective of the multi-armed bandit (MAP)
+problem where we want to minimise the cumulative regret or maximise
+the cumulative reward over time. 
+In recent years, Thompson sampling has been emerged as  
+an competitive solution in MAP problems.
+We borrow Thompson sampling, which provides a principled
+way to find an optimal trade off between exploration and exploitation,
+to solve the knowledge base construction problem.
+}
+
+\eat{
+We propose a compositional relation model that exploit the compositional structure of 
+knowledge graph to capture the latent semantic structure of the entities and relations.
+While previously suggested vector space models provide a statistical way to infer the latent semantic 
+structure of entities and relations, but lack consideration of a graph structure of a knowledge base itself.
+
+In a separate way from the vector space models, graph feature algorithms such as the path ranking algorithm 
+are suggested to fill a missing part of a knowledge graph \cite{Lao2010}. The graph feature algorithms 
+directly include graph structures, such as edge type, node type, and node degree, to learn and predict new 
+triples, however, the absence of latent structure makes the models failed to predict a new triple when the 
+target entities does not have rich structural background\cite{nickel2015review}.
+
+We propose a compositional vector space model that benefits the latent representation of vector space model 
+along with the graph structure of the graph feature models. Recently, Guu et. al. suggest a compositional 
+training framework for vector space models \cite{gu2015traversing}, where paths over a knowledge graph act 
+as a new form of structural regularisation of the models. Based on their work, we extend the compositional 
+approach within a probabilistic framework with two compositional structures.
+}
+
+\eat{%% v1 of intro
 As the amount of information codified in a computer readable fashion increases, the management
 of knowledge bases need to become increasingly more automated. In this paper, we study
 the problem of acquiring new knowledge given an existing knowledge base. Knowledge bases
@@ -85,51 +143,4 @@ Goal of this paper 1: Populating knowledge graph with an active label acquisitio
 corresponding to [B,C,A] in Figure \ref{fig:related3d}.
 
 [B,C,P] could be an alternative direction (or both).
-}
-
-\eat{
-Statistical relational models have been proposed to tackle
-various problems of knowledge bases. For example, it can be used 
-for question understanding and answering problems ,
-or it can be integrated into a search engine
-to improve the users' search experiment \cite{dong2014knowledge}.
-
-However, most of previous latent feature models lack the consideration
-of constructing a knowledge graph with the latent features.
-As an alternative approach, distant supervision algorithms
-\cite{Mintz2009} suggest a way to fill a missing part of knowledge graph
-through the extensive NLP processing, however, this method inherently
-requires a set of initial observations used as a distant supervision.
-
-Here, we tackle the problem of knowledge base construction with the
-statistical relational model.
-A goal of knowledge base construction is to acquire a maximum number
-of valid triples with a limited budget.
-This goal corresponds to a general objective of the multi-armed bandit (MAP)
-problem where we want to minimise the cumulative regret or maximise
-the cumulative reward over time. 
-In recent years, Thompson sampling has been emerged as  
-an competitive solution in MAP problems.
-We borrow Thompson sampling, which provides a principled
-way to find an optimal trade off between exploration and exploitation,
-to solve the knowledge base construction problem.
-}
-
-\rev{
-We propose a compositional relation model that exploit the compositional structure of 
-knowledge graph to capture the latent semantic structure of the entities and relations.
-While previously suggested vector space models provide a statistical way to infer the latent semantic 
-structure of entities and relations, but lack consideration of a graph structure of a knowledge base itself.
-
-In a separate way from the vector space models, graph feature algorithms such as the path ranking algorithm 
-are suggested to fill a missing part of a knowledge graph \cite{Lao2010}. The graph feature algorithms 
-directly include graph structures, such as edge type, node type, and node degree, to learn and predict new 
-triples, however, the absence of latent structure makes the models failed to predict a new triple when the 
-target entities does not have rich structural background\cite{nickel2015review}.
-
-We propose a compositional vector space model that benefits the latent representation of vector space model 
-along with the graph structure of the graph feature models. Recently, Guu et. al. suggest a compositional 
-training framework for vector space models \cite{gu2015traversing}, where paths over a knowledge graph act 
-as a new form of structural regularisation of the models. Based on their work, we extend the compositional 
-approach within a probabilistic framework with two compositional structures.
 }
