@@ -1,7 +1,7 @@
 %!TEX root = ./icml2016.tex
 \section{Discussion}
 We have proposed a novel compositional relational model and presented the
-Thompson sampling for proposed models to solve the active knowledge acquisition 
+Thompson sampling for both compositional and non-compositional models to solve the active knowledge acquisition 
 problem. The compositional model aims to infer the latent features of knowledge 
 bases by incorporating a graph structure of the knowledge. In the passive 
 learning scenario, the compositional model outperforms the other models, 
@@ -12,7 +12,20 @@ distribution, it may show the similar performance with the passive learning
 scenario, but this assumption does not always hold. One possible explanation is 
 that the naive particle Thompson sampling may not capture the posterior of the 
 complex compositional structure, so the particle degenerates over time. Recent
- advances in sequential Monte Carlo may help to solve the problem \cite{gu2015neural,naesseth2014sequential,lindsten2014divide}.
+ advances in sequential Monte Carlo may help to solve the problem\cite{gu2015neural,naesseth2014sequential,lindsten2014divide}. 
+We leave it  for future work.
+ 
+In the active learning scenario, Bayesian RESCAL achieves the highest 
+cumulative gain across all datasets. Again, this result emphasise the 
+importance of being balanced between exploration and exploitation. One 
+important finding of the previous work is that the knowledge population 
+and predictive model construction are separate problem, and we need to 
+decide which strategy we will use \cite{kajino2015active}. This finding
+may hold for some scenarios where their is already proper amount of 
+information to exploit the structure we want to maximise, but the finding 
+does not hold for more conservative cases.
+
+The Thompson sampling has been studied in the context of multi-armed bandit problems where the goal is to maximise cumulative gains or minimise cumulative regrets over time, whereas its performance on making a predictive model has not been widely discussed so far. Throughout this work, we have shown that maximising cumulative gain entails the predictive models as well.
 
 %\begin{description}
 %  \item[Not useful theorem] In \cite{kawale2015efficient}, the theorem does not really give
