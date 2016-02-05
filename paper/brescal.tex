@@ -80,7 +80,7 @@ p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}(
 p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x) &= \mathcal{N}(\text{vec}(R_k) |
 \mu_k, \Lambda_k^{-1}) \label{eqn:sample_r}
 \end{align}
-where the egative subscript $-i$ indicates the every other entity variables except $e_i$.
+where the negative subscript $-i$ indicates the every other entity variables except $e_i$.
 The means and precision matrices are listed in Table~\ref{tab:brescalposterior}, where we have
 used the identity $e_i^{\top} R_k e_j = r_k^{\top} e_i \otimes e_j$.
 
@@ -91,7 +91,7 @@ probability is determined by logistic regression.
 p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
 \]
 where $\sigma$ is a sigmoid function.
-e approximate the conditional posterior of
+We approximate the conditional posterior of
 $E$ and $R$ by Laplace approximation \cite{bishop2006pattern}. The maximum a
 posterior estimate of $e_i$ or $R_k$ given the rest can be computed through the
 standard logistic regression solvers with regularisation parameters. Given the

@@ -27,7 +27,7 @@ requires extensive computational cost. To make the algorithm feasible, we employ
 in~\cite{kawale2015efficient} to tensors.
 
 The SMC starts with $H$ number of particles, each of which starts with likelihood
-weight $w_{h} = 1/H$, and a set of randomly sampled latent features $E^{h_0}$ and $R^{h_0}$.
+weight $w_{h} = 1/H$, and a set of randomly sampled latent features $E^{h_0}$ and $\mathcal{R}^{h_0}$.
 With a slight abuse of notation, let $\mathcal{X}^{t}$ be a set of observed triples up to time $t$.
 At time $t$, the system chooses one particle according to the particle weights,
 and then generates a new query via Thompson sampling from the selected particle.
@@ -35,7 +35,7 @@ After observing a new variable, the system updates the posterior samples of
 every particle through the MCMC kernels with the new observation.
 We first sample the relation matrices using Equation \ref{eqn:sample_r}, and sample the entity vectors using Equation \ref{eqn:sample_e}.
 Under the mild assumption where
-$p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$,
+$p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$, $\Theta = \{E, \mathcal{R}\}$,
 the weight of each particle at time $t$ can be computed as follows
 \cite{del2006sequential,chopin2002sequential}:
 \begin{align}
@@ -86,7 +86,7 @@ We describe our extension in the appendix.
    \ENDIF
 
    \FOR{$h=1$ {\bfseries to} $H$}
-   \STATE $\forall k, R_k^{h_t} \sim p(R_k | \mathcal{X}^{t}, E^{h_{t-1}}, R_{-k})$   \hfill $\triangleright$ see Table (\ref{tab:brescalposterior})
+   \STATE $\forall k, R_k^{h_t} \sim p(R_k | \mathcal{X}^{t}, E^{h_{t-1}}, \mathcal{R}_{-k})$   \hfill $\triangleright$ see Table (\ref{tab:brescalposterior})
    \STATE $\forall i, e^{h_t}_i \sim p(e_i | \mathcal{X}^{t}, E_{-i}, \mathcal{R}^{h_{t}})$ \hfill $\triangleright$ see Table (\ref{tab:brescalposterior})
    \ENDFOR
 
