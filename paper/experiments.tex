@@ -76,7 +76,7 @@ entities and relations. We compare the cumulative regret of the particle Thompso
 learning method where the model choose a random triple at each time. All results are averaged over 10 
 individual runs with different initialisations. 
 Note that the dataset with binary logistic output variables can be used to train both Bayesian logistic RESCAL (BLOGIT) and Bayesian Gaussian RESCAL (BNORMAL) whereas the dataset with the Gaussian output can only be trained by BNORMAL.
-Figure \ref{fig:syn1} and \ref{fig:syn2} show that with the logistic synthetic dataset both models are capable to learn the latent features of the generated triples, with logistic out-performing the Gaussian; Figure \ref{fig:syn3} and \ref{fig:syn4} show that BNORMAL \rev{out-perform passive learning in} the real valued dataset. 
+Figure \ref{fig:syn1} and \ref{fig:syn2} show that with the logistic synthetic dataset both models are capable to learn the latent features of the generated triples, with logistic outperforming the Gaussian; Figure \ref{fig:syn3} and \ref{fig:syn4} show that BNORMAL \rev{outperform passive learning in} the real valued dataset. 
 %For every experiment, the cumulative regret of the Thompson 
 %sampling method was bounded after a certain number of interactions whereas the cumulative regret of 
 %passive learning increases linearly. 
@@ -177,7 +177,7 @@ For all experiments, we set the compositional length $L$ to 2, split the dataset
 from 1\% to 13\% of datasets. For RESCAL, we use the authors' implementation, and measure performance over 10 runs with random initialisations. For BRESCAL and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
 %Based on the trained model, measure the ROC-AUC scores on the test set.
 
-Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We can see that BNORMAL or BLOGIT generally out-perform RESCAL. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, BCOMP-MUL out-performs BCOMP-ADD, and performs better the other baseline models when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL out-performs across the all training proportions. For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
+Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We can see that BNORMAL or BLOGIT generally outperform RESCAL. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, BCOMP-MUL outperforms BCOMP-ADD, and performs better the other baseline models when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions. For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
 
 
 \subsection{Thompson sampling on real datasets}

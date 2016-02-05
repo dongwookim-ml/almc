@@ -3,8 +3,8 @@
 We have proposed a novel compositional relational model and presented the
 Thompson sampling for both compositional and non-compositional models to solve the active knowledge acquisition 
 problem. The compositional model aims to infer the latent features of knowledge 
-bases by incorporating an additional graph structure of the knowledge base. In the passive 
-learning scenario, the compositional model out-performs the other models, 
+bases by incorporating an additional graph structure. In the passive 
+learning scenario, the compositional model outperforms the other models, 
 especially, when training size is relatively small. In the active learning 
 scenario, however, the compositional model performs worse than the model without 
 composition. If the samples of the compositional model follows the posterior 
@@ -28,7 +28,9 @@ does not hold for more conservative cases.
 The Thompson sampling has been studied in the context of multi-armed bandit 
 problems where the goal is to maximise cumulative gains or minimise cumulative 
 regrets over time, whereas its performance on making a predictive model has not 
-been widely discussed so far. However, its performance on building a generalisable model was unclear. Throughout this work, we have partially shown that maximising cumulative gain entails the predictive models as well.
+been widely discussed so far. Its performance on building a generalisable model 
+was unclear. Throughout this work, we have empirically shown that maximising 
+cumulative gain entails the predictive models as well.
 
 %\begin{description}
 %  \item[Not useful theorem] In \cite{kawale2015efficient}, the theorem does not really give
