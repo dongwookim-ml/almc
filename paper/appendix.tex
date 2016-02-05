@@ -1,5 +1,5 @@
 %!TEX root = ./icml2016.tex
-\section*{Posterior covariance of logistic output}
+\section{Posterior covariance of logistic output}
 Let $R_k^*$ is a maximum a posterior solution of $R_k$ given $E$. Then, the conditional posterior covariance of relation matrix $R_k$ has the form of:
 
 \begin{align}
@@ -8,7 +8,7 @@ S_i^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{\top} R_k^* e_{j}) (1 - \sigma(e_{i}^{*\
 \end{align}
 where $\bar{e}_{ij} = e_i \otimes e_j$.
 
-\section*{Rao-Blackwellisation particle Thompson sampling}
+\section{Rao-Blackwellisation particle Thompson sampling}
 We also develop Rao-Blackwellisation particle Thompson sampling algorithm for the RESCAL with the Gaussian output model. The outline of the algorithm is described in Algorithm \ref{alg:rbsmc}. With the Rao-Blackwellisation, we marginalise out the relation matrix $R_k$ while computing the weight of each particle, but we still keep the same MCMC kernel to generate the samples. In theory, this will reduce the degeneracy problems for long running particles, but in our experiment, the difference between two models is not significant.
 \begin{algorithm}[t!]
    \caption{Rao-Blackwellised Particle Thompson Sampling for Gaussian output}

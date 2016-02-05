@@ -1,9 +1,9 @@
 %!TEX root = ./icml2016.tex
-\section*{Compositional Relations}
+\section{Compositional Relations}
 
 We provide the conditional posterior distribution of the compositional models.
 
-\subsection*{Additive Compositionality}
+\subsection{Additive Compositionality}
 
 The conditional distribution of $e_i$ given $E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
 expanded from the posterior of BRESCAL by incorporating compositional triples.
@@ -70,7 +70,7 @@ Vectorisation of $R_c$ and $R_{c/k}$ are represented as $r_c$ and $r_{c/k}$, res
 %Note that the ordering of the relations in compositional sequence $c$ does not affect the value of
 %compositional triple $(i, c, j)$.
 
-\subsection*{Multiplicative Compositionality}
+\subsection{Multiplicative Compositionality}
 
 Given a sequence of relations including relation $k$, $R_k$ is placed in the middle of the compositional
 sequence, i.e., $e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(\delta_k)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j$, where $
