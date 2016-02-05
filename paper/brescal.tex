@@ -98,7 +98,7 @@ $i$ takes the form
 \begin{align}
 S_i^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{*\top} R_k e_{j}) (1 - \sigma(e_{i}^{*\top} R_k e_{j})) R_k
 e_{j}(R_k e_{j})^\top \label{eqn:sample_e} \\
- + \sum_{x_{jki}} \sigma(e_{j}^{\top} R_k e_{i}^*) ( 1- \sigma(e_{j}^{\top} R_k e_{i}^*)) R_k^\top e^*_{i}(R_k^\top + I\sigma_e^{-1}
-e^*_{i})^\top. \label{eqn:sample_r}
+ + \sum_{x_{jki}} \sigma(e_{j}^{\top} R_k e_{i}^*) ( 1- \sigma(e_{j}^{\top} R_k e_{i}^*)) R_k^\top e^*_{i}(R_k^\top e^*_{i})^\top + I\sigma_e^{-1}
+. \label{eqn:sample_r}
 \end{align}
 The posterior covariance of $R_k$ can be computed in the same way.

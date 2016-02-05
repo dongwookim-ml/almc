@@ -15,28 +15,26 @@ improves the entity embedding upon the non-compositional models. }
 \subsection{\rev{Thompson Sampling on }synthetic data}
 \begin{figure}[t]
 	\centering
-	\subfigure[N=10, K=10, D=5\label{fig:syn1}]{
+	\subfigure[\scriptsize Logistic: N=10, K=10, D=5\label{fig:syn1}]{
 	\includegraphics[width=0.42\linewidth]{images/toy_logit_vs_normal_10_10_5.pdf}
 	}
-	\subfigure[N=20, K=10, D=5\label{fig:syn2}]{
+	\subfigure[\scriptsize Logistic: N=20, K=10, D=5\label{fig:syn2}]{
 	\includegraphics[width=0.445\linewidth]{images/toy_logit_vs_normal_20_10_5.pdf}
 	}
-	\subfigure[N=5, K=5, D=5\label{fig:syn3}]{
+	\subfigure[\scriptsize Gaussian: N=5, K=5, D=5\label{fig:syn3}]{
 	\includegraphics[width=0.42\linewidth]{images/toy_5_5_5.pdf}
 	}
-	\subfigure[N=10, K=10, D=5\label{fig:syn4}]{
+	\subfigure[\scriptsize Gaussian: N=10, K=10, D=5\label{fig:syn4}]{
 	\includegraphics[width=0.45\linewidth]{images/toy_10_10_5.pdf}				
 	}
 %	\includegraphics[width=0.32\linewidth]{images/toy_5_10_5.pdf}			
 %	\includegraphics[width=0.32\linewidth]{images/toy_10_5_5.pdf}				
 	\caption{\label{fig:synthetic} Cumulative regret of particle Thompson sampling 
-	on different sizes of the synthetic dataset. 
-	(a, b) Synthetic dataset with logistic output variable.
-	(c, d) Synthetic dataset with Gaussian output variable.
-	We compared the particle Thompson sampling with passive sampling method. 
-	The averaged cumulative regrets are plotted with one standard error. 
+	on synthetic datasets with logistic	(top row, a, b) and Gaussian (bottom row, c, d) output variables.
+	%We compared the particle Thompson sampling with passive sampling method. 
+	The averaged cumulative regrets \verify{over X runs} are plotted with one standard error. 
 	As the model obtained more and more labeled samples from Thompson sampling, 
-	the cumulative regrets sub-linearly increase.\TODO{TODO if time}{update the Gaussian case w. N=20.}}
+	the cumulative regrets increase sub-linearly.\TODO{TODO if time}{update the Gaussian case w. N=20.}}
 \end{figure}
 
 \eat{To verify the particle Thompson sampling, }We first synthesise two \eat{sets of }datasets 
@@ -52,12 +50,12 @@ variance parameters \verify{$\sigma_e=??$, $\sigma_r=??$}, respectively.
 \eat{The variance of gaussian $\sigma_x$ set to 0.1.}
 
 To measure performance\eat{ on synthetic dataset}, we compute cumulative regret 
-\eat{of proposed algorithm }at each time $n$ as follows:
-\begin{align}
-R(n) = \sum_{t=1}^{n} x_t - x^{*}_t,
-\end{align}
-where $x^*_t$ is the highest triple among triples that have not been chosen up to time $t$. Unlike the general 
-Bandit setting where one can select a single item multiple times, in our formulation, we can select one triple 
+\eat{of proposed algorithm }at each time $n$ as $R(n) = \sum_{t=1}^{n} x_t - x^{*}_t,$, 
+%\begin{align}
+%R(n) = \sum_{t=1}^{n} x_t - x^{*}_t,
+%\end{align}
+where $x^*_t$ is the highest\rev{-valued} triple among triples that have not been chosen up to time $t$. Unlike the general 
+bandit setting where one can select a single item multiple times, in our formulation, we can select one triple 
 only once. So after selecting a triple at time $t$, the selected triple will be removed from a set of candidate 
 triples.
 
