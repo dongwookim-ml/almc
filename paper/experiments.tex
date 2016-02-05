@@ -236,3 +236,15 @@ whereas in our experiment, we start from zero
 observation which makes the model hard to exploit the structure. This result shows 
 the importance of balancing between exploitation and exploration.
 
+We note that the compositional model performs worse than the model without 
+composition in this active setting. 
+\eat{If the samples of the compositional model follows the posterior 
+distribution, it may show the similar performance with the passive learning 
+scenario, but this assumption does not always hold since the active sampling
+path does not correspond to the passive scenario. } %%LX: this looks like too much detail
+One possible explanation is 
+that the naive particle Thompson sampling may not capture the posterior of the 
+complex compositional structure, so the particle degenerates over time. Recent
+ advances in sequential Monte Carlo may help to solve the problem\cite{gu2015neural,naesseth2014sequential,lindsten2014divide}. 
+We leave this for future work.
+ 

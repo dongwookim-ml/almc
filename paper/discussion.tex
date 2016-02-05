@@ -1,37 +1,35 @@
 %!TEX root = ./icml2016.tex
 \section{Discussion}
-We have proposed a novel compositional relational model and presented the
-Thompson sampling for both compositional and non-compositional models to solve the active knowledge acquisition 
-problem. The compositional model aims to infer the latent features of knowledge 
+We have proposed a novel compositional relational model with uncertainty and presented the
+Thompson sampling for both compositional and non-compositional models to solve the active knowledge acquisition problem. 
+The compositional model aims to infer the latent features of knowledge 
 bases by incorporating an additional graph structure. In the passive 
 learning scenario, the compositional model outperforms the other models, 
-especially, when training size is relatively small. In the active learning 
-scenario, however, the compositional model performs worse than the model without 
-composition. If the samples of the compositional model follows the posterior 
-distribution, it may show the similar performance with the passive learning 
-scenario, but this assumption does not always hold since the active sampling
-path does not correspond to the passive scenario. One possible explanation is 
-that the naive particle Thompson sampling may not capture the posterior of the 
-complex compositional structure, so the particle degenerates over time. Recent
- advances in sequential Monte Carlo may help to solve the problem\cite{gu2015neural,naesseth2014sequential,lindsten2014divide}. 
-We leave it  for future work.
- 
+especially, when training size is relatively small. 
 In the active learning scenario, Bayesian RESCAL achieves the highest 
 cumulative gain across all datasets. Again, this result emphasise the 
-importance of being balanced between exploration and exploitation. One 
-important finding of the previous work is that the knowledge population 
-and predictive model construction are separate problem, and we need to 
-decide which strategy we will use \cite{kajino2015active}. This finding
+importance of being balanced between exploration and exploitation. 
+
+Previous work such as the one by \citet{kajino2015active} 
+views knowledge population 
+and predictive model construction are separate problems. 
+We find this observation true when the algorithm has a warm-start, 
+i.e. already having a fair amount of data before active learning starts; 
+when the information is sparse, the same strategy works for both maximizing 
+recall and reducing uncertainty.  
+\eat{This finding
 may hold for some scenarios where their is already a proper amount of 
 information to exploit the structure we want to maximise, but the finding 
-is not consistence in more conservative cases.
-
-The Thompson sampling has been studied in the context of multi-armed bandit 
+is not consistence in more conservative cases.}
+Thompson sampling has been studied in the context of multi-armed bandit 
 problems where the goal is to maximise cumulative gains or minimise cumulative 
 regrets over time, whereas its performance on making a predictive model has not 
 been widely discussed so far. Its performance on building a generalisable model 
 was unclear. Throughout this work, we have empirically shown that maximising 
 cumulative gain entails the predictive models as well.
+In the long run, we see this work as a promising step towards using a composition-aware knowledge 
+completion system to connect with the 
+knowledge extraction problem~\cite{dong2014knowledge}. %, with rich graph structures. 
 
 %\begin{description}
 %  \item[Not useful theorem] In \cite{kawale2015efficient}, the theorem does not really give
