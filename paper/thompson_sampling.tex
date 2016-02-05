@@ -48,10 +48,10 @@ an effective sample size (ESS) is less than a predefined threshold.
 The ESS can be computed as $(\sum_h w_h^2)^{-1}$, and we set the threshold
 to $N/2$ \cite{Doucet2011}. Resampling removes low weight particles with high probability,
 while keeping samples from the posterior.
-We summarise the particle Thompson sampling for Bayesian RESCAL with the
+We summarise the particle Thompson sampling for BRESCAL with the
 Gaussian output variable in Algorithm \ref{alg:smc}.
 
-We show that the Thompson sampling approach improves over passive Bayesian RESCAL in
+We show that the Thompson sampling approach improves over passive BRESCAL in
 experiments with real and synthetic data.
 We also investigated the extension of the Rao-Blackwellisation approach as proposed
 in~\cite{kawale2015efficient}, but we did not observe any significant performance improvements.
