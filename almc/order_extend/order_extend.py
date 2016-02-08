@@ -9,7 +9,7 @@ from collections import defaultdict
 import numpy as np
 import numpy.linalg as linalg
 
-from ..utils.formatted_logger import formatted_logger
+from almc.utils.formatted_logger import formatted_logger
 
 log = formatted_logger('OrderExtend', 'info')
 

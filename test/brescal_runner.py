@@ -3,9 +3,9 @@ import sys
 import numpy as np
 import pickle
 from scipy.io.matlab import loadmat
-from seq_brescal import PFBayesianRescal
-from seq_bcomp_rescal import PFBayesianCompRescal
-from seq_logit_brescal import PFBayesianLogitRescal
+from almc.bayesian_rescal import PFBayesianRescal
+from almc.bayesian_rescal import PFBayesianCompRescal
+from almc.bayesian_rescal import PFBayesianLogitRescal
 
 
 def load_dataset(dataset):
@@ -30,7 +30,7 @@ def load_dataset(dataset):
 
 if __name__ == '__main__':
     if len(sys.argv) != 9:
-        print('usage: python runner.py model dataset n_dim n_particle var_x var_comp trial_num max_iter')
+        print('usage: python amdc_runner.py model dataset n_dim n_particle var_x var_comp trial_num max_iter')
         raise Exception()
 
     model = sys.argv[1]

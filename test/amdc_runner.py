@@ -25,7 +25,7 @@ def load_dataset(dataset):
 
 if __name__ == '__main__':
     if len(sys.argv) != 7:
-        print('usage: python runner.py model dataset n_dim p_obs p_test max_iter')
+        print('usage: python amdc_runner.py model dataset n_dim p_obs p_test max_iter')
         raise Exception()
 
     model = sys.argv[1]
