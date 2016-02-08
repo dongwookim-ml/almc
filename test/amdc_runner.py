@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import pickle
 from scipy.io.matlab import loadmat
-from model import AMDC
+from almc.amdc import AMDC
 
 
 def load_dataset(dataset):

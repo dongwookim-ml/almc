@@ -1,5 +1,3 @@
-__author__ = 'Dongwoo Kim'
-
 import numpy as np
 import logging
 from sklearn.metrics import roc_auc_score
@@ -23,14 +21,15 @@ class AMDC:
     def __init__(self, n_dim, alpha_0=0.1, gamma=0.3, gamma_p=0.9, c_e=5., c_n=1., population=False):
         """
 
-        @param n_dim: latent dimension of entity
-        @param alpha_0: initial learning rate
-        @param gamma: hyperparameter
-        @param gamma_p: hyperparameter
-        @param c_e: hyperparameter, impose score of positive triple to be greater than 0,
+        Parameters
+        ----------
+        n_dim: latent dimension of entity
+        alpha_0: initial learning rate
+        gamma: hyperparameter
+        gamma_p: hyperparameter
+        c_e: hyperparameter, impose score of positive triple to be greater than 0,
                     and negative triple to be less than 0
-        @param c_n: hyperparameter, importance of negative samples
-        @return:
+        c_n: hyperparameter, importance of negative samples
         """
         self.n_dim = n_dim
         self.alpha_0 = alpha_0
@@ -44,21 +43,24 @@ class AMDC:
         """
         Stochastic gradient descent optimization for AMDC
 
-        @param T: [n_entity x n_entity x n_relation] multi-dimensional array,
-                tensor representation of knowledge graph
-                n_entity = number of entities
-                n_relation = number of relationships
-        @param p_idx: index of observed positive triples, all indices are raveled by np.ravel_multi_index
-        @param n_idx: index of observed negative triples
-        @param max_iter: maximum number of iterations
-        @param e_gap: evaluation gap
-        @param obs_only: When this parameter is True, the stochastic gradient step uses the
+        Parameters
+        ----------
+        T: [n_entity x n_entity x n_relation] multi-dimensional array,
+            tensor representation of knowledge graph
+            n_entity = number of entities
+            n_relation = number of relationships
+        p_idx: index of observed positive triples, all indices are raveled by np.ravel_multi_index
+        n_idx: index of observed negative triples
+        max_iter: maximum number of iterations
+        e_gap: evaluation gap
+        obs_only: When this parameter is True, the stochastic gradient step uses the
                 observed positive and negative triples only.
-        @return: A, R, r_error
-                A: [n_entity x n_dim] latent feature vector of entities
-                R: [n_dim x n_dim x n_relation] rotation matrix for each entity
-                n_dim = size of latent dimension
-                r_error: list of reconstruction errors at each evaluation point
+        Returns
+        A, R, r_error
+            A: [n_entity x n_dim] latent feature vector of entities
+            R: [n_dim x n_dim x n_relation] rotation matrix for each entity
+            n_dim = size of latent dimension
+            r_error: list of reconstruction errors at each evaluation point
         """
         n_entity, n_relation = T.shape[0], T.shape[2]
 
@@ -206,9 +208,14 @@ class AMDC:
         """
         Reconstruct knowledge graph from latent representations of entities and rotation matrices
 
-        @param A: [E x D] multi-dimensional array, latent representation of entity
-        @param R: [D x D x K] multi-dimensional array, rotation matrix for each relation
-        @return: [E x E x K] reconstructed knowledge graph
+        Parameters
+        ----------
+        A: [E x D] multi-dimensional array, latent representation of entity
+        R: [D x D x K] multi-dimensional array, rotation matrix for each relation
+
+        Returns
+        -------
+        [E x E x K] reconstructed knowledge graph
         """
         T = np.zeros((A.shape[0], A.shape[0], R.shape[2]))
 
@@ -231,12 +238,17 @@ class AMDC:
         """
         compute objective function of AMDC model
 
-        @param A: [E x D] multi-dimensional array, latent representation of entity
-        @param R: [D x D x K] multi-dimensional array, rotation matrix for each relation
-        @param p_idx: index of observed positive triples, all indices are raveled by np.ravel_multi_index
-        @param n_idx: index of observed negative triples
-        @return: objective function of AMDC model
-                Equation (4) in the original paper
+        Parameters
+        ----------
+        A: [E x D] multi-dimensional array, latent representation of entity
+        R: [D x D x K] multi-dimensional array, rotation matrix for each relation
+        p_idx: index of observed positive triples, all indices are raveled by np.ravel_multi_index
+        n_idx: index of observed negative triples
+
+        Returns
+        -------
+        obj: objective function of AMDC model
+            Equation (4) in the original paper
         """
         obj = 0
         total = A.shape[0] * A.shape[0] * R.shape[2]
@@ -273,7 +285,7 @@ class AMDC:
 
         return obj
 
-    def do_active_learning(self, T, mask, max_iter, test_t, query_log='', eval_log='', obs_only=False):
+    def do_active_learning(self, T, mask, max_iter, test_t=None, query_log='', eval_log='', obs_only=False):
         T[T == 0] = -1
         cur_obs = np.zeros_like(T)
         cur_obs[mask == 1] = T[mask == 1]
@@ -326,16 +338,17 @@ class AMDC:
 
                 log.debug('[NEXT IDX] %s, %d', next_idx, cur_obs[next_idx])
 
-            _T = self.reconstruct(A, R)
-            auc_roc = roc_auc_score(T[test_t == 1], _T[test_t == 1])
-            log.info('[ITER %d] %d/%d, %.2f', iter, pop, (iter + 1) * pull_size,
-                     auc_roc)
+            if not isinstance(test_t, type(None)):
+                _T = self.reconstruct(A, R)
+                auc_roc = roc_auc_score(T[test_t == 1], _T[test_t == 1])
+                log.info('[ITER %d] %d/%d, %.2f', iter, pop, (iter + 1) * pull_size, auc_roc)
+                if len(eval_log) > 0:
+                    with open(eval_log, 'a') as f:
+                        f.write('%f\n' % auc_roc)
 
-            if len(eval_log) > 0:
-                with open(eval_log, 'a') as f:
-                    f.write('%f\n' % auc_roc)
-
-            auc_scores.append(auc_roc)
+                auc_scores.append(auc_roc)
+            else:
+                log.info('[ITER %d] %d/%d', iter, pop, (iter + 1) * pull_size)
 
         return seq, auc_scores
 

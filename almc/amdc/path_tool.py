@@ -1,5 +1,3 @@
-__author__ = 'Dongwoo Kim'
-
 import itertools
 from collections import defaultdict
 
