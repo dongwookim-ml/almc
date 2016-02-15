@@ -1,0 +1,73 @@
+% !TEX TS-program = pdflatexmk
+\documentclass{article}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[a4paper, total={6.5in, 8.5in}, voffset=0.2in, footskip=15pt]{geometry}
+\usepackage{amsthm}
+
+
+\newtheorem{theorem}{Theorem} %This is the example presented in the introduction but it has the additional parameter [section] that restarts the theorem counter at every new section.
+\newtheorem{corollary}{Corollary}[theorem] %A environment called corollary is created, the counter of this new environment will be reset every time a new theorem environment is used.
+\newtheorem{lemma}[theorem]{Lemma} %In this case, the even though a new environment called lemma is created, it will use the same counter as the theorem environment.
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}[definition]
+\newtheorem{remark}{Remark}
+
+\begin{document}
+
+\section{Latent Space Metric Learning}
+
+There are several limitation of prev work. I'll discuss a few of them here, and suggest a new possible direction in a distance space.
+\begin{description}
+\item[Arbitrary output] Normal distribution with the binary output is an arbitrary choice. Why should it be normal? and binary? The problem is more arbitrary when it comes to compositional structure. We place the number of path as the output of compositional normal distribution, but there is no way to say that this approach works with the compositional structure we proposed.
+\item[Arbitrary compositionality] Even we proposed two compositional approaches, the choices of the compositional structures are also arbitrary and not interpretable.
+\end{description}
+
+Let's start from scratch again. The most easiest way to interpret latent relation $R_k$ is to consider the latent relation as a linear transformation of latent entity $e_i$ to the transformed entity $e_i^\top R_k$, and this linear transformation $e_i^\top R_k$ should be somehow similar to $e_j$ when $(i, k, j)$ is a valid triple. This can be easily formulated in Euclidean distance space. We measure the distance between two entities as $|| e_i^\top R_k - e_j ||_2$ or $|| e_i - e_j^\top R_k^{-1} ||_2$, and let the distances of valid triples be shorter than those of invalid triples. We might want to model this relation in a probabilistic framework, and in this case, the first equation could be modelled as $e_j \sim \mathcal{N}_D(e_i^\top R_k, \Sigma)$ or the second equation as $e_i \sim \mathcal{N}_D(e_j^\top R_k^{-1}, \Sigma)$. The probability distribution of one entity is conditioned on the other entity, and we may model this as a Markov random field with the energy function between two entities as $E(e_i, e_j) = \exp(-||e_i^\top R_k - e_j||_2)$.
+
+Again, this formulation is somewhat weird and seems not well defined. Let's define it in the more general Mahalanobis distance space. In the Mahalanobis space, the distance between two entities $d_{R_k}(e_i, e_j)$ is $\sqrt{(e_i-e_j)^\top R_k (e_i - e_j)}$ (the corresponding probability distribution is a normal distribution with covariance matrix $R_k^{-1}$). 
+
+One problem with the distance approach is that the distance metric is symmetric, so we cannot encode the direction of relations. We may define asymmetric Mahalanobis space where the precision matrix $R$ is positive semi-definite but not symmetric.
+
+\section{AMDC and distance based knowledge base learning}
+
+The objective function of AMDC model is a pair-wise margin based learning:
+\begin{align}
+\mathcal{L} = [e_i^\top R_k e_{j'} - e_i^\top R_k e_j]_{+} + \mathcal{R}(e, R),
+\end{align}
+where $\mathcal{R}$ is a regulariser.
+Now, write a similar objective based on the latent distance:
+\begin{align}
+\mathcal{L} &= [d_{R_k}^2(e_i, e_j) - d_{R_k}^2(e_i, e_{j'})]_{+} + \mathcal{R}(e, R) \\
+&= [(e_i - e_{j})^\top R_k (e_i - e_{j}) - (e_i - e_{j'})^\top R_k (e_i - e_{j'})]_{+} + \mathcal{R}(e, R) \\
+&= [\underbrace{e_i^\top R_k e_{j'} - e_{j}^\top R_k e_i} 
++ e_{j'}^\top R_k e_{i} - e_{i}^\top R_k e_{j} 
++ e_{j}^\top R_k e_{j} - e_{j'}^\top R_k e_{j'} ]_{+}  
++ \mathcal{R}(e, R) ,
+\end{align}
+where the first two terms are the same as the objective of AMDC.
+
+\section{Compositional Malahanobis space}
+
+Now let's think about the compositional Mahalanobis space. Assume that triples $(i, k1, j)$ and $(j, k2, l)$ is valid triples and $(j, k2, l')$ is an invalid triple. Can we define that the compositional Mahalanobis space has precision matrix $R_{k1,k2} = R_{k1} R_{k2}$, so that the relative distances over different spaces are preserved? What are properties of this compositional space, and how can we learn the space?
+
+%is it valid to say $d_{R_{k1,k2}}(i, l)$  of valid compositional path $(i, k1, j) - (j, k2, l)$ is shorter than $d_{R_{k1,k2}}(i, l')$ of invalid compositional path $(i, k1, j)-(j, k2, l')$. 
+
+%\begin{theorem}[Closeness in compositional space] If $e_i$ and $e_j$ are close in $R_1$, $e_j$ and $e_l$ are closer than $e_j$ and $e_{l'}$ in $R_2$, then are $e_i$ and $e_l$ closer than $e_i$ and $e_{l'}$ in compositional space $c(R_1, R_2)$? (where $c(R_1, R_2) = R_1 R_2$, $R_k \succeq 0$)
+%\end{theorem}
+%\begin{align}
+%\text{if } 
+%(e_i - e_{j})^\top R_1 (e_i - e_{j}) &< (e_{i'} - e_{j})^\top R_1 (e_{i'} - e_{j}) \\
+%(e_j - e_{l})^\top R_2 (e_j - e_{l}) &< (e_j - e_{l'})^\top R_2 (e_j - e_{l'}) \\
+%\text{then } 4(e_i - e_{l})^\top R_1R_2 (e_i - e_{l}) & < (e_i - e_{l'})^\top R_1R_2 (e_i - e_{l'}) + (e_{i'} - e_{l})^\top R_1R_2 (e_{i'} - e_{l}) ?
+%\end{align}
+%If not, what additional conditions should be defined to satisfy the relative closeness?
+
+\bibliographystyle{plain}
+\bibliography{ref}
+
+\end{document}
