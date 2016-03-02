@@ -35,8 +35,7 @@ MIN_VAL = np.iinfo(np.int32).min
 
 
 class PFSparseBayesianRescal:
-    def __init__(self, n_dim, compute_score=True, sample_prior=False, rbp=False,
-                 obs_var=.01, unobs_var=10., n_particles=5, selection='Thompson',
+    def __init__(self, n_dim, compute_score=True, rbp=False, n_particles=5, selection='Thompson',
                  eval_fn=mean_squared_error, log="", **kwargs):
         """
 
@@ -56,12 +55,6 @@ class PFSparseBayesianRescal:
         rbp: boolean, default=False
             If True, Rao-Blackwellized particle sampling algorithm will be
             applied instead basic particle sampling.
-
-        obs_var: float, default=0.01
-            The variance of the observed triple.
-
-        unobs_var: float, default=10.0
-            The variance of the unobserved triple.
 
         n_particles: int, default=5
             Number of particles for sequential Monte Carlo sampler
@@ -157,7 +150,7 @@ class PFSparseBayesianRescal:
         self.E = list()
         self.R = list()
 
-        if type(obs_mask_csr) == type(None):
+        if obs_mask_csr is None:
             obs_mask_csr = [csr_matrix((self.n_entities, self.n_entities)) for i in range(self.n_pure_relations)]
 
         cur_obs_csr = [csr_matrix((self.n_entities, self.n_entities)) for i in range(self.n_relations)]
@@ -293,7 +286,7 @@ class PFSparseBayesianRescal:
                         RE[k][i] = np.dot(R[k], E[i])
                         RTE[k][i] = np.dot(R[k].T, E[i])
 
-                #self._sample_entities(obs_csr, obs_csc, mask_csr, mask_csc, self.E[p], self.R[p], self.var_e[p])
+                # self._sample_entities(obs_csr, obs_csc, mask_csr, mask_csc, self.E[p], self.R[p], self.var_e[p])
                 if self.rbp:
                     self._sample_relations(obs_csr, mask_csr, self.E[p], self.R[p], self.var_r[p])
 
@@ -384,7 +377,7 @@ class PFSparseBayesianRescal:
                     max_idx = (i, next_idx)
                     max_k = k
                     max_val = _X[next_idx]
-        print(time.time()-tic)
+        print(time.time() - tic)
 
         return int(max_k), int(max_idx[0]), int(max_idx[1])
 

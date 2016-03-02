@@ -170,7 +170,6 @@ class PFBayesianRescal:
         eval_fn: callable
             Evaluate scoring function between training data and reconstructed data
 
-        kwargs
 
         Returns
         -------
@@ -215,6 +214,9 @@ class PFBayesianRescal:
         self.var_r = np.ones(self.n_particles) * self._var_r
 
     def __getstate__(self):
+        """
+        Remove attributes that are used to speed up the computations
+        """
         d = dict(self.__dict__)
         del d['features']
         del d['xi']
@@ -308,6 +310,26 @@ class PFBayesianRescal:
         return seq
 
     def particle_filter(self, X, cur_obs, mask, max_iter, test_mask=None):
+        """
+        Running a particle Thompson sampling
+
+        Parameters
+        ----------
+        X : numpy.ndarray
+            Fully observed tensor with shape (n_relations, n_entities, n_entities)
+        cur_obs : numpy.ndarray
+            Initial observation of tensor `X`
+        mask : numpy.ndarray, default=None
+            Mask tensor of observed triples
+        max_iter: int
+            maximum number of particle Thompson sampling
+
+        test_mask
+
+        Returns
+        -------
+
+        """
 
         pop = 0
         for i in range(max_iter):
