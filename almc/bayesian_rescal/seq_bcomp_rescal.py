@@ -673,7 +673,7 @@ class PFBayesianCompRescal:
         score = 0.
         p = self.p_weights.argmax()
 
-        for k in range(self.n_relations):
+        for k in range(self.n_pure_relations):
             mean = np.dot(np.dot(self.E[p], self.R[p][k]), self.E[p].T)
             score += np.sum(norm.logpdf(X[k].flatten(), mean.flatten(), np.sqrt(self.var_x)) * mask[k].flatten())
             score += np.sum(norm.logpdf(self.R[p][k].flatten(), 0, np.sqrt(self.var_r[p])))
