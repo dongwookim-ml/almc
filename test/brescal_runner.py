@@ -20,8 +20,10 @@ def load_dataset(dataset):
         T = np.array(mat['Rs'], np.float32)
     elif dataset == 'wordnet':
         T = pickle.load(open('../data/%s/reduced_wordnet.pkl' % (dataset), 'rb'))
+    elif dataset == 'freebase':
+        T, _, _ = pickle.load(open('../data/freebase/subset_5000.pkl'), 'rb')
 
-    if dataset != 'wordnet':
+    if dataset == 'umls' or dataset == 'nation' or dataset == 'kinship':
         T = np.swapaxes(T, 1, 2)
         T = np.swapaxes(T, 0, 1)  # [relation, entity, entity]
         T[np.isnan(T)] = 0
