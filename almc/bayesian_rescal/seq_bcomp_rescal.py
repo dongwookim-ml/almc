@@ -388,7 +388,7 @@ class PFBayesianCompRescal:
         p = multinomial(1, self.p_weights).argmax()
         _X = self._reconstruct(self.E[p], self.R[p], False)
         _X[mask[:self.n_pure_relations] == 1] = MIN_VAL
-        if not isinstance(test_mask, type(None)):
+        if test_mask is not None:
             _X[test_mask == 1] = MIN_VAL
         return np.unravel_index(_X.argmax(), _X.shape)
 
@@ -420,7 +420,7 @@ class PFBayesianCompRescal:
             RE[k] = np.dot(_R[k], E.T).T
             RTE[k] = np.dot(_R[k].T, E.T).T
 
-        if isinstance(sample_idx, type(None)):
+        if sample_idx is None:
             sample_idx = range(self.n_entities)
 
         for i in sample_idx:

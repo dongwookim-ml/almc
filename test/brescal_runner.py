@@ -21,7 +21,7 @@ def load_dataset(dataset):
     elif dataset == 'wordnet':
         T = pickle.load(open('../data/%s/reduced_wordnet.pkl' % (dataset), 'rb'))
     elif dataset == 'freebase':
-        T, _, _ = pickle.load(open('../data/freebase/subset_5000.pkl'), 'rb')
+        T, _, _ = pickle.load(open('../data/freebase/subset_5000.pkl', 'rb'))
 
     if dataset == 'umls' or dataset == 'nation' or dataset == 'kinship':
         T = np.swapaxes(T, 1, 2)

@@ -268,7 +268,6 @@ class PFBayesianRescal:
         if self.gibbs_init and np.sum(self.obs_sum) != 0:
             # initialize latent variables with gibbs sampling
             E = np.random.random([self.n_entities, self.n_dim])
-            E = np.identity(self.n_entities)
             R = np.random.random([self.n_relations, self.n_dim, self.n_dim])
 
             for gi in range(20):
