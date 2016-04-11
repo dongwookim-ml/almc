@@ -25,7 +25,7 @@
 
 \maketitle
 
-\section{Exchangeable array}
+\section{Exchangeable array for graph}
 \begin{definition}[Jointly exchangeable array] A random 2-array $(X_{ij})_{i,j\in \mathbb{N}}$
 is jointly exchangeable if
 \begin{align}
@@ -34,13 +34,14 @@ is jointly exchangeable if
 for any permutation $\pi$ of $\mathbb{N}$.
 \end{definition}
 
-\begin{definition}[Aldous, Hoover Theorem]\cite{aldous1981representations,hoover1979relations}] A random 2-array $(X_{ij})_{i,j\in \mathbb{N}}$
+\begin{theorem}[Aldous, Hoover Theorem \cite{aldous1981representations,hoover1979relations}] A random 2-array $(X_{ij})_{i,j\in \mathbb{N}}$
 is jointly exchangeable if and only if there exists a random measurable function $f:[0,1]^3 \rightarrow \mathbf{X}$ such that
 \begin{align}
 (X_{ij}) \stackrel{d}{=} (f(U_i, U_j, U_{ij})),
 \end{align}
 where $(U_{i})_{i \in \mathbb{N}}$ and $(U_{ij})_{ij>i\in\mathbb{N}}$ with $U_{ij} = U_{ij}$ are a sequence and matrix of i.i.d. Uniform[0,1] random variables.
-\end{definition}
+\end{theorem}
+The function $f$ is a symmetric in its first two argument.
 
 For the undirected graph case $\mathcal{X} = \{0,1\}$, the theorem can be simplified further through a random function called \textit{graphon} $W:[0,1]^2 \rightarrow [0,1]$, symmetric in its arguments, where
 \[ f(U_i, U_j, U_{ij}) = 
@@ -60,10 +61,28 @@ Every graph represented by graphon $W$ are either empty or dense. The asymptotic
 
 In \cite{Lloyd2013}, the authors place a Gaussian process prior over graphon $W:[0,1]^2 \rightarrow \mathbb{R}$ and transform the output through the logistic function to model the edge probability between nodes.
 
-For the undirected graph case where $X_{ij} = X_{ji}$, one can sample upper triangle of the adjacency matrix, and use the same result for the lower triangle. However, for the directed graph case, by the theorem, both $X_{ij}$ and $X_{ji}$ rely on single parameter $U_{ij}$ which means one should jointly sample ($X_{ij}$, $X_{ji}$) together from three parameters $U_{i}, U_{j}, U_{ij}$. Also, asymmetric graphon $W$ might be employed for directed random graph. However, \cite{Cai2015} show that assymetric graphon is inappropriate to impose certain structures on a graph such as the partial ordering and propose a class of priors for directed graphs.
+For the undirected graph case where $X_{ij} = X_{ji}$, one can sample upper triangle of the adjacency matrix, and use the same result for the lower triangle. However, for the directed graph case, by the theorem, both $X_{ij}$ and $X_{ji}$ rely on single parameter $U_{ij}$ which means one should jointly sample ($X_{ij}$, $X_{ji}$) together from three parameters $U_{i}, U_{j}, U_{ij}$. Thus, $X_{ij}$ and $X_{ji}$ are not conditionally independent. Also, asymmetric graphon $W$ might be employed for directed random graph. However, \cite{Cai2015} show that assymetric graphon is inappropriate to impose certain structures on a graph such as the partial ordering and propose a class of priors for directed graphs.
 
+\section{Exchangeable array for matrix factorisation}
+Unlike the graph model, jointly exchangeability for a general matrix where rows and columns represent different entities (i.e. users and items in recommendation system) is
 
-\bibliographystyle{plain}
+\begin{definition}[Separately exchangeable array \cite{Orbanz2015}]A random 2-array $(X_{ij})_{i,j\in \mathbb{N}}$ is separately exchangeable if
+\begin{align}
+(X_{ij}) \stackrel{d}{=} (X_{\pi(i)\sigma(j)}) \quad \text{for } i,j \in \mathbb{N}^2
+\end{align}
+for any permutation $\pi$ and $\sigma$ of $\mathbb{N}$.
+\end{definition}
+
+\begin{corollary}[Separately exchangeable array] A random 2-array $(X_{ij})$ is separately exchangeable if and only if there exists a random measurable function $f:[0,1]^3 \rightarrow \mathbb{X}$ such that
+\begin{align}
+(X_{ij})  \stackrel{d}{=} (f(U_i, U_j, U_{ij})),
+\end{align}
+where $(U_i)_{i\in \mathbb{N}}$, $(U_j)_{j\in \mathbb{N}}$, and $(U_{ij})_{ij\in \mathbb{N}^2}$ are i.i.d. uniform[0,1] random variables.
+\end{corollary}
+
+\section{Sparse exchangeable array}
+
+\bibliographystyle{apalike}
 \bibliography{ref}
 
 \end{document}
