@@ -51,7 +51,10 @@ For the undirected graph case $\mathcal{X} = \{0,1\}$, the theorem can be simpli
   \end{cases}
 \]
 
-\begin{example}[Random function prior on function $f$ \cite{Lloyd2013}] Lloyd et al. use a Gaussian process prior to define function $f$ for an undirected graph. They define $W(U_i, U_j) = \phi(\Theta(U_i,U_j))$ where $\phi$ is a logstic function, and $\Theta(\cdot, \cdot)$ is a continuous function with a Gaussian process prior. Thus, the probability of edge between node $i$ and $j$ is equal to Bernoulli$(\phi(\Theta(U_i,U_j)))$.
+\begin{example}[Random function prior on function $f$ \cite{Lloyd2013}] Lloyd et al. use a Gaussian process prior to define function $f$ for an undirected graph. They define $W(U_i, U_j) = \phi(\Theta(U_i,U_j))$ where $\phi$ is a logistic function, and $\Theta(\cdot, \cdot)$ is a continuous function with a Gaussian process prior. Thus, the probability of edge between node $i$ and $j$ is equal to Bernoulli$(\phi(\Theta(U_i,U_j)))$.
+\end{example}
+
+\begin{example}[Stochastic block model] The stochastic block model is another generative model for random graphs. The model assumes that each node belongs to a community and there is a edge probability between communities. Then the probability of edge between two different nodes are determined by the edge probability between communities where the two nodes belong. In stochastic block model with Aldous, Hoover Theorem, $U_i$ and $U_j$ determine the communities of node $i$ and $j$, respectively, and $U_{ij}$ determines the existence of edge between node $i$ and $j$ as done in graphon. The stick breaking process is one way to partition unit length interval into an infinite number of communities \cite{sethuraman1994constructive}.
 \end{example}
 
 \begin{definition}[Sparse Graph]
