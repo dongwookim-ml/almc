@@ -34,7 +34,7 @@ is jointly exchangeable if
 for any permutation $\pi$ of $\mathbb{N}$.
 \end{definition}
 
-\begin{theorem}[Aldous, Hoover Theorem \cite{aldous1981representations,hoover1979relations}] A random 2-array $(X_{ij})_{i,j\in \mathbb{N}}$
+\begin{theorem}[\label{aldous_hoover}Aldous, Hoover Theorem \cite{aldous1981representations,hoover1979relations}] A random 2-array $(X_{ij})_{i,j\in \mathbb{N}}$
 is jointly exchangeable if and only if there exists a random measurable function $f:[0,1]^3 \rightarrow \mathbf{X}$ such that
 \begin{align}
 (X_{ij}) \stackrel{d}{=} (f(U_i, U_j, U_{ij})),
@@ -50,6 +50,9 @@ For the undirected graph case $\mathcal{X} = \{0,1\}$, the theorem can be simpli
     0  & \quad \mathrm{otherwise}\\
   \end{cases}
 \]
+
+\begin{example}[Random function prior on function $f$ \cite{Lloyd2013}] Lloyd et al. use a Gaussian process prior to define function $f$ for an undirected graph. They define $W(U_i, U_j) = \phi(\Theta(U_i,U_j))$ where $\phi$ is a logstic function, and $\Theta(\cdot, \cdot)$ is a continuous function with a Gaussian process prior. Thus, the probability of edge between node $i$ and $j$ is equal to Bernoulli$(\phi(\Theta(U_i,U_j)))$.
+\end{example}
 
 \begin{definition}[Sparse Graph]
 Let the number of nodes in a graph be $n$. The graph is sparse if the number of edges are $o(n^2)$ or dense if the number of edges are $\Theta(n^2)$.
@@ -73,14 +76,31 @@ Unlike the graph model, jointly exchangeability for a general matrix where rows 
 for any permutation $\pi$ and $\sigma$ of $\mathbb{N}$.
 \end{definition}
 
-\begin{corollary}[Separately exchangeable array] A random 2-array $(X_{ij})$ is separately exchangeable if and only if there exists a random measurable function $f:[0,1]^3 \rightarrow \mathbb{X}$ such that
+\begin{corollary}[\label{sea}Separately exchangeable array] A random 2-array $(X_{ij})$ is separately exchangeable if and only if there exists a random measurable function $f:[0,1]^3 \rightarrow \mathbb{X}$ such that
 \begin{align}
 (X_{ij})  \stackrel{d}{=} (f(U_i, U_j, U_{ij})),
 \end{align}
 where $(U_i)_{i\in \mathbb{N}}$, $(U_j)_{j\in \mathbb{N}}$, and $(U_{ij})_{ij\in \mathbb{N}^2}$ are i.i.d. uniform[0,1] random variables.
 \end{corollary}
+In the separately exchangeable array case, function $f$ is not a symmetric in its first two arguments.
+
+\begin{example}[Probabilistic matrix factorisation (PMF) \cite{Salakhutdinov2008}] 
+PMF is one instantiation of Corollary \ref{sea}. Let the generative process of PMF be
+\begin{align}
+U_i &\sim \mathcal{MN}_d(0, \Sigma_U)\\
+V_j &\sim \mathcal{MN}_d(0, \Sigma_V)\\
+X_{ij} &\sim \mathcal{N}(U_i^\top V_j, \sigma_x)
+\end{align}
+where $\mathcal{MN}_d$ is a $d$-dimensional zero-mean multivariate normal distribution with covariance $\Sigma$. This corresponds to random measurable function
+$f(U_i, U_j, U_{ij}) = \Phi_1(U_{ij}; \Phi_d(U_i;0, \Sigma_{U})^\top \Phi_d(U_j;0, \Sigma_{U}), \sigma^2_x)$, where $\Phi_d(\cdot;\mu, \sigma^2)$ is an inverse-CDF of $d$-dimensional multivariate function with mean $\mu$ and variance $\sigma^2$.
+\end{example}
+
 
 \section{Sparse exchangeable array}
+\begin{theorem}[Kallenberg's exchangeable theorem \cite{Kallenberg1990}] Representation theorems for jointly exchangeable random measures on $\mathbb{R}^2$
+\end{theorem}
+
+Matrix factorisation for the sparse bipartite graph has been partially discussed in \cite{Caron2012}.
 
 \bibliographystyle{apalike}
 \bibliography{ref}
