@@ -67,7 +67,7 @@ In \cite{Lloyd2013}, the authors place a Gaussian process prior over graphon $W:
 For the undirected graph case where $X_{ij} = X_{ji}$, one can sample upper triangle of the adjacency matrix, and use the same result for the lower triangle. For the directed graph case, however, the adjacency matrix is no longer symmetric, also, by the theorem, both $X_{ij}$ and $X_{ji}$ rely on single parameter $U_{ij}$. Therefore, one should jointly sample ($X_{ij}$, $X_{ji}$) together from three parameters $U_{i}, U_{j}, U_{ij}$, which means $X_{ij}$ and $X_{ji}$ are not conditionally independent. In addition, asymmetric graphon $W$ could be employed for directed random graph. However, \cite{Cai2015} show that assymetric graphon is inappropriate to impose certain structures on a graph such as the partial ordering and propose a class of priors for directed graphs.
 
 \section{Exchangeable array for matrix factorisation}
-Unlike the graph model, jointly exchangeability for a general matrix where rows and columns represent different entities (i.e. users and items in recommendation system) is
+Jointly exchangeable array assume that both rows and columns index the same entities. However, the assumption does not hold for the general matrix where rows and columns represent different entities (e.g. users and items in recommendation system).
 
 \begin{definition}[Separately exchangeable array]A random 2-array $(X_{ij})_{i,j\in \mathbb{N}}$ is separately exchangeable if
 \begin{align}
