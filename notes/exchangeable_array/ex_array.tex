@@ -139,31 +139,25 @@ Again, we can transform uniform random variables $U_i, U_j, U_k$ to $e_i, e_j, R
 \xi \circ (f \otimes f)^{-1} \stackrel{d}{=} \xi
 \end{align}
 \end{definition}
-\begin{theorem}[Kallenberg's jointly exchangeable theorem \citep{Kallenberg1990,kallenberg2005probabilistic}] A random measure $\xi$ on $\mathbb{R}^2$ is jointly exchangeable iff it has an almost surely representation
+\begin{theorem}[\label{thm:kallenjoint}Kallenberg's jointly exchangeable theorem \citep{Kallenberg1990,kallenberg2005probabilistic}] A random measure $\xi$ on $\mathbb{R}^2$ is jointly exchangeable iff it has an almost surely representation
 \begin{align}
-\xi &= \sum_{i,j} f(\alpha, \vartheta_i, \vartheta_j, \zeta_{i,j})\delta_{\theta_i, \theta_j} \label{kallenjoint}\\
+\xi &= \sum_{i,j} f(\alpha, \vartheta_i, \vartheta_j, \zeta_{i,j})\delta_{\theta_i, \theta_j} \label{eqn:kallenjoint}\\
 &+ \sum_{j,k}\{g(\alpha, \vartheta_j, \chi_{jk})\delta_{\theta_j,\sigma_{jk}} + g'(\alpha, \vartheta_j, \chi_{jk})\delta_{\sigma_{jk},\theta_j}\}\\
-&+ \sum_{k}\{l(\alpha, \eta_k)\delta_{\rho_k,\rho'_k} + l'(\alpha, \eta_k)\delta_{\rho'_k, \rho_k}\}\\
+&+ \sum_{k}\{l(\alpha, \eta_k)\delta_{\nu_k,\nu'_k} + l'(\alpha, \eta_k)\delta_{\nu'_k, \nu}\}\\
 &+\sum_j\{h(\alpha, \vartheta_j)(\delta_{\theta_j} \otimes \Lambda) + h'(\alpha, \vartheta_j)(\Lambda \otimes \delta_{\theta_j})\} + \beta\Lambda_D + \gamma \Lambda^2,
 \end{align}
-for some measurable function $f:\mathbb{R}_+^4 \rightarrow \mathbb{R}_+$, $g,g':\mathbb{R}_+^3 \rightarrow \mathbb{R}_+$, and $l, l', h, h': \mathbb{R}_+^2\rightarrow\mathbb{R}_+$, some collection of independent uniformly distributed random variables $(\zeta_{i,j})$ on $[0,1]$, some independent unit rate Poisson processes $\{(\theta_j, \vartheta_j)\}$ and $\{(\sigma_{ij}, \chi_{ij})\}$ on $\mathbb{R}_+^2$ and $\{(\rho_j, \rho'_j, \eta_j)\}$ on $\mathbb{R}^3$, and some independent set of random variables $\alpha, \beta, \gamma \geq 0$. $\Lambda$ is Lebesgue measure on $\mathbb{R}_+$, and $\Lambda_D$ is Lebesgue measure on the diagonal of $\mathbb{R}_+^2$.
-\end{theorem}
-If we only focus on an atomic measure, all terms with the Lebesgue measure have measure zero. The atomic measure will be symmetric if $f$ is symmetric in its the second and third arguments, $g = g'$, and $l=l'$. The atomic measure will be simple if $f, g, g', l,$ and $l'$ are $\{0,1\}$-valued. This random measure is locally finite under certain conditions, and a truncated measure is defined as a Kallenberg exchangeable graph by \cite{Veitch2015}. Like \textit{graphon} in exchangeable random array, they also characterise the space of exchangeable atomic measure in terms of \textit{graphex}.
-
-\begin{theorem}[Graphex \citep{Veitch2015}] Let $\xi$ be a random adjacency atomic measure. Then $\xi$ is jointly exchangeable iff it has a.s. representation
-\begin{align}
-\xi &= \sum_{i,j}\mathbf{1} [W(\alpha, \vartheta_i, \vartheta_j) \leq \zeta_{i,j}]\delta_{\theta_i, \theta_j} \\
-&+\sum_{j,k} \mathbf{1} [\chi_{jk} \leq S(\alpha, \vartheta_j)](\delta_{\theta_j,\sigma_{jk}} +  \delta_{\sigma_{jk},\theta_j}) \\
-&+\sum_{k} \mathbf{1} [\eta_{k} \leq I(\alpha)](\delta_{\rho_k,\rho'_k} + \delta_{\rho'_k, \rho_k}),
-\end{align}
-where $W:\mathbb{R}^3 \rightarrow [0,1]$, $S:\mathbb{R}^2 \rightarrow \mathbb{R}$, and $I:\mathbb{R}\rightarrow\mathbb{R}$, $(\zeta_{i,j})$ are collection of uniform random variable in [0,1], $\{(\theta_i, \vartheta_j)\}$, $\{(\sigma_{jk}, \chi_{jk})\}$, and $\{(\rho_k, \rho'_k, \eta_{k})\}$ are independent unit rate Poisson processes on $\mathbb{R}^2_+$ and $\mathbb{R}^3_+$, and $\alpha$ is an independent random variable on $\mathbb{R}_+$.
+for some measurable function $f:\mathbb{R}_+^4 \rightarrow \mathbb{R}_+$, $g,g':\mathbb{R}_+^3 \rightarrow \mathbb{R}_+$, and $l, l', h, h': \mathbb{R}_+^2\rightarrow\mathbb{R}_+$, some collection of independent uniformly distributed random variables $(\zeta_{i,j})$ on $[0,1]$, some independent unit rate Poisson processes $\{(\theta_j, \vartheta_j)\}$ and $\{(\sigma_{ij}, \chi_{ij})\}$ on $\mathbb{R}_+^2$ and $\{(\nu, \nu'_j, \eta_j)\}$ on $\mathbb{R}^3$, and some independent set of random variables $\alpha, \beta, \gamma \geq 0$. $\Lambda$ is Lebesgue measure on $\mathbb{R}_+$, and $\Lambda_D$ is Lebesgue measure on the diagonal of $\mathbb{R}_+^2$.
 \end{theorem}
 
-\begin{example}[\cite{Caron2015}]
-\cite{Caron2015} propose a simple point process on $\mathbb{R}^2$ as a product measure of a complete random measure.
+If we only focus on an atomic measure, all terms with the Lebesgue measure have measure zero. The atomic measure will be symmetric if $f$ is symmetric in its the second and third arguments, $g = g'$, and $l=l'$. The atomic measure will be simple if $f, g, g', l,$ and $l'$ are $\{0,1\}$-valued. This random measure is locally finite under certain conditions, and a truncated measure is defined as a Kallenberg exchangeable graph by \cite{Veitch2015}. 
+
+Each atomic term in Theorem \ref{thm:kallenjoint} uniquely contributes to a structure of the random measure.
+
+\begin{example}[\label{caron2015}Caron and Fox model]
+\cite{Caron2015} propose a simple point process on $\mathbb{R}^2$ as a product measure of a complete random measure. They propose a hierarchical model
 \begin{align}
 G_0 &= \sum_{i=1}^{\infty} w_i \delta_{\theta_i} & &G_0 \sim \text{CRM}(\rho, \lambda)\\
-G &= \sum_{i,j} n_{ij} \delta_{\theta_i, \theta_j} & &G|G_0 \sim \text{PP}(G_0 \times G_0)\\
+G &= \sum_{i,j} n_{ij} \delta_{\theta_i, \theta_j} & &G|G_0 \sim \text{PP}(G_0 \otimes G_0)\\
 Z &=\sum_{i,j} \min(n_{ij} + n_{ji}, 1)\delta_{\theta_i, \theta_j}, &&
 \end{align}
 for L\'{e}vy intensity measure $\rho$ and $\lambda$ where $\rho$ is a jump part of the measure.
@@ -174,7 +168,7 @@ $Z$ can be directly specified as
     1 - \exp(-w_i^2) & \quad i = j\\
   \end{cases}
 \]
-This model can be reformulated in the Kallenberg's exchangeable theorem. The CRM $G_0$ can be constructed from a two-dimensional unit-rate Poisson process on $\mathbb{R}_+^2$ by the inverse L\'{e}vy method. Let $(\theta_i, \vartheta_i)$ be a unit rate Poisson process on $\mathbb{R}_+^2$, and $\rho^{-1}$ be the inverse L\'{e}vy intensity of $\rho$. Then $w_i = \rho^{-1}(\vartheta_i)$. The model can be formulated under the representation of Equation \ref{kallenjoint} as 
+This model can be reformulated in the Kallenberg's exchangeable theorem. The CRM $G_0$ can be constructed from a two-dimensional unit-rate Poisson process on $\mathbb{R}_+^2$ by the inverse L\'{e}vy method \cite{ferguson1972representation}. Let $(\theta_i, \vartheta_i)$ be a unit rate Poisson process on $\mathbb{R}_+^2$, and $\rho^{-1}$ be the inverse L\'{e}vy intensity of $\rho$, where $w_i = \rho^{-1}(\vartheta_i)$. The model can be formulated under the representation of Equation \ref{eqn:kallenjoint} as 
 \[ f(\alpha, \vartheta_i, \vartheta_j, \zeta_{i,j}) =
 	\begin{cases}
 	1- \exp(-2\rho^{-1}(\vartheta_i)\rho^{-1}(\vartheta_j)) & \quad i \neq j\\
@@ -182,6 +176,36 @@ This model can be reformulated in the Kallenberg's exchangeable theorem. The CRM
 	\end{cases}
 \]
 and $g,g',l,l'=0$. 
+
+They show that the resulting graph is sparse if intensity measure $\rho$ is infinite activity, i.e. $\int_{0}^{\infty} \rho(w)dw = \infty$ and dense if the intensity measure is finite activity, i.e. $\int_{0}^{\infty} \rho(w)dw < \infty$.
+\end{example}
+
+\begin{example}[Sparse block structured graphs \citep{Herlau2015}]
+\end{example}
+
+\begin{example}[Sparse graphs with overlapping communities \citep{Todeschini2016}]
+\end{example}
+
+
+Like \textit{graphon} in exchangeable random array, \citep{Veitch2015} also characterise the space of exchangeable atomic measure in terms of \textit{graphex}.
+
+\begin{theorem}[Graphex \citep{Veitch2015}] Let $\xi$ be a random adjacency atomic measure. Then $\xi$ is jointly exchangeable iff it has a.s. representation
+\begin{align}
+\xi &= \sum_{i,j}\mathbf{1} [W_\alpha(\vartheta_i, \vartheta_j) \leq \zeta_{i,j}]\delta_{\theta_i, \theta_j} \\
+&+\sum_{j,k} \mathbf{1} [\chi_{jk} \leq S(\alpha, \vartheta_j)](\delta_{\theta_j,\sigma_{jk}} +  \delta_{\sigma_{jk},\theta_j}) \\
+&+\sum_{k} \mathbf{1} [\eta_{k} \leq I(\alpha)](\delta_{\nu_k,\nu'_k} + \delta_{\nu'_k, \nu_k}),
+\end{align}
+where $W:\mathbb{R}^3 \rightarrow [0,1]$, $S:\mathbb{R}^2 \rightarrow \mathbb{R}$, and $I:\mathbb{R}\rightarrow\mathbb{R}$, $(\zeta_{i,j})$ are collection of uniform random variable in [0,1], $\{(\theta_i, \vartheta_i)\}$, $\{(\sigma_{jk}, \chi_{jk})\}$, and $\{(\nu_k, \nu'_k, \eta_{k})\}$ are independent unit rate Poisson processes on $\mathbb{R}^2_+$ and $\mathbb{R}^3_+$, and $\alpha$ is an independent random variable on $\mathbb{R}_+$.
+\end{theorem}
+
+\begin{example}[Caron and Fox model with graphex] The model in Example \ref{caron2015} can be represented in terms of graphex notation.
+\[ W_\alpha(\vartheta_i, \vartheta_j) =
+	\begin{cases}
+	1- \exp(-2\rho^{-1}(\vartheta_i)\rho^{-1}(\vartheta_j)) & \quad i \neq j\\
+    1 - \exp( \rho^{-1}(\vartheta_i)^2) & \quad i = j\\
+	\end{cases}
+\]
+
 \end{example}
 
 \section{Sparse exchangeable bipartite graph}
@@ -195,7 +219,10 @@ and $g,g',l,l'=0$.
 \end{align}
 for some measurable function $f:\mathbb{R}_+^4 \rightarrow \mathbb{R}_+$, $g,g':\mathbb{R}_+^3 \rightarrow \mathbb{R}_+$, and $l, l', h, h': \mathbb{R}_+^2\rightarrow\mathbb{R}_+$, some collection of independent uniformly distributed random variables $(\zeta_{i,j})$ on $[0,1]$, some independent unit rate Poisson processes $\{(\theta_i, \vartheta_i)\}$, $\{(\theta'_j, \vartheta'_j)\}$, $\{(\sigma_{ij}, \chi_{ij})\}$ and $\{(\sigma'_{ij}, \chi'_{ij})\}$ on $\mathbb{R}_+^2$ and $\{(\rho_j, \rho'_j, \eta_j)\}$ on $\mathbb{R}^3$, and some independent set of random variables $\alpha, \gamma \geq 0$. $\Lambda$ is Lebesgue measure on $\mathbb{R}_+$.
 \end{theorem}
+
+\begin{example}[\citep{Caron2012}]
 Matrix factorisation for the sparse bipartite graph has been partially discussed in \citep{Caron2012}, although the formal proof of the sparsity is lacking.
+\end{example}
 
 \bibliographystyle{apalike}
 \bibliography{ref}
