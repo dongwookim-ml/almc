@@ -24,10 +24,10 @@ and so on.
 of passively learning a model given labeled data points, or actively 
 requesting data points to be labeled.
 \item[Matrix/Tensor/Composition] Relational learning problems for operate on 
-different data representations. Matrix representation is common when dataset 
-can be represented as a bi-partite graph, such as in (user, item) tuples in 
-recommenders systems setting. Tensor representation is handy when edges in the 
-graph has labels, i.e. (entity1, relation, entity2). We can think of 
+different data representations. Matrix representation is common when a dataset 
+can be represented as a bi-partite graph, such as (user, item) tuples in the 
+recommender systems setting. Tensor representation is handy when edges in the 
+graph have labels, i.e. (entity1, relation, entity2). We can think of 
 compositions as paths in the graph, i.e. entity1 -- relation1 -- entity2 -- 
 relation2 -- entity3.
 %\item[Data representation] Data for a factorisation problem can be 
@@ -53,8 +53,7 @@ active multi-relational data construction (AMDC)
 with tensor factorisation~\cite{kajino2015active}, 
 Thomson sampling for matrix factorisation~\cite{kawale2015efficient}, 
 and compositions objectives in vector space~\cite{guu2015traversing}.
-Note that we re-formulate the compositions objectives in the 
-probabilistially such that it can be used in an active setting; 
+Note that we re-formulate the compositions objectives probabilistically such that it can be used in an active setting; 
 our approach for active learning is a generalisation of
 Thomson sampling from matrixes to tensors; 
 AMDC find that reconstruction accuracy and recall 

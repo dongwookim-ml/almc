@@ -6,14 +6,14 @@
 %KG background from text, completion
 Relational knowledge bases support reasoning, information retrieval, 
 or question-answering tasks about entities and their relations.
-Most of them contact facts in the form of (entity1, relation, entity2) triples, 
+Most of them contain facts in the form of (entity1, relation, entity2) triples, 
 such as (CarlFriedrichGauss, BornIn, Braunschweig).
 %(ThomasBayes, London, BornIn).
 Automatically acquiring, maintaining, and reasoning in
 knowledge bases is a very active topic area with many important and challenging research questions. 
 %, has sustained attention from both academia and industry. 
 Even the largest of such databases are known to be incomplete~\cite{dong2014knowledge}. %min2013distant
-There are two main ways to fill in the missing facts,
+There are two main ways to fill in the missing facts:
 the first learning new relations from large collections of text or hyper-text,
 %~\cite{Mintz2009,carlson2010toward}, 
 known as knowledge extraction, 
@@ -26,8 +26,9 @@ its disconnection from the knowledge extraction setting.
 It would be nice, for example, to know which question to query for in 
 a search-based method for gathering triples~\cite{west2014knowledge}. 
 Recently \citet{kajino2015active} propose an active learning strategy for completing 
-knowledge triples, however the algorithm find it difficult to achieve 
-high recall and high reconstruction at the same time. 
+knowledge triples; however the algorithm had problems simultaneously achieving high recall and faithful reconstruction.
+% finds it difficult to achieve 
+%high recall and high reconstruction at the same time. 
 Having an active exploit-explore strategy would more effectively 
 connect knowledge completion and extraction problems. 
 Another challenge is leveraging compositional knowledge from existing triples. 
@@ -58,24 +59,24 @@ which allows us to trade-off exploration and exploitation when identifying new t
 %randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
 We also perform compositional training for the probabilistic model, 
 by modeling relation compositions as algebraic operations in the probabilistic embedding space. 
-For inference, we design Gibbs sampling for BRESCAL with and without and compositions. 
+For inference, we design Gibbs sampling for BRESCAL with and without compositions. 
 %with by computing conditional posteriors. 
 We employ a sequential Monte-Carlo method for the active querying of new triples, 
 called particle Thompson sampling. 
 
 We first test the proposed models with synthetic datasets. 
-We observe that Thompson sampling provide significant gain over random sampling of triples, 
+We observe that Thompson sampling provides significant gain over random sampling of triples; 
 we also observe a clear gain in tensors with known composition structure. 
-We then evaluated the model on three real-world relation datasets. In passive learning setting, 
+We then evaluated the model on three real-world relation datasets. In the passive learning setting, 
 we find BRESCAL outperforming the non-probabilistic version of tensor factorisation, 
-and that compositions help when training set is sparse. 
+and that compositions help when the training set is sparse. 
 In the active learning scenario, 
 we find that BRESCAL achieves the highest cumulative gain across all datasets. 
-It is encouraging to see the exploit-explore strategy with uncertainty outperforms 
-active learning strategies that focus on exploit or favours uncertainty. 
+It is encouraging to see the exploitation-exploration strategy with uncertainty outperforming 
+active learning strategies that focus solely on exploitation or exploration. 
 
 We are pleased to be able to learn a vector-space model for entities and relations with uncertainty, 
-bridging the gaps of probabilistic active sampling and knowledge compositions. 
+bridging the gap of probabilistic active sampling and knowledge compositions. 
 We look forward to follow-on work with better sampling strategies and computational scalability. 
 
 \eat{
