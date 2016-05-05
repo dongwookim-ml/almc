@@ -5,9 +5,9 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from numpy.random import multivariate_normal, gamma, multinomial
 from sklearn.metrics import mean_squared_error, roc_auc_score
+from ..utils.formatted_logger import formatted_logger
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = formatted_logger(__name__)
 
 _E_ALPHA = 1.
 _E_BETA = 1.
@@ -506,6 +506,8 @@ class PFBayesianCompRescal:
 
         try:
             E[i] = multivariate_normal(mu, inv_lambda)
+            mean_var = np.mean(np.diag(inv_lambda))
+            logger.info('Mean variance E, %d, %f', i, mean_var)
         except:
             logger.debug('Sample E error, %d', i)
 
@@ -613,6 +615,8 @@ class PFBayesianCompRescal:
 
         try:
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+            mean_var = np.mean(np.diag(inv_lambda))
+            logger.info('Mean variance R, %d, %f', k, mean_var)
         except:
             logger.debug('Sample R error, %d', k)
 
@@ -649,6 +653,8 @@ class PFBayesianCompRescal:
 
         try:
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+            mean_var = np.mean(np.diag(inv_lambda))
+            logger.info('Mean variance R, %d, %f', k, mean_var)
         except:
             logger.debug('Sample R error, %d', k)
 

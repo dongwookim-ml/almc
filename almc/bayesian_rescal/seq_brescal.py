@@ -1,14 +1,10 @@
-import logging
 import time
-import itertools
 import numpy as np
-import scipy as sp
-import concurrent.futures
 from numpy.random import multivariate_normal, gamma, multinomial
 from sklearn.metrics import mean_squared_error, roc_auc_score
+from ..utils.formatted_logger import formatted_logger
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = formatted_logger(__name__)
 
 _E_ALPHA = 1.
 _E_BETA = 1.
@@ -514,6 +510,10 @@ class PFBayesianRescal:
         mu = np.dot(inv_lambda, xi)
         E[i] = multivariate_normal(mu, inv_lambda)
 
+        mean_var = np.mean(np.diag(inv_lambda))
+        logger.info('Mean variance E, %d, %i', i, mean_var)
+
+
     def _sample_relations(self, X, mask, E, R, var_r):
         EXE = np.kron(E, E)
 
@@ -541,6 +541,8 @@ class PFBayesianRescal:
         try:
             # R[k] = normal(mu, _lambda).reshape([self.n_dim, self.n_dim])
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
+            mean_var = np.mean(np.diag(inv_lambda))
+            logger.info('Mean variance R, %d, %f', k, mean_var)
         except:
             pass
 

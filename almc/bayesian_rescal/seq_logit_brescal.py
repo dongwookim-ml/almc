@@ -1,14 +1,10 @@
-import logging
 import time
-import itertools
 import numpy as np
-import scipy as sp
 from numpy.random import multivariate_normal, multinomial
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import mean_squared_error
+from ..utils.formatted_logger import formatted_logger
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = formatted_logger(__name__)
 
 _E_ALPHA = 1.
 _E_BETA = 1.
