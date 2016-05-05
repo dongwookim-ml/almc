@@ -2,6 +2,7 @@ import time
 import numpy as np
 from numpy.random import multivariate_normal, multinomial
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import mean_squared_error, roc_auc_score
 from ..utils.formatted_logger import formatted_logger
 
 logger = formatted_logger(__name__)
