@@ -511,7 +511,7 @@ class PFBayesianRescal:
         E[i] = multivariate_normal(mu, inv_lambda)
 
         mean_var = np.mean(np.diag(inv_lambda))
-        logger.info('Mean variance E, %d, %i', i, mean_var)
+        logger.info('Mean variance E, %d, %f', i, mean_var)
 
 
     def _sample_relations(self, X, mask, E, R, var_r):
