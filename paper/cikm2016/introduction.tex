@@ -1,0 +1,162 @@
+%!TEX root = ./cikm2016.tex
+
+\section{Introduction}
+\label{sec:intro}
+
+%KG background from text, completion
+Relational knowledge bases support reasoning, information retrieval, 
+or question-answering tasks about entities and their relations.
+Most of them contain facts in the form of (entity1, relation, entity2) triples, 
+such as (CarlFriedrichGauss, BornIn, Braunschweig).
+%(ThomasBayes, London, BornIn).
+Automatically acquiring, maintaining, and reasoning in
+knowledge bases is a very active topic area with many important and challenging research questions. 
+%, has sustained attention from both academia and industry. 
+Even the largest of such databases are known to be incomplete~\cite{dong2014knowledge}. %min2013distant
+There are two main ways to fill in the missing facts:
+the first learning new relations from large collections of text or hyper-text,
+%~\cite{Mintz2009,carlson2010toward}, 
+known as knowledge extraction, 
+the second is inferring facts from existing relations, %~\cite{Lao2010,nickel2015review} 
+known as knowledge completion. 
+
+%There are two open 
+One challenge in knowledge base completion is 
+its disconnection from the knowledge extraction setting. 
+It would be nice, for example, to know which question to query for in 
+a search-based method for gathering triples~\cite{west2014knowledge}. 
+Recently \citet{kajino2015active} propose an active learning strategy for completing 
+knowledge triples; however the algorithm had problems simultaneously achieving high recall and faithful reconstruction.
+% finds it difficult to achieve 
+%high recall and high reconstruction at the same time. 
+Having an active exploit-explore strategy would more effectively 
+connect knowledge completion and extraction problems. 
+Another challenge is leveraging compositional knowledge from existing triples. 
+Also known as paths in knowledge graphs, composition of facts is key to 
+achieving common reasoning tasks. 
+For example, the two triples (CarlFriedrichGauss, BornIn, Braunschweig)
+and (Braunschweig, LocatedIn, Germany) implies (CarlFriedrichGauss, BornIn Germany). 
+Path ranking~\cite{Lao2010}, vector space traversal~\cite{guu2015traversing}
+and composition~\cite{Neelakantan2015} techniques 
+are recently developed to leverage such information for knowledge completion. 
+We note, however, that a principled formulation that can address 
+both open challenges is still missing -- namely, a relational model 
+that can model knowledge compositions in an active setting. 
+
+%\TODO{TODO}{revise summary-of-our-approach to be consistent w. the above}
+We propose a novel probabilistic re-formulation of tensor factorisation,  
+one of the main competitive variants for knowledge completion~\cite{nickel2015review}. 
+%There are many advantages to a probabilistic formulation of tensor factorisation, 
+%such as the quantification of uncertainty by the predictive distribution, 
+%the ability to utilise priors, and the availability of principled model selection. 
+We name our model Bayesian RESCAL (BRESCAL).
+The probabilistic model provides a natural way of 
+embracing uncertainty of triples that is crucial to develop 
+%implementing
+an active triple selection for knowledge completion, using 
+Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
+which allows us to trade-off exploration and exploitation when identifying new triples.
+%randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
+We also perform compositional training for the probabilistic model, 
+by modeling relation compositions as algebraic operations in the probabilistic embedding space. 
+For inference, we design Gibbs sampling for BRESCAL with and without compositions. 
+%with by computing conditional posteriors. 
+We employ a sequential Monte-Carlo method for the active querying of new triples, 
+called particle Thompson sampling. 
+
+We first test the proposed models with synthetic datasets. 
+We observe that Thompson sampling provides significant gain over random sampling of triples; 
+we also observe a clear gain in tensors with known composition structure. 
+We then evaluated the model on three real-world relation datasets. In the passive learning setting, 
+we find BRESCAL outperforming the non-probabilistic version of tensor factorisation, 
+and that compositions help when the training set is sparse. 
+In the active learning scenario, 
+we find that BRESCAL achieves the highest cumulative gain across all datasets. 
+It is encouraging to see the exploitation-exploration strategy with uncertainty outperforming 
+active learning strategies that focus solely on exploitation or exploration. 
+
+We are pleased to be able to learn a vector-space model for entities and relations with uncertainty, 
+bridging the gap of probabilistic active sampling and knowledge compositions. 
+We look forward to follow-on work with better sampling strategies and computational scalability. 
+
+\eat{
+Statistical relational models have been proposed to tackle
+various problems of knowledge bases. For example, it can be used 
+for question understanding and answering problems ,
+or it can be integrated into a search engine
+to improve the users' search experiment \cite{dong2014knowledge}.
+
+However, most of previous latent feature models lack the consideration
+of constructing a knowledge graph with the latent features.
+As an alternative approach, distant supervision algorithms
+\cite{Mintz2009} suggest a way to fill a missing part of knowledge graph
+through the extensive NLP processing, however, this method inherently
+requires a set of initial observations used as a distant supervision.
+
+Here, we tackle the problem of knowledge base construction with the
+statistical relational model.
+A goal of knowledge base construction is to acquire a maximum number
+of valid triples with a limited budget.
+This goal corresponds to a general objective of the multi-armed bandit (MAP)
+problem where we want to minimise the cumulative regret or maximise
+the cumulative reward over time. 
+In recent years, Thompson sampling has been emerged as  
+an competitive solution in MAP problems.
+We borrow Thompson sampling, which provides a principled
+way to find an optimal trade off between exploration and exploitation,
+to solve the knowledge base construction problem.
+}
+
+\eat{
+We propose a compositional relation model that exploit the compositional structure of 
+knowledge graph to capture the latent semantic structure of the entities and relations.
+While previously suggested vector space models provide a statistical way to infer the latent semantic 
+structure of entities and relations, but lack consideration of a graph structure of a knowledge base itself.
+
+In a separate way from the vector space models, graph feature algorithms such as the path ranking algorithm 
+are suggested to fill a missing part of a knowledge graph \cite{Lao2010}. The graph feature algorithms 
+directly include graph structures, such as edge type, node type, and node degree, to learn and predict new 
+triples, however, the absence of latent structure makes the models failed to predict a new triple when the 
+target entities does not have rich structural background\cite{nickel2015review}.
+
+We propose a compositional vector space model that benefits the latent representation of vector space model 
+along with the graph structure of the graph feature models. Recently, Guu et. al. suggest a compositional 
+training framework for vector space models \cite{gu2015traversing}, where paths over a knowledge graph act 
+as a new form of structural regularisation of the models. Based on their work, we extend the compositional 
+approach within a probabilistic framework with two compositional structures.
+}
+
+\eat{%% v1 of intro
+As the amount of information codified in a computer readable fashion increases, the management
+of knowledge bases need to become increasingly more automated. In this paper, we study
+the problem of acquiring new knowledge given an existing knowledge base. Knowledge bases
+are modeled as a set of relations between pairs of entities, for example the factoid
+``Barack Obama is the 44th president of the United States''
+is modeled as two entities (Barack Obama, United States) being related by ``president of''.
+Such relations have a natural representation as a sparse graph or a tensor of order 3.
+Given this representation, we model the acquisition of new knowledge as the
+identification of new triples that capture particular relations between two entities.
+
+There are several challenges when we apply machine learning methods to completing
+existing knowledge bases, namely:
+sparse, noisy, and incomplete annotations.
+There has been recent success in transferring ideas from matrix completion problems to
+the tensor domain to overcome the challenge of sparsity~\cite{unknown}.
+We follow this thread of research by using a low rank approximation model for tensor
+factorisation. Such low rank approximations can also be seen as a latent variable probabilistic
+model, which additionally captures the inherent uncertainty of noisy annotations.
+We propose a probabilistic model for tensor factorisation and explore both the Gaussian
+and Logistic model. The probabilistic model provides a natural way of implementing
+randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
+Thompson sampling is an approach for solving the multi-armed bandit problem,
+which allows us to trade off exploration and exploitation when identifying new triples.
+This provides a principled approach to identify promising candidates for knowledge base
+completion.
+We additionally consider compositional relations as an additional source of weak information
+to further utilise the existing (incomplete) knowledge items.
+
+Goal of this paper 1: Populating knowledge graph with an active label acquisition process 
+corresponding to [B,C,A] in Figure \ref{fig:related3d}.
+
+[B,C,P] could be an alternative direction (or both).
+}

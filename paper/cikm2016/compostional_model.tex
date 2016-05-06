@@ -1,0 +1,116 @@
+%!TEX root = ./cikm2016.tex
+\section{Compositional Relations}
+\label{sec:comp}
+
+In this section, we propose a compositional relation model that exploit the compositional structure of
+knowledge graph to capture the latent semantic structure of the entities and relations.
+While previously suggested vector space models provide a statistical way to infer the latent semantic
+structure of entities and relations, but lack consideration of a graph structure of a knowledge base itself.
+%%LX: the above para is also in intro right now.
+
+The compositionality represents a semantic meaning of a path over a knowledge graph that corresponds to a
+sequence of composable triples.
+For example, given two triples, ``Barack Obama is a 44th president of U.S.'' (BarackObama, PresidentOf,
+U.S) and ``Joe Biden was a running mate of Barack Obama'' (JoeBiden, RunningMateOf, BarackObama),
+one can naturally deduce that the ``Joe Biden is a vice president of U.S.'' (JoeBiden, VicePresidentOf, U.S.).
+Here the composition of two relations, president of, and running mate of, yield to a compositional relation,
+vice president of.
+% Is every running mate always a vice president? maybe this is not a proper example.
+More formally, if there is a sequence of triples where the target entity of a former triple is a source entity of a
+latter triple in a consecutive pair of triples in the sequence, then we can form a compositional triples
+as follows.
+Given the sequence of triples
+$(i_1, k_1 ,j_1)$,  $(i_2, k_2, j_2)$, $(i_2, k_2, j_2)$ $\dots$ $(i_n, k_n, j_n)$, where $i_k = j_{k+1}$ for all $k
+$,  we form a compositional triple $(i_1, {c}(k_1, k_2, \dots, k_n), j_n)$, where $c$ denotes the compositional
+relation of the sequence of relations.
+
+Let $\mathcal{C}^{L}$ be a set of all possible compositions of which length is up to $L$, $c \in \mathcal{C}$
+be a sequence of relations, $c(i)$ be $i$th index of a relation in sequence $c$ and $|c|$ be the length of the
+sequence. With set of compositions $\mathcal{C}^{L}$, we can expand set of observed triples
+$\mathcal{X}^{t}$ to set of compositional triples $\mathcal{X}^{\mathcal{C}^{L}(t)}$ in which
+compositional triple $x_{icj}$ is an
+indicator variable that show the existence of the path from entity $i$ to entity $j$ through sequence
+of relations
+$c$ in $\mathcal{X}^{t}$. Note that the compositional relation $c$ is an abstract relation, and there might be a
+multiple possible paths from $i_1$ to $j_n$.
+
+With these extended compositional triples, we again model $x_{icj}$ with a bilinear Gaussian distribution,
+\begin{align}
+x_{(i, {{c}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{{c}(k_1,k_2)} e_j, \sigma_{c}^2),
+\end{align}
+where $R_{{c}(k_1,k_2)} \in \mathbb{R}^{D\times D}$ is a latent matrix of compositional relation $c$, and $
+\sigma_{c}^2$ is a covariance of the compositional triples. We keep the same latent vector $e$ for each entity
+to model both normal triples and compositional triples.
+In the subsequent sections, we provide two different ways of modelling the compositional relation $R_c$.
+
+\subsection{Additive Compositionality}
+First, we define an additive compositional relation $R_c$ as a sequence of normalized summation over
+relation matrices in composition $c$, i.e.,
+$R_{{c}} = \frac{1}{|c|}(R_{c(1)} + R_{c(2)} + \dots + R_{c(|c|)})$, then compositional triple $x_{icj}$
+is modeled as
+\begin{align}
+x_{(i, c, j)} &\sim \mathcal{N}(e_i^\top R_c e_j, \sigma_{c}^2) \\
+&= \mathcal{N}(e_i^\top \frac{1}{|c|}(R_{c(1)} + R_{c(2)} + \dots + R_{c(|c|)}) e_j, \sigma_{c}^2). \notag
+\end{align}
+The conditional distribution of $e_i$ given $E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
+expanded from the posterior of BRESCAL by incorporating compositional triples.
+\begin{align} \label{eqn:comp_sample_e}
+p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}) &= \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1}).
+\end{align}
+
+To compute the conditional distribution of $R_k$, we first decompose $R_c$ into two part where $R_c =
+\frac{1}{|c|} R_k + \frac{|c|-1}{|c|}R_{c/k}$, where $R_{c/k} = \sum_{k' \in c/k} R_{k'}$.
+The distribution of compositional triple is decomposed as follows:
+\begin{align}
+x_{(i, c, l)} \sim \mathcal{N}(e_i^\top (\frac{1}{|c|} R_k + \frac{|c|-1}{|c|}R_{c/k}) e_j, \sigma_{c}^2).
+\end{align}
+Then, the conditional distribution $R_k$ given $R_{-k}, E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
+\begin{align}
+\label{eqn:comp_cond_r}
+p(R_k|E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_k,
+\Lambda_k^{-1}).
+\end{align}
+
+The mean and precision are obtained by expanding out the sum across $\mathcal{X}^{t}$ and
+$\mathcal{X}^{L(t)}$. The details of the parameters are shown in the appendix.
+
+
+\subsection{Multiplicative Compositionality}
+Second, we define an multiplicative compositional relation $R_c$ as a sequence of multiplication over
+relations in composition $c$, i.e. $R_c = R_{c(1)} R_{c(2)} \dots R_{c(|c|)}$, and the compositional triple as a
+bilinear Gaussian distribution with the compositional relation $R_c$,
+\begin{align}
+x_{(i, c, j)} \sim \mathcal{N}(e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j, \sigma_{c}^2)
+\end{align}
+The multiplicative compositionality can be understood as a sequence of linear transformation from the original
+entity $i$ with the compositional relations, and the inner product between the transformed entity and target
+entity will form a value of the compositional triple.
+
+Given a sequence of relations including relation $k$, $R_k$ is placed in the middle of the compositional
+sequence, i.e., $e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(\delta_k)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j$, where $
+\delta_k$ is the index of relation $k$. For notational simplicity, we will denote the left side $e_i^\top R_{c(1)}
+R_{c(2)} \dots R_{c(\delta_k -1)}$ as $\bar{e}_{ic(:\delta_k)}^\top$, and the right side $R_{c(\delta_k + 1)} \dots
+R_{c(|c|-1)}R_{c(|c|)} e_j$ as $\bar{e}_{ic(\delta_k:)}$, therefore we can rewrite the mean parameter as $
+\bar{e}_{ic(:\delta_k)}^\top R_{k} \bar{e}_{ic(\delta_k:)}$. With the simplified notations, the conditional of $R_k$
+is
+\begin{align}
+p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_k, \Lambda_k^{-1}),
+\end{align}
+where
+the mean and precision are obtained by expanding out the product across $\mathcal{X}^{t}$ and
+$\mathcal{X}^{L(t)}$. The details of the parameters are shown in the appendix.
+The conditional distribution of $e_i$ given the rest is the same as Equation $\ref{eqn:comp_sample_e}$.
+
+As the length of sequence $c$ increases, a small error in the first few multiplication will result a large
+differences in the final compositional relation. One way to mitigate the cascading error is to increase variance
+of compositional triples $\sigma_c$ as the length of the sequence increases.
+
+With the conditional distributions, both compositional models can use the same
+particle Thompson sampling scheme described in Algorithm \ref{alg:smc}.
+However, the model can only query the triples in the original tensor and 
+not in the expanded tensor because the triples are not observable.
+
+%If the determinant of latent relation $R_k$ is greater than 1, the compositional latent relation $R_c$ might
+%be exploded after multiplying a long sequence of relations. To obtain a stable scale of compositional
+%relation $R_c$, one may multiply decaying factor $\tau < 1$ after each composition. $R_c = \tau^{|c|-1}
+%R_{c(1)} R_{c(2)} \dots R_{c(|c|)}$.

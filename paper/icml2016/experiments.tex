@@ -1,0 +1,250 @@
+%!TEX root = ./icml2016.tex
+\section{Experiments}
+
+In this section, we show results for Thomson sampling and compositions for BRESCAL. 
+First on two synthetic datasets, and then on three common benchmarks for knowledge graphs.
+%\rev{These experiments compare exploitation and exploration
+% with exploitation only algorithms, and also show how the compositional model
+%improves the entity embedding upon the non-compositional models. }
+%%LX: second sentence can be cut if we need space.
+
+\eat{
+In this section, we verify the Thompson sampling for Bayesian RESCAL (BRESCAL) 
+through the synthetic dataset. We fit the compositional model in general
+passive learning settings and show how the compositionality helps to find the 
+latent features.
+And then, we show how the active knowledge acquisition using Thompson sampling 
+benefits the balance between exploitation and exploration to compare with the 
+exploitation only algorithms. 
+>>>>>>> bd7f11cb775339cba3a538a6f68351c2251ea530
+}
+
+\subsection{\rev{Thompson Sampling on }synthetic data}
+\begin{figure}[t]
+	\centering
+	\subfigure[\scriptsize Logistic: N=10, K=10, D=5\label{fig:syn1}]{
+	\includegraphics[width=0.42\linewidth]{images/toy_logit_vs_normal_10_10_5.pdf}
+	}
+	\subfigure[\scriptsize Logistic: N=20, K=10, D=5\label{fig:syn2}]{
+	\includegraphics[width=0.445\linewidth]{images/toy_logit_vs_normal_20_10_5.pdf}
+	}
+	\subfigure[\scriptsize Gaussian: N=10, K=10, D=5\label{fig:syn3}]{
+	\includegraphics[width=0.42\linewidth]{images/toy_10_10_5.pdf}
+	}
+	\subfigure[\scriptsize Gaussian: N=20, K=10, D=5\label{fig:syn4}]{
+	\includegraphics[width=0.45\linewidth]{images/toy_20_10_5.pdf}				
+	}
+%	\includegraphics[width=0.32\linewidth]{images/toy_5_10_5.pdf}			
+%	\includegraphics[width=0.32\linewidth]{images/toy_10_5_5.pdf}				
+	\caption{\label{fig:synthetic} Cumulative regret of particle Thompson sampling with Gaussian and logistic output ({\sc BNORMAL, BLOGIT}) against Passive learning 
+	on synthetic datasets with logistic	(top row, a, b) and Gaussian (bottom row, c, d) output variables.
+	%We compared the particle Thompson sampling with passive sampling method. 
+	The averaged cumulative regrets over 10 runs are plotted with one standard error. 
+	As the model obtained more and more labeled samples from Thompson sampling, 
+	the cumulative regrets increase sub-linearly.}
+\end{figure}
+
+\eat{To verify the particle Thompson sampling, }We first synthesise two \eat{sets of }datasets 
+\eat{based on the model assumptions and run the Thompson sampling algorithm. By }
+following the model assumptions in Eq. \ref{eqn:entity_gen} to 
+\verify{\ref{eqn:triple_gen}}. 
+\eat{We randomly generate triples based on randomly sampled entities and relations. Every }
+\rev{First, }entities and relations are generated from zero-mean isotropic multivariate normal distribution, \eat{where we set }\rev{with } 
+variance parameters $\sigma_e=1$, $\sigma_r=1$, respectively.
+\rev{We generate two sets of \eat{the final}output triples,}
+\eat{we generate two sets of datasets with }
+\rev{with} the logistic output \eat{output variable }and the Gaussian \rev{with $\sigma_x$ set to 0.1}\eat{ variable}, respectively (Sec~\ref{sec:brescal}). 
+\eat{The variance of gaussian $\sigma_x$ set to 0.1.}
+
+To measure performance\eat{ on synthetic dataset}, we compute cumulative regret 
+\eat{of proposed algorithm }at each time $n$ as $R(n) = \sum_{t=1}^{n} x_t - x^{*}_t$, 
+%\begin{align}
+%R(n) = \sum_{t=1}^{n} x_t - x^{*}_t,
+%\end{align}
+where $x^*_t$ is the highest\rev{-valued} triple among triples that have not been chosen up to time $t$. Unlike the general 
+bandit setting where one can select a single item multiple times, in our formulation, we can select one triple 
+only once. So after selecting a triple at time $t$, the selected triple will be removed from a set of candidate 
+triples.
+
+Figure \ref{fig:synthetic} shows the cumulative regret of the algorithm on the synthetic data with varying size of 
+entities and relations. We compare the cumulative regret of the particle Thompson sampling with the passive 
+learning method where the model choose a random triple at each time. All results are averaged over 10 
+individual runs with different initialisations. 
+Note that the dataset with binary logistic output variables can be used to train both Bayesian logistic RESCAL (BLOGIT) and Bayesian Gaussian RESCAL (BNORMAL) whereas the dataset with the Gaussian output can only be trained by BNORMAL.
+Figure \ref{fig:syn1} and \ref{fig:syn2} show that with the logistic synthetic dataset both models are capable to learn the latent features of the generated triples, with logistic outperforming the Gaussian; Figure \ref{fig:syn3} and \ref{fig:syn4} show that BNORMAL \rev{outperform passive learning in} the real valued dataset. 
+%For every experiment, the cumulative regret of the Thompson 
+%sampling method was bounded after a certain number of interactions whereas the cumulative regret of 
+%passive learning increases linearly. 
+\eat{Both results indicate the particle sampling is capable of inferring latent features 
+of entities and relations as the interaction increases.}
+
+\subsection{Thompson sampling for compositional models on synthetic data}
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\linewidth]{images/toy_comp_5_2_5.pdf}
+	\caption{\label{fig:comp_synthetic} Cumulative regret of particle Thompson sampling of the compositional models on synthetic dataset with N=5, D=5. The synthetic dataset has three relations (K=3); the first two are independently generated, and the third relation is composed by the first two relations. The dataset used in (a) is generated by the multiplicative assumption, and the dataset used in (b) is generated by the additive assumption.}
+\end{figure}
+
+We conduct a second experiment on synthetic dataset to understand how
+the Thompson sampling works for the compositional data. 
+As in the first experiment, we first generate entities and relations from 
+zero-mean multivariate normal with variance parameter $\sigma_e = 1$ and 
+$\sigma_r=1$. We generate a set of triples with Gaussian output as in 
+Eq. \ref{eqn:triple_gen}. We then synthesise two sets of expanded tensors 
+using the previously used entities and relations based on the multiplicative 
+and additive compositional assumptions, defined in Sec \ref{sec:comp}, 
+respectively. So we synthesise fully observable expanded tensor $\mathcal{X}^L$ 
+where $L=2$. We set both variance parameter $\sigma_x$ and $\sigma_c$ to 0.1. Note that in real world situation, the expanded tensor can be only constructed through the observed triples, and the triples in the expanded tensor cannot be queried.
+
+To run the particle Thompson sampling on the synthetic dataset, we let the 
+compositional models know which relation is composed by other relations. 
+The non-compositional BNORMAL model assumes each relation is independent to one another. 
+Therefore, the compositional model uses much less number of parameters to model 
+the same size of tensor to compare with the non-compositional model. 
+\eat{%%LX: these info repeats?
+Through 
+this experiments, we verify the particle Thompson sampling algorithm for the 
+compositional models.
+
+For the experiment, we generate three relations ($K=3$) of five entities ($N=5$): 
+the first and second relations 
+are independent and the third relation is composed by the first and second 
+relations. The latent dimension is set to 5.
+}
+With this fully observable expanded tensors, we run the Thompson sampling of 
+the compositional models.
+Figure \ref{fig:comp_synthetic} shows the cumulative regrets on synthetic 
+datasets. The multiplicative and additive compositionality are used to 
+generate the dataset for Figure \ref{fig:comp_synthetic}(a) and 
+\ref{fig:comp_synthetic}(b), respectively. The results correspond to our 
+assumption: the multiplicative compositional model (BCOMP-MUL) shows lower 
+regrets on the multiplicative data in Figure \ref{fig:comp_synthetic}(a), and 
+the additive compositional model (BCOMP-ADD) shows lower regrets on the 
+additive compositional data in Figure \ref{fig:comp_synthetic}(b), 
+and both have lower regrets than passive learning or BNORMAL with no composition. 
+
+\subsection{Training compositional model on real datasets}
+We evaluate the compositional models on three benchmark datasets and compare the performance to various baseline 
+algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each 
+dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washington.edu/papers/kok07/}.
+
+\begin{table}[t]
+\centering
+\caption{\label{tbl:dataset}Description of datasets. 
+Sparsity denotes the ration of valid triples to invalid triples.}
+\vskip 0.15in
+\begin{tabular}{l | r | r | r | r}
+Dataset &  \# rel & \# entities & \# triples & sparsity \\ \hline
+Kinship & 26 & 104  & 10,790 & 0.038 \\
+UMLS & 49 &135  & 6,752 & 0.008 \\
+Nation & 56 & 14  & 2,024 & 0.184 \\
+%Wordnet & 11 & 38,696  &123,429 & 7.5e-06\\
+%Wordnet(N) & 10 & 836 & 1,766 & 2.5e-04\\
+\end{tabular}
+\end{table}
+
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\linewidth]{images/comp_training_error_kinship_small.pdf}
+	\includegraphics[width=\linewidth]{images/comp_training_error_umls_small.pdf}			
+	\includegraphics[width=\linewidth]{images/comp_training_error_nation_small.pdf}				
+	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. 
+	The x-axis denotes the proportion of an observed triples including negative triples used for training 
+	models. %We use other 20\% of triples as a validation set and another 30\% of triples as a test set. 
+}
+\end{figure} 
+
+%Applying Thompson sampling to the compositional models is not straight forward. 
+%Because, in the compositional model, adding one valid triple in a knowledge base will 
+%change the accompanying compositional paths over the extended tensor $\mathcal{X}^L$. 
+%Therefore, the system requires to compute potential changes in the 
+%compositional structure for every candidate query triple. This computational complexity 
+%will increase exponentially as we increase the length of the composition.
+
+%In this experiment, instead running the Thompson sampling for the compositional models,
+We first evaluate our model in a non-active setting, 
+%we follow the standard train/validation/test approach 
+to measure the performance of BRESCAL with all non-compositional and compositional variants.
+%The results between active acquisition and training and testing are not always coincident, but if the Thompson sampling samples latent features from true posterior of the compositional model, the samples corresponds to the true posterior samples from the training set.
+
+For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
+from 1\% to 13\% of datasets. For RESCAL, we use the authors' implementation, and measure performance over 10 runs with random initialisations. For BRESCAL and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
+%Based on the trained model, measure the ROC-AUC scores on the test set.
+
+Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We can see that BNORMAL or BLOGIT generally outperform RESCAL. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, BCOMP-MUL outperforms BCOMP-ADD, and performs better the other baseline models when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions. For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
+
+
+\subsection{Thompson sampling on real datasets}
+
+\begin{figure*}[t]
+	\centering
+	
+	\subfigure[KINSHIP]{
+	\includegraphics[width=0.3\linewidth]{images/thompson_kinship_mcmc_vertical.pdf}
+	}
+	\subfigure[UMLS]{
+	\includegraphics[width=0.3\linewidth]{images/thompson_umls_mcmc_vertical.pdf}				
+	}
+	\subfigure[NATION]{
+	\includegraphics[width=0.3\linewidth]{images/thompson_nation_mcmc_vertical.pdf}				
+	}	
+	\caption{\label{fig:c_gain}The cumulative gain and ROC-AUC score of the Thompson sampling 
+	with various baseline approaches. Thompson sampling with Bayesian RESCAL (BNORMAL)
+	model achieves the highest cumulative gain to compare with other active and 
+	passive learning algorithms and shows comparable performance on ROC-AUC scores.}
+\end{figure*}
+
+Next, we evaluate particle Thompson sampling for both compositional and non-compositional models on real datasets.
+
+\textbf{Experimental settings}: 
+We compare our model with AMDC, and passive learning with BRESCAL.  
+AMDC model has been proposed to achieve two different active learning goals, constructing a predictive
+model and maximising the valid triples in a knowledge base, with two different querying strategies
+ \cite{kajino2015active}. 
+AMDC-PRED is a predictive model construction strategy and chooses a triple which is the most ambiguous (close to the decision boundary) at each time $t$.
+AMDC-POP is a population strategy which aims to maximise the number of valid triples in a knowledge base, choosing a triple with the highest expected value at each time.  
+To train all models we only use the observed triples up to the current time. For the passive learning with BRESCAL, we generate a random sample at each time period. For the particle Thompson sampling models, we set variance parameter $\sigma_e$ and $\sigma_r$ to 1, $\sigma_x$ to 0.1, and vary $\sigma_c$ from 1 to 100.
+
+We leave 30 \% of triples as a test set to measure test error. 
+At each time period, each model choose one triples to query, 
+if the selected triple is in the test set then we choose the next highest expected triple which is not in the test set.
+All models start from zero observation. 
+After every querying, the model obtains a label of the queried triples from an oracle,
+then the model updates the parameters. 
+
+\textbf{Evaluation metric}: We use two different evaluation metrics, ROC-AUC score, and cumulative gain,
+for the performance comparison. One goal of the Thompson sampling is to maximise the knowledge 
+acquisition through the balanced querying strategy between exploration and exploitation. 
+To measure how many triples are obtained through the querying stage, we fist compute the cumulative 
+gain which is the number of valid triple obtained up to time $t$, and then compute the ROC-AUC score on 
+test set to understand how this balanced querying strategy results in making a predictive model.
+
+\textbf{Exploitation and exploration}: 
+Figure \ref{fig:c_gain} shows 
+the cumulative gain and ROC-AUC scores of the Thompson sampling on three real datasets.
+BNORMAL performs better than other baseline models for the cumulative gain, and shows comparable result for the ROC-AUC scores. Both compositional models perform worse than BNORMAL across all datasets.
+
+In the original AMDC work \cite{kajino2015active}, AMDC-POP model obtains more 
+valid triples than AMDC-PRED, and AMDC-PRED shows high ROC-AUC scores than AMDC-POP. 
+In our experiment, however, AMDC-POP shows comparable cumulative gain to AMDC-PRED 
+and even worse than AMDC-PRED for the UMLS. We conjecture the initial observation 
+results in the  different performances: in the original experiment, the model starts
+from a small set of training data so this gives the model focusing on exploit and advantage, 
+%a certain latent structure given an initially trained model
+whereas in our experiment, we start from zero 
+observation which makes the model hard to exploit the structure. This result shows 
+the importance of balancing between exploitation and exploration.
+
+We note that the compositional model performs worse than the model without 
+composition in this active setting. 
+\eat{If the samples of the compositional model follows the posterior 
+distribution, it may show the similar performance with the passive learning 
+scenario, but this assumption does not always hold since the active sampling
+path does not correspond to the passive scenario. } %%LX: this looks like too much detail
+One possible explanation is 
+that the naive particle Thompson sampling may not capture the posterior of the 
+complex compositional structure, so the particle degenerates over time. Recent
+ advances in sequential Monte Carlo may help to solve the problem\cite{gu2015neural,naesseth2014sequential,lindsten2014divide}. 
+We leave this for future work.
+ 

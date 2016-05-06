@@ -1,0 +1,74 @@
+%!TEX root = ./cikm2016.tex
+\section{Discussion}
+We have proposed a novel compositional relational model with uncertainty and presented the
+Thompson sampling for both compositional and non-compositional models to solve the active knowledge acquisition problem. 
+The compositional model aims to infer the latent features of knowledge 
+bases by incorporating an additional graph structure. In the passive 
+learning scenario, the compositional model outperforms the other models, 
+especially, when training size is relatively small. 
+In the active learning scenario, Bayesian RESCAL achieves the highest 
+cumulative gain across all datasets. Again, this result emphasise the 
+importance of being balanced between exploration and exploitation. 
+
+Previous work such as the one by \citet{kajino2015active} 
+views knowledge population 
+and predictive model construction are separate problems. 
+We find this observation true when the algorithm has a warm-start, 
+i.e. already having a fair amount of data before active learning starts; 
+when the information is sparse, the same strategy works for both maximizing 
+recall and reducing uncertainty.  
+\eat{This finding
+may hold for some scenarios where their is already a proper amount of 
+information to exploit the structure we want to maximise, but the finding 
+is not consistence in more conservative cases.}
+Thompson sampling has been studied in the context of multi-armed bandit 
+problems where the goal is to maximise cumulative gains or minimise cumulative 
+regrets over time, whereas its performance on making a predictive model has not 
+been widely discussed so far. Its performance on building a generalisable model 
+was unclear. Throughout this work, we have empirically shown that maximising 
+cumulative gain entails the predictive models as well.
+In the long run, we see this work as a promising step towards using a composition-aware knowledge 
+completion system to connect with the 
+knowledge extraction problem~\cite{dong2014knowledge}. %, with rich graph structures. 
+
+%\begin{description}
+%  \item[Not useful theorem] In \cite{kawale2015efficient}, the theorem does not really give
+%  a setting that is used in the paper.
+%  \item[Logistic regression] For outputs which are binary, instead of a Gaussian assumption on
+%  $x$, we can use logistic regression. See
+%   \url{http://people.csail.mit.edu/romer/papers/TISTRespPredAds.pdf}
+%  \item[Choosing triples] For entity $e_i$ related via relation $R_k$ to entity $e_j$, we want
+%  an active learning algorithm that will choose triples $e_i R_k e_j$ that corresponds to
+%  $x_{ikj}$. This will not have a bandit regret bound, since we only choose each triple once.
+%  \item[Contextual Bandits] There are two groups of three possible assumptions for contextual
+%  bandits:
+%  \begin{enumerate}
+%    \item Two elements of the tuple as context, choose only one element
+%    \begin{itemize}
+%      \item $e_iR_k$ context, $e_j$ arms
+%      \item $e_i, e_j$ context, $R_k$ arms
+%      \item $R_ke_j$ context, $e_i$ arms
+%    \end{itemize}
+%    \item One element of the tuple as context, choose two elements
+%    \begin{itemize}
+%      \item $e_i$ context, $R_k e_j$ arms
+%      \item $R_k$ context, $e_i, e_j$ arms
+%      \item $e_j$ context, $e_iR_k$ arms
+%    \end{itemize}
+%  \end{enumerate}
+%\end{description}
+%
+%\section{Discussion}
+%There are several limitation of this work. I'll discuss a few of them here, and suggest a new possible direction in a distance space.
+%\begin{description}
+%\item[Arbitrary output] Normal distribution with the binary output is an arbitrary choice. Why should it be normal? and binary? The problem is more arbitrary when it comes to compositional structure. We place the number of path as the output of compositional normal distribution, but there is no way to say that this approach works with the compositional structure we proposed.
+%\item[Arbitrary compositionality] Even we proposed two compositional approaches, the choices of the compositional structures are also arbitrary and not interpretable.
+%\end{description}
+%
+%Let's start from the scratch again. The most easiest way to interpret latent relation $R_k$ is to consider the latent relation as a linear transformation of latent entity $e_i$ to the transformed entity $e_i^\top R_k$, and this linear transformation $e_i^\top R_k$ should be somehow similar to $e_j$ when $(i, k, j)$ is a valid triple. This can be easily formulated in Euclidean distance space. We measure the distance between two entities as $|| e_i^\top R_k - e_j ||_2$ or $|| e_i - e_j^\top R_k^{-1} ||_2$, and let the distances of valid triples be shorter than those of invalid triples. We might want to model this relation in a probabilistic framework, and in this case, the first equation could be modelled as $e_j \sim \mathcal{N}_D(e_i^\top R_k, \Sigma)$ or the second equation as $e_i \sim \mathcal{N}_D(e_j^\top R_k^{-1}, \Sigma)$. The probability distribution of one entity is conditioned on the other entity, and we may model this as a Markov random field with the energy function between two entities as $E(e_i, e_j) = \exp(-||e_i^\top R_k - e_j||_2)$.
+%
+%Again, this formulation is somewhat weird and seems not well defined. Let's define it in the more general Mahalanobis distance space. In the Mahalanobis space, the distance between two entities $d_{R_k}(e_i, e_j)$ is $\sqrt{(e_i-e_j)^\top R_k (e_i - e_j)}$ (the corresponding probability distribution is a normal distribution with covariance matrix $R_k^{-1}$). 
+%Now let's think about the compositional Mahalanobis space. Assume that triples $(i, k1, j)$ and $(j, k2, l)$ is valid triples and $(j, k2, l')$ is an invalid triple. If we define that the compositional Mahalanobis space has precision matrix $R_{k1,k2} = R_{k1} R_{k2}$, is it valid to say $d_{R_{k1,k2}}(i, l)$  of valid compositional path $(i, k1, j) - (j, k2, l)$ is shorter than $d_{R_{k1,k2}}(i, l')$ of invalid compositional path $(i, k1, j)-(j, k2, l')$. So the only thing that we need to prove is if $d_{R_{k1}}(i, j) + d_{R_{k2}}(j, l) < d_{R_{k1}}(i, j) + d_{R_{k2}}(j, l')$ then $d_{R_{k1,k2}}(i, l) < d_{R_{k1,k2}}(i, l')$?
+%
+%One problem with the distance approach is that the distance metric is symmetric, so we cannot encode the direction of relations. We may define asymmetric Mahalanobis space where the precision matrix $R$ is positive semi-definite but not symmetric.
+

@@ -1,0 +1,101 @@
+%!TEX root = ./cikm2016.tex
+\section{Compositional Relations}
+
+We provide the conditional posterior distribution of the compositional models.
+
+\subsection{Additive Compositionality}
+
+The conditional distribution of $e_i$ given $E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
+expanded from the posterior of BRESCAL by incorporating compositional triples.
+\begin{align} \label{eqn:comp_sample_e}
+p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}) &= \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1}),
+\end{align}
+where
+\begin{align*}
+\mu_i &= \Lambda_i^{-1}\xi_i \\
+\Lambda_i &= \frac{1}{\sigma_x^2} \sum_{jk : x_{ikj} \in \mathcal{X}^{t}} (R_k e_j)(R_k e_j)^\top \\
+&\quad+ \frac{1}{\sigma_x^2} \sum_{jk : x_{jki} \in \mathcal{X}^{t}} (R_k^\top e_j)(R_k^\top e_j)^\top \\
+&\quad + \frac{1}{\sigma_c^2} \sum_{jc : x_{icj} \in \mathcal{X}^{L(t)}} (R_c e_j)(R_c e_j)^\top \\
+&\quad+ \frac{1}{\sigma_c^2} \sum_{jc : x_{jci} \in \mathcal{X}^{L(t)}} (R_c^\top e_j)(R_c^\top e_j)^\top +
+\frac{1}{\sigma_e^2} {I}_D \\
+\xi_i &= \frac{1}{\sigma_x^2}\sum_{jk : x_{ikj} \in \mathcal{X}^{t}}  x_{ikj} R_{k} e_{j} + \frac{1}
+{\sigma_x^2}\sum_{jk : x_{jki} \in \mathcal{X}^{t}} x_{jki} R_{k}^\top e_{j} \\
+& + \frac{1}{\sigma_c^2}\sum_{jc : x_{icj} \in \mathcal{X}^{L(t)}}  x_{icj} R_{c} e_{j} + \frac{1}
+{\sigma_c^2}\sum_{jc : x_{jci} \in \mathcal{X}^{L(t)}} x_{jci} R_{c}^\top e_{j}
+\end{align*}
+
+The detail derivation of the posterior distribution is as follows:
+\begin{align*}
+&p(R_k | E, R_{-k}, \mathcal{X}) \propto p(\mathcal{X} | R, E)p(R_k)&\\
+&\propto \prod_{x_{ikj}}\exp\bigg\{-\frac{(x_{ikj} - e_i^\top R_k e_j)^2}{2\sigma_x^2}\bigg\} &\\
+& \quad\prod_{x_{icj}} \exp\bigg\{-\frac{(x_{icj} - e_i^\top R_c e_j)^2}{2\sigma_c^2}\bigg\} \exp\bigg\{-\frac{r_k^\top r_k}{2\sigma_r^2}\bigg\}&\\
+&= \exp\bigg\{-\frac{\sum_{x_{ikj}}(x_{ikj} - \bar{e}_{ij}^\top r_k)^2}{2\sigma_x^2} &\\
+&\quad- \frac{\sum_{x_{icj}}(x_{icj} - \bar{e}_{ij}^\top r_c)^2}{2\sigma_c^2} -\frac{r_k^\top r_k}{2\sigma_r^2} \bigg\}&\\
+&= \exp\bigg\{-\frac{\sum_{x_{ikj}}(x_{ikj} - \bar{e}_{ij}^\top r_k)^2}{2\sigma_x^2} &\\ 
+&\quad-\frac{\sum_{x_{icj}}(x_{icj} - \bar{e}_{ij}^\top (\frac{1}{|c|}r_k + \frac{|c|-1}{|c|})r_{c/k})^2}{2\sigma_c^2} -\frac{r_k^\top r_k}{2\sigma_r^2} \bigg\}&\\
+&= \exp\bigg\{ -\frac{\sum_{x_{ikj}}- 2 x_{ikj} \bar{e}_{ij}^\top r_k + r_k^\top \bar{e}_{ij} \bar{e}_{ij}^\top r_k }{2\sigma_x^2} &\\
+&\quad-\frac{\sum_{x_{icj}} \frac{2}{|c|} r_k ^\top (x_{icj} - \frac{(|c|-1)}{|c|} \bar{e}_{ij}^\top r_{c/k}) + (\frac{1}{|c|^2}r_k^\top \bar{e}_{ij} \bar{e}_{ij}^\top r_k)}{2\sigma_c^2} &\\
+&\quad-\frac{r_k^\top r_k}{2\sigma_r^2} + const \bigg\}&\\
+&\propto \exp\bigg\{ - \frac{1}{2}r_k^\top(\frac{1}{\sigma_x^2}\sum_{x_{ikj}} \bar{e}_{ij}\bar{e}_{ij}^\top + \frac{1}{|c|^2\sigma_c^2}\sum_{x_{icj}} \bar{e}_{ij}\bar{e}_{ij}^\top + \frac{1}{\sigma_r^2}I) r_k  &\\
+&- r_k^\top \Big(\frac{\sum_{x_{ikj}}-x_{ikj}\bar{e}_{ij}}{\sigma_x^2} + \frac{\sum_{x_{icj}} |c|^{-1} (x_{icj} - \frac{(|c|-1)}{|c|} \bar{e}_{ij}^\top r_{c/k})}{\sigma_c^2} \Big)&
+\end{align*}
+Completing the square results Equation \ref{eqn:comp_cond_r}.
+
+To compute the conditional distribution of $R_k$, we first decompose $R_c$ into two part where $R_c =
+\frac{1}{|c|} R_k + \frac{|c|-1}{|c|}R_{c/k}$, where $R_{c/k} = \sum_{k' \in c/k} R_{k'}$.
+The distribution of compositional triple is decomposed as follows:
+\begin{align}
+x_{(i, c, l)} \sim \mathcal{N}(e_i^\top (\frac{1}{|c|} R_k + \frac{|c|-1}{|c|}R_{c/k}) e_j, \sigma_{c}^2).
+\end{align}
+Then, the conditional distribution $R_k$ given $R_{-k}, E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
+\begin{align}
+\label{eqn:comp_cond_r}
+p(R_k|E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_k,
+\Lambda_k^{-1}),
+\end{align}
+where
+\begin{align*}
+\mu_k &=\Lambda_k^{-1}\xi_k \\
+\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} \bar{e}_{ij}\bar{e}_{ij}^\top + \frac{1}
+{\sigma_r^2} {I}_{D^2} \\
+& +\frac{1}{|c|^2 \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)},\text{ }k \in c} \bar{e}_{ij} \bar{e}_{ij}^\top \\
+\xi_k &=  \frac{1}{\sigma_x^2}\sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} \bar{e}_{ij}\\
+& +\frac{1}{|c| \sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)},\text{ }k \in c} x_{icj} \bar{e}_{ij} - \frac{|c|-1}{|c|}
+\bar{e}_{ij} r_{c/k}^\top \bar{e}_{ij}\\
+\bar{e}_{ij} &= e_{i} \otimes e_{j}.
+\end{align*}
+Vectorisation of $R_c$ and $R_{c/k}$ are represented as $r_c$ and $r_{c/k}$, respectively.
+
+
+%Note that the ordering of the relations in compositional sequence $c$ does not affect the value of
+%compositional triple $(i, c, j)$.
+
+\subsection{Multiplicative Compositionality}
+
+Given a sequence of relations including relation $k$, $R_k$ is placed in the middle of the compositional
+sequence, i.e., $e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(\delta_k)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j$, where $
+\delta_k$ is the index of relation $k$. For notational simplicity, we will denote the left side $e_i^\top R_{c(1)}
+R_{c(2)} \dots R_{c(\delta_k -1)}$ as $\bar{e}_{ic(:\delta_k)}^\top$, and the right side $R_{c(\delta_k + 1)} \dots
+R_{c(|c|-1)}R_{c(|c|)} e_j$ as $\bar{e}_{ic(\delta_k:)}$, therefore we can rewrite the mean parameter as $
+\bar{e}_{ic(:\delta_k)}^\top R_{k} \bar{e}_{ic(\delta_k:)}$. With the simplified notations, the conditional of $R_k$
+is
+\begin{align}
+p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x)  &= \mathcal{N}(\text{vec}(R_k) | \mu_k, \Lambda_k^{-1}),
+\end{align}
+where
+\begin{align*}
+\mu_k &= \Lambda_k^{-1}\xi_k \\
+\Lambda_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} (e_i \otimes e_j)(e_i \otimes e_j)^\top +
+\frac{1}{\sigma_r^2} {I}_{D^2} \\
++ &\frac{1}{\sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}, \text{ }k \in c} (\bar{e}_{ic(:\delta_k)} \otimes
+\bar{e}_{jc(\delta_k:)})(\bar{e}_{ic(:\delta_k)} \otimes \bar{e}_{jc(\delta_k:)} )^\top \\
+\xi_k &= \frac{1}{\sigma_x^2} \sum_{ij:x_{ikj} \in \mathcal{X}^{t}} x_{ikj} (e_{j} \otimes e_{i}) \\
+& + \frac{1}{\sigma_c^2} \sum_{ij:x_{icj} \in \mathcal{X}^{L(t)}, \text{ }k\in c} x_{icj} (\bar{e}_{ic(:\delta_k)}
+\otimes \bar{e}_{jc(\delta_k:)}).
+\end{align*}
+The conditional distribution of $e_i$ given the rest is the same as the additive compositional case.
+
+%If the determinant of latent relation $R_k$ is greater than 1, the compositional latent relation $R_c$ might
+%be exploded after multiplying a long sequence of relations. To obtain a stable scale of compositional
+%relation $R_c$, one may multiply decaying factor $\tau < 1$ after each composition. $R_c = \tau^{|c|-1}
+%R_{c(1)} R_{c(2)} \dots R_{c(|c|)}$.
