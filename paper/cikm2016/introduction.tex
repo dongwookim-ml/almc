@@ -25,7 +25,7 @@ One challenge in knowledge base completion is
 its disconnection from the knowledge extraction setting. 
 It would be nice, for example, to know which question to query for in 
 a search-based method for gathering triples~\cite{west2014knowledge}. 
-Recently \citet{kajino2015active} propose an active learning strategy for completing 
+Recently \cite{kajino2015active} propose an active learning strategy for completing 
 knowledge triples; however the algorithm had problems simultaneously achieving high recall and faithful reconstruction.
 % finds it difficult to achieve 
 %high recall and high reconstruction at the same time. 
@@ -53,7 +53,7 @@ We name our model Bayesian RESCAL (BRESCAL).
 The probabilistic model provides a natural way of 
 embracing uncertainty of triples that is crucial to develop 
 %implementing
-an active triple selection for knowledge completion, using 
+an active triple selection for knowledge completion, using  
 Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
 which allows us to trade-off exploration and exploitation when identifying new triples.
 %randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.

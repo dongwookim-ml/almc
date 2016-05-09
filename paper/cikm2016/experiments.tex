@@ -16,7 +16,6 @@ latent features.
 And then, we show how the active knowledge acquisition using Thompson sampling 
 benefits the balance between exploitation and exploration to compare with the 
 exploitation only algorithms. 
->>>>>>> bd7f11cb775339cba3a538a6f68351c2251ea530
 }
 
 \subsection{\rev{Thompson Sampling on }synthetic data}
@@ -123,7 +122,8 @@ the additive compositional model (BCOMP-ADD) shows lower regrets on the
 additive compositional data in Figure \ref{fig:comp_synthetic}(b), 
 and both have lower regrets than passive learning or BNORMAL with no composition. 
 
-\subsection{Training compositional model on real datasets}
+%\subsection{Training compositional model on real datasets}
+\subsection{Filling Missing Links from Known Triples}
 We evaluate the compositional models on three benchmark datasets and compare the performance to various baseline 
 algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each 
 dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washington.edu/papers/kok07/}.
@@ -171,28 +171,64 @@ to measure the performance of BRESCAL with all non-compositional and composition
 For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
 from 1\% to 13\% of datasets. For RESCAL, we use the authors' implementation, and measure performance over 10 runs with random initialisations. For BRESCAL and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
 %Based on the trained model, measure the ROC-AUC scores on the test set.
+Given the test set, the performances of models are measured by ROC-AUC score:
+\begin{align}
+\frac{1}{|\mathcal{X}_p|  |\mathcal{X}_n|} \sum_{\{i,k,j\} \in \mathcal{X}_p, \{i',k',j'\} \in \mathcal{X}_n} \mathbb{I}[\bar{x}_{ikj} > \bar{x}_{ikj}],
+\end{align}
+where $X_p$ and $X_n$ are the set of positive and negative triples in the test set, respectively, and $\bar{x}$ is a reconstructed triple.
 
 Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We can see that BNORMAL or BLOGIT generally outperform RESCAL. We compare the compositional model with original RESCAL, BNORMAL, and BLOGIT. In general, BCOMP-MUL outperforms BCOMP-ADD, and performs better the other baseline models when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions. For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
 
 
-\subsection{Thompson sampling on real datasets}
+%\subsection{Thompson sampling on real datasets}
+\subsection{Active Knowledge Acquisition}
+
+%\begin{figure*}[t]
+%	\centering
+%	
+%	\subfigure[KINSHIP]{
+%	\includegraphics[width=0.3\linewidth]{images/thompson_kinship_mcmc_vertical.pdf}
+%	}
+%	\subfigure[UMLS]{
+%	\includegraphics[width=0.3\linewidth]{images/thompson_umls_mcmc_vertical.pdf}				
+%	}
+%	\subfigure[NATION]{
+%	\includegraphics[width=0.3\linewidth]{images/thompson_nation_mcmc_vertical.pdf}				
+%	}	
+%	\caption{\label{fig:c_gain}The cumulative gain and ROC-AUC score of the Thompson sampling 
+%	with various baseline approaches. Thompson sampling with Bayesian RESCAL (BNORMAL)
+%	model achieves the highest cumulative gain to compare with other active and 
+%	passive learning algorithms and shows comparable performance on ROC-AUC scores.}
+%\end{figure*}
 
 \begin{figure*}[t]
 	\centering
 	
 	\subfigure[KINSHIP]{
-	\includegraphics[width=0.3\linewidth]{images/thompson_kinship_mcmc_vertical.pdf}
+	\includegraphics[width=0.3\linewidth]{images/present_vs_passive_greedy_thompson_kinship_mcmc_vertical_line.pdf}
 	}
 	\subfigure[UMLS]{
-	\includegraphics[width=0.3\linewidth]{images/thompson_umls_mcmc_vertical.pdf}				
+	\includegraphics[width=0.3\linewidth]{images/present_vs_passive_greedy_thompson_umls_mcmc_vertical_line.pdf}				
 	}
 	\subfigure[NATION]{
-	\includegraphics[width=0.3\linewidth]{images/thompson_nation_mcmc_vertical.pdf}				
+	\includegraphics[width=0.3\linewidth]{images/present_vs_passive_greedy_thompson_nation_mcmc_vertical_line.pdf}				
 	}	
-	\caption{\label{fig:c_gain}The cumulative gain and ROC-AUC score of the Thompson sampling 
-	with various baseline approaches. Thompson sampling with Bayesian RESCAL (BNORMAL)
-	model achieves the highest cumulative gain to compare with other active and 
-	passive learning algorithms and shows comparable performance on ROC-AUC scores.}
+	\caption{\label{fig:}Comparison between probabilistic RESCAL and greedy models. }
+\end{figure*}
+
+\begin{figure*}[t]
+	\centering
+	
+	\subfigure[KINSHIP]{
+	\includegraphics[width=0.3\linewidth]{images/present_vs_comp_thompson_kinship_mcmc_vertical_line.pdf}
+	}
+	\subfigure[UMLS]{
+	\includegraphics[width=0.3\linewidth]{images/present_vs_comp_thompson_umls_mcmc_vertical_line.pdf}				
+	}
+	\subfigure[NATION]{
+	\includegraphics[width=0.3\linewidth]{images/present_vs_comp_thompson_nation_mcmc_vertical_line.pdf}				
+	}	
+	\caption{\label{fig:} Comparison between active PRESCAL, passive PRESCAL, and AMDC models.}
 \end{figure*}
 
 Next, we evaluate particle Thompson sampling for both compositional and non-compositional models on real datasets.
@@ -248,3 +284,10 @@ complex compositional structure, so the particle degenerates over time. Recent
  advances in sequential Monte Carlo may help to solve the problem\cite{gu2015neural,naesseth2014sequential,lindsten2014divide}. 
 We leave this for future work.
  
+\begin{figure}[t]
+	\centering
+	
+	\includegraphics[width=0.9\linewidth]{images/posterior_variance_trace_kinship.pdf}
+
+	\caption{\label{fig:} Trace plot of mean posterior variance of the non-compositional model and compositional models.}
+\end{figure}
