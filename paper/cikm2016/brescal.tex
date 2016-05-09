@@ -1,5 +1,5 @@
 %!TEX root = ./cikm2016.tex
-\section{Bayesian RESCAL}
+\section{Probabilistic RESCAL}
 \label{sec:brescal}
 
 \begin{table*}[bt]
@@ -73,7 +73,7 @@ we can control the confidence on different observations
 through the variance parameter $\sigma_x^2$.
 The role of this parameter will be further discussed in the compositional model section.
 
-We develop an efficient Gibbs sampler to perform inference for Bayesian RESCAL (BRESCAL).
+We develop an efficient Gibbs sampler to perform inference for the probabilistic RESCAL (PPRESCAL).
 The key for achieving efficiency are the two conditional posteriors for latent features.
 The Gibbs updates are given by:
 \begin{align}
@@ -111,6 +111,6 @@ There are many advantages to a Bayesian view of tensor factorisation, such as
 the quantification of uncertainty by the predictive distribution,
 the ability to utilise priors, and
 the availability of principled model selection.
-We show in the empirical experiments that BRESCAL outperforms standard RESCAL.
+We show in the empirical experiments that PRESCAL outperforms standard RESCAL.
 In the following, we focus on the predictive distribution, which enables us to
 improve sequential knowledge acquisition.

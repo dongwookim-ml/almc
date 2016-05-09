@@ -49,7 +49,7 @@ one of the main competitive variants for knowledge completion~\cite{nickel2015re
 %There are many advantages to a probabilistic formulation of tensor factorisation, 
 %such as the quantification of uncertainty by the predictive distribution, 
 %the ability to utilise priors, and the availability of principled model selection. 
-We name our model Bayesian RESCAL (BRESCAL).
+We name our model probabilistic RESCAL (PRESCAL).
 The probabilistic model provides a natural way of 
 embracing uncertainty of triples that is crucial to develop 
 %implementing
@@ -59,7 +59,7 @@ which allows us to trade-off exploration and exploitation when identifying new t
 %randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
 We also perform compositional training for the probabilistic model, 
 by modeling relation compositions as algebraic operations in the probabilistic embedding space. 
-For inference, we design Gibbs sampling for BRESCAL with and without compositions. 
+For inference, we design Gibbs sampling for PRESCAL with and without compositions. 
 %with by computing conditional posteriors. 
 We employ a sequential Monte-Carlo method for the active querying of new triples, 
 called particle Thompson sampling. 
@@ -68,10 +68,10 @@ We first test the proposed models with synthetic datasets.
 We observe that Thompson sampling provides significant gain over random sampling of triples; 
 we also observe a clear gain in tensors with known composition structure. 
 We then evaluated the model on three real-world relation datasets. In the passive learning setting, 
-we find BRESCAL outperforming the non-probabilistic version of tensor factorisation, 
+we find PRESCAL outperforming the non-probabilistic version of tensor factorisation, 
 and that compositions help when the training set is sparse. 
 In the active learning scenario, 
-we find that BRESCAL achieves the highest cumulative gain across all datasets. 
+we find that PRESCAL achieves the highest cumulative gain across all datasets. 
 It is encouraging to see the exploitation-exploration strategy with uncertainty outperforming 
 active learning strategies that focus solely on exploitation or exploration. 
 

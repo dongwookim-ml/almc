@@ -50,7 +50,7 @@ while keeping samples from the posterior.
 We summarise the particle Thompson sampling for BRESCAL with the
 Gaussian output variable in Algorithm \ref{alg:smc}.
 
-We show that the Thompson sampling approach improves over passive BRESCAL in
+We show that the Thompson sampling approach improves over passive PRESCAL in
 experiments with real and synthetic data.
 We also investigated the extension of the Rao-Blackwellisation approach as proposed
 in~\cite{kawale2015efficient}, but we did not observe any significant performance improvements.
@@ -66,7 +66,7 @@ We describe our extension in the appendix.
 %where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
 
 \begin{algorithm}[t!]
-   \caption{Particle Thompson sampling for Bayesian RESCAL with Gaussian output variable}
+   \caption{Particle Thompson sampling for probabilistic RESCAL with Gaussian output variable}
    \label{alg:smc}
 \begin{algorithmic}
    \STATE {\bfseries Input:} $\mathcal{X}^{0}, \sigma_x, \sigma_e, \sigma_r$.
