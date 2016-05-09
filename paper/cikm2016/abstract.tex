@@ -1,5 +1,6 @@
 %!TEX root = ./cikm2016.tex
 \begin{abstract}
+\eat{
 %Automated processes for knowledge base completion benefit from models that account for
 %statistical uncertainty. 
 We are concerned with the problem of knowledge base completion, or inferring missing facts from known relations. 
@@ -20,8 +21,17 @@ approaches for composing relations.
 On synthetic and real world datasets, 
 we find that learning with composition is helpful 
 when training data is sparse,
-and that Thompson sampling provides effective exploitation-exploreation strategies 
+and that Thompson sampling provides effective exploitation-exploration strategies 
 that balance recall and reconstruction accuracy. 
 % and show the regimes where compositional models are
 %beneficial for knowledge base completion.
+}
+
+A knowledge base completion consists of two processes; extracting initial information from external sources, and inferring missing relations through a statistical analysis of the initial information. 
+In many cases, however, it is implausible to extract a fair amount of information from the external sources. An active knowledge acquisition via the human expert labelling can help to reduce the gap between two processes. 
+In this paper, we propose a new probabilistic knowledge base factorisation that benefits from a compositionality of existing knowledge (e.g. syllogism). This explicit probabilistic formulation enable us to develop an active acquisition model based on the exploitation-exploration strategies.
+We demonstrate that the compositional knowledge factorisation results a better performance on the missing relation prediction, whereas the model shows a worse performance on active knowledge acquisition.
+The result leads to a counter-intuitive conclusion; a better predictive model does not guarantee to have a better active acquisition model.
+An additional experiment explains the degeneracy in terms of an exploitation-exploration regime in the active knowledge acquisition.
+
 \end{abstract}
