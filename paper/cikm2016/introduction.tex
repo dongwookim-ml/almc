@@ -3,6 +3,46 @@
 \section{Introduction}
 \label{sec:intro}
 
+Relational knowledge bases structuralise our understanding about the world into the form of \textit{(entity1, relation, entity2)} triples
+that help reasoning and inferring in a wide range of tasks such as information retrieval, question answering, and semantic parsing~\cite{Dong2015,jiang2015improving,kim2013context,sondhi2014mining}.
+A construction of a knowledge base is a very active research area with many important and challenging research questions.
+The early stage of knowledge base construction relies on {\bf knowledge extraction} task
+in which structured information from external sources are extracted, 
+or human experts encode a prior knowledge manually.
+Despite the endeavour toward to construct a complete knowledge base, 
+even the commercialised knowledge bases are still far from complete~\cite{dong2014knowledge}. 
+{\bf Knowledge completion} task has been emerged as an complement of the knowledge extraction 
+to scale up the knowledge base construction. Unlike the knowledge extraction task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise the predictive performance on unseen triples.
+%There are two main knowledge completion approaches. First, latent feature models factorise entities and relations to predict unseen triples. Second, graph feature models 
+
+One major obstacle of knowledge base construction is a gap between knowledge 
+extraction and completion. For example, when there is no external source to extract knowledge,
+the construction relies solely on the contribution of human experts.
+Manual labelling is often painful and tedious, 
+therefore triples that will be labelled should be selected in an active way so 
+that we can maximise the performance of following knowledge completion.
+Active learning may provide a systematic way of selecting a data point to be labelled with one of knowledge completion models~\cite{Settles2010}. However, it is not clear that which model should be used for the active selection because of the discrepancy between two different goals  of knowledge extraction and completion.
+%However, the selection of proper model is still ambiguous and arbitrary for the active acquisition task. 
+%In the active learning literature, it is often ignored that which model for a predictive task is appropriate for its active counterpart. 
+
+We first re-formulate a bilinear tensor factorisation~\cite{nickel2015review} in a probabilistic way, where the model embeds entities and relations into latent feature space. And then we propose a novel tensor factorisation model that incorporates the graph structure of knowledge base into the factorisation model. These two probabilistic models provide a natural way of embracing uncertainty of triples that is crucial to develop 
+an active triple selection for the active knowledge extraction.
+With Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
+the model find an optimal trade-off between exploration and exploitation when identifying new triples.
+
+Based on experiments with three real-world datasets, we find that the models outperformed in the knowledge completion may not perform well in the active knowledge extraction. Because, for the knowledge completion, it is important to find a better latent structure given current observation, for the active extraction, however, it is more important to  measure the uncertainty of a current model in order to explore the latent space efficiently over time.
+As far as we know, this is the first study that explicitly reveals how the knowledge completion models result in different conclusions in the active knowledge extraction.
+
+The contributions of this paper can be summarised as follows:
+\begin{itemize}
+\item We propose a probabilistic re-formulation of bilinear tensor factorisation that allows us to predict and measure the uncertainty of unobserved triples in Section \ref{sec:brescal}.
+\item We incorporate a compositional structure of knowledge graph into the proposed factorisation by modelling a composition of relations as an algebraic operation in the probabilistic embedding space in Section \ref{sec:comp}.
+\item We propose an active knowledge extraction method that efficiently explore the factorised space guided by a principled way of exploration-exploitation via Thompson sampling algorithm in Section \ref{sec:pts}.
+\item Experiments on the knowledge completion with three real-world dataset show that the compositional model uncovers a better factorisation in Section \ref{sec:exp1}.
+\item Experiments show the importance of uncertainty in the active acquisition. Especially, the better predictive model does not guarantee to have a better performance due to an improper uncertainty measure in Section \ref{sec:exp2}.
+\end{itemize}
+
+\eat{
 %KG background from text, completion
 Relational knowledge bases support reasoning, information retrieval, 
 or question-answering tasks about entities and their relations.
@@ -78,6 +118,7 @@ active learning strategies that focus solely on exploitation or exploration.
 We are pleased to be able to learn a vector-space model for entities and relations with uncertainty, 
 bridging the gap of probabilistic active sampling and knowledge compositions. 
 We look forward to follow-on work with better sampling strategies and computational scalability. 
+}
 
 \eat{
 Statistical relational models have been proposed to tackle

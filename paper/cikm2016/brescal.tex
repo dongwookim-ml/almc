@@ -3,7 +3,7 @@
 \label{sec:brescal}
 
 \begin{table*}[bt]
-\caption{Parameters for Gibbs updates. The posterior of $e_i$ and $R_k$ follows the normal distribution with mean $\mu$ and precision matrix $\Lambda$. $\otimes$ is the Kronecker product.}
+\caption{Parameters for Gibbs updates. The conditional posterior of $e_i$ and $R_k$ follows the normal distribution with mean $\mu$ and precision matrix $\Lambda$. $\otimes$ is the Kronecker product.}
 \label{tab:brescalposterior}
 \vskip 0.05in
 \begin{tabu}{l|l|l|l}
@@ -29,7 +29,7 @@ where $i$, $j$ are entities, and $k$ is a relation. A triple can be distinguishe
 in a valid triple and invalid triple based on a semantic meaning of a triple. An
 example of valid triple in Freebase is (BarackObama, PresidentOf, U.S.), and an
 example of invalid triple is (BarackObama, PresidentOf, U.K.).
-A knowledge base can be represented in a three-way tensor
+A knowledge base can be represented in a three-way binary tensor
 $\mathcal{X} \in \{0, 1\}^{N \times K \times N}$, where $K$ is a number of
 relations, $N$ is a number of entities, and $x_{ikj}\in\mathcal{X}$ indicates whether
 the triple is valid.
