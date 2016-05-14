@@ -27,8 +27,7 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 	\includegraphics[width=\linewidth]{images/comp_training_error_umls_small.pdf}			
 	\includegraphics[width=\linewidth]{images/comp_training_error_nation_small.pdf}				
 	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models. 
-	The x-axis denotes the proportion of an observed triples including negative triples used for training 
-	models. %We use other 20\% of triples as a validation set and another 30\% of triples as a test set. 
+	The x-axis denotes the proportion and total number of triples used for training. %We use other 20\% of triples as a validation set and another 30\% of triples as a test set. 
 }
 \end{figure} 
 
@@ -151,34 +150,6 @@ and additive compositional assumptions, defined in Sec \ref{sec:comp},
 respectively. So we synthesise fully observable expanded tensor $\mathcal{X}^L$ 
 where $L=2$. We set both variance parameter $\sigma_x$ and $\sigma_c$ to 0.1. Note that in real world situation, the expanded tensor can be only constructed through the observed triples, and the triples in the expanded tensor cannot be queried.
 
-To run the particle Thompson sampling on the synthetic dataset, we let the 
-compositional models know which relation is composed by other relations. 
-The non-compositional PNORMAL model assumes each relation is independent to one another. 
-Therefore, the compositional model uses much less number of parameters to model 
-the same size of tensor to compare with the non-compositional model. 
-\eat{%%LX: these info repeats?
-Through 
-this experiments, we verify the particle Thompson sampling algorithm for the 
-compositional models.
-
-For the experiment, we generate three relations ($K=3$) of five entities ($N=5$): 
-the first and second relations 
-are independent and the third relation is composed by the first and second 
-relations. The latent dimension is set to 5.
-}
-With this fully observable expanded tensors, we run the Thompson sampling of 
-the compositional models.
-Figure \ref{fig:comp_synthetic} shows the cumulative regrets on synthetic 
-datasets. The multiplicative and additive compositionality are used to 
-generate the dataset for Figure \ref{fig:comp_synthetic}(a) and 
-\ref{fig:comp_synthetic}(b), respectively. The results correspond to our 
-assumption: the multiplicative compositional model (BCOMP-MUL) shows lower 
-regrets on the multiplicative data in Figure \ref{fig:comp_synthetic}(a), and 
-the additive compositional model (BCOMP-ADD) shows lower regrets on the 
-additive compositional data in Figure \ref{fig:comp_synthetic}(b), 
-and both have lower regrets than passive learning or PNORMAL with no composition. 
-
-\subsection{Thompson sampling on real datasets}
 
 \begin{figure*}[t]
 	\centering
@@ -207,8 +178,38 @@ and both have lower regrets than passive learning or PNORMAL with no composition
 	\subfigure[NATION]{
 	\includegraphics[width=0.3\linewidth]{images/present_vs_comp_thompson_nation_mcmc_vertical_line.pdf}				
 	}	
-	\caption{\label{fig:vs_comp} Comparison between active PRESCAL, passive PRESCAL, and AMDC models.}
+	\caption{\label{fig:vs_comp} Comparison between PNORMAL and two compositional models.}
 \end{figure*}
+
+
+To run the particle Thompson sampling on the synthetic dataset, we let the 
+compositional models know which relation is composed by other relations. 
+The non-compositional PNORMAL model assumes each relation is independent to one another. 
+Therefore, the compositional model uses much less number of parameters to model 
+the same size of tensor to compare with the non-compositional model. 
+\eat{%%LX: these info repeats?
+Through 
+this experiments, we verify the particle Thompson sampling algorithm for the 
+compositional models.
+
+For the experiment, we generate three relations ($K=3$) of five entities ($N=5$): 
+the first and second relations 
+are independent and the third relation is composed by the first and second 
+relations. The latent dimension is set to 5.
+}
+With this fully observable expanded tensors, we run the Thompson sampling of 
+the compositional models.
+Figure \ref{fig:comp_synthetic} shows the cumulative regrets on synthetic 
+datasets. The multiplicative and additive compositionality are used to 
+generate the dataset for Figure \ref{fig:comp_synthetic}(a) and 
+\ref{fig:comp_synthetic}(b), respectively. The results correspond to our 
+assumption: the multiplicative compositional model (BCOMP-MUL) shows lower 
+regrets on the multiplicative data in Figure \ref{fig:comp_synthetic}(a), and 
+the additive compositional model (BCOMP-ADD) shows lower regrets on the 
+additive compositional data in Figure \ref{fig:comp_synthetic}(b), 
+and both have lower regrets than passive learning or PNORMAL with no composition. 
+
+\subsection{Thompson sampling on real datasets}
 
 Next, we evaluate particle Thompson sampling for both compositional and non-compositional models on real datasets.
 

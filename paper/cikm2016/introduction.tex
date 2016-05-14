@@ -12,7 +12,7 @@ or human experts encode a prior knowledge manually.
 Despite the endeavour toward to construct a complete knowledge base, 
 even the commercialised knowledge bases are still far from complete~\cite{dong2014knowledge}. 
 {\bf Knowledge completion} task has been emerged as an complement of the knowledge extraction 
-to scale up the knowledge base construction. Unlike the knowledge extraction task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise the predictive performance on unseen triples.
+to scale up the knowledge base construction. Unlike the knowledge extraction task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise the predictive performance on unseen triples given the extracted triples.
 %There are two main knowledge completion approaches. First, latent feature models factorise entities and relations to predict unseen triples. Second, graph feature models 
 
 One major obstacle of knowledge base construction is a gap between knowledge 
@@ -21,11 +21,11 @@ the construction relies solely on the contribution of human experts.
 Manual labelling is often painful and tedious, 
 therefore triples that will be labelled should be selected in an active way so 
 that we can maximise the performance of following knowledge completion.
-Active learning may provide a systematic way of selecting a data point to be labelled with one of knowledge completion models~\cite{Settles2010}. However, it is not clear that which model should be used for the active selection because of the discrepancy between two different goals  of knowledge extraction and completion.
+Active learning may provide a systematic way of selecting a data point to be labelled with one of knowledge completion models~\cite{Settles2010}. However, it is not clear that which model from the knowledge completion should be used for the active selection because of the discrepancy between two different goals of knowledge extraction and completion.
 %However, the selection of proper model is still ambiguous and arbitrary for the active acquisition task. 
 %In the active learning literature, it is often ignored that which model for a predictive task is appropriate for its active counterpart. 
 
-We first re-formulate a bilinear tensor factorisation~\cite{nickel2015review} in a probabilistic way, where the model embeds entities and relations into latent feature space. And then we propose a novel tensor factorisation model that incorporates the graph structure of knowledge base into the factorisation model. These two probabilistic models provide a natural way of embracing uncertainty of triples that is crucial to develop 
+We provide a model based active query selection approach to see how the models from the latter task can be used for the former task. We first reformulate a bilinear tensor factorisation~\cite{nickel2015review} in a probabilistic way, where entities and relations are embedded into latent feature space. And then we propose a novel tensor factorisation model that incorporates the graph structure of knowledge base into the factorisation model. These two probabilistic models provide a natural way of embracing uncertainty of triples that is crucial to develop 
 an active triple selection for the active knowledge extraction.
 With Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
 the model find an optimal trade-off between exploration and exploitation when identifying new triples.
@@ -35,7 +35,7 @@ As far as we know, this is the first study that explicitly reveals how the knowl
 
 The contributions of this paper can be summarised as follows:
 \begin{itemize}
-\item We propose a probabilistic re-formulation of bilinear tensor factorisation that allows us to predict and measure the uncertainty of unobserved triples in Section \ref{sec:brescal}.
+\item We propose a probabilistic reformulation of bilinear tensor factorisation that allows us to predict and measure the uncertainty of unobserved triples in Section \ref{sec:brescal}.
 \item We incorporate a compositional structure of knowledge graph into the proposed factorisation by modelling a composition of relations as an algebraic operation in the probabilistic embedding space in Section \ref{sec:comp}.
 \item We propose an active knowledge extraction method that efficiently explore the factorised space guided by a principled way of exploration-exploitation via Thompson sampling algorithm in Section \ref{sec:pts}.
 \item Experiments on the knowledge completion with three real-world dataset show that the compositional model uncovers a better factorisation in Section \ref{sec:exp1}.
@@ -84,7 +84,7 @@ both open challenges is still missing -- namely, a relational model
 that can model knowledge compositions in an active setting. 
 
 %\TODO{TODO}{revise summary-of-our-approach to be consistent w. the above}
-We propose a novel probabilistic re-formulation of tensor factorisation,  
+We propose a novel probabilistic reformulation of tensor factorisation,  
 one of the main competitive variants for knowledge completion~\cite{nickel2015review}. 
 %There are many advantages to a probabilistic formulation of tensor factorisation, 
 %such as the quantification of uncertainty by the predictive distribution, 

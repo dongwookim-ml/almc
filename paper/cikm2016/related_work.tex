@@ -14,7 +14,7 @@ We then use these dimensions to help position our work.
 %underlying model structure, we broadly categorise models into Bayesian 
 %and non-Bayesian models.
 \item[Probabilistic/Non-Probabilistic] This refers to two broad classes of model 
-formulation, whether the obtained model has a probabilistic interpretation or not.
+formulation, whether the obtained model has a probabilistic interpretation or not. The probabilistic models are capable of placing priors and measuring uncertainty.
 %is a point estimate or posterior 
 %distribution, whether to incorporate priors, quantification of uncertainty, 
 %and so on. 
@@ -24,7 +24,7 @@ formulation, whether the obtained model has a probabilistic interpretation or no
 \item[Passive/Active] This refers to two different learning strategies, 
 of passively learning a model given labeled data points, or actively 
 requesting data points to be labeled.
-\item[Matrix/Tensor/Composition] Relational learning problems for operate on 
+\item[Matrix/Tensor/Composition] Relational learning problems can operate on 
 different data representations. Matrix representation is common when a dataset 
 can be represented as a bi-partite graph, such as (user, item) tuples in the 
 recommender systems setting. Tensor representation is handy when edges in the 
@@ -37,10 +37,10 @@ relation2 -- entity3.
 \end{description}
 In Table \ref{tbl:relatedwork}, we summarise a sample of related recent work 
 along all combinations in each dimension. 
-Note that N,A,C, or Non-Bayesian Active Composition model, can be done by 
+Note that N-Pr,A,C, or Non-Probabilistic Active Composition model, can be done by 
 simply using the query strategies from \cite{kajino2015active} on the 
 compositional model by \cite{guu2015traversing}. Our work address a critical gap 
-in Bayesian Tensor factorisation capable of learning in the 
+in probabilistic Tensor factorisation capable of learning in the 
 Active setting with relation Compositions.
 \eat{The knowledge base construction has been widely focused in the natural 
 language processing communities. 

@@ -64,7 +64,7 @@ R_k \sim \mathcal{MN}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
 \end{align}
 where $\text{vec}(R_k)$ denotes the flattening of the matrix.
 
-We consider two models for $x_{ikj}$: a real or random variable. By placing a
+We consider two observation models for $x_{ikj}$: a real or random variable. By placing a
 normal distribution over $x_{ikj}$,
 \begin{align}
   x_{ikj} |e_i, e_j, R_k \sim \mathcal{N}(e_i^{\top} R_k e_j, \sigma_x^2) \label{eqn:triple_gen}
@@ -86,7 +86,7 @@ where the negative subscript $-i$ indicates the every other entity variables exc
 The means and precision matrices are listed in Table~\ref{tab:brescalposterior}, where we have
 used the identity $e_i^{\top} R_k e_j = r_k^{\top} e_i \otimes e_j$.
 
-Alternatively, we may want to more closely model the fact that the observations are binary.
+Alternatively, we may want to more precisely model the fact that the observations are binary.
 Therefore we model $x_{ikj}$ as a binomial distributed random variable whose
 probability is determined by logistic regression.
 \[
@@ -96,7 +96,7 @@ where $\sigma$ is a sigmoid function.
 We approximate the conditional posterior of
 $E$ and $R$ by Laplace approximation~\cite{bishop2006pattern}. The maximum a
 posterior estimate of $e_i$ or $R_k$ given the rest can be computed through the
-standard logistic regression solvers with regularisation parameters. Given the
+standard logistic regression solvers with regularisation parameters as the priors over $e_i$ and $R_k$. Given the
 maximum a posteriori parameters $e_i^*$, the posterior covariance $S_i$ of entity
 $i$ takes the form
 \begin{align*}
@@ -107,7 +107,7 @@ e_{j}(R_k e_{j})^\top\\
 \end{align*}
 The posterior covariance of $R_k$ can be computed in the same way, and is shown in the appendix.
 
-There are many advantages to a Bayesian view of tensor factorisation, such as
+There are many advantages to a probabilistic view of tensor factorisation, such as
 the quantification of uncertainty by the predictive distribution,
 the ability to utilise priors, and
 the availability of principled model selection.
