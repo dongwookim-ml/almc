@@ -267,11 +267,32 @@ the importance of balancing between exploitation and exploration.
 	
 	\includegraphics[width=0.9\linewidth]{images/posterior_variance_trace_kinship.pdf}
 
-	\caption{\label{fig:pos_var} Trace plot of mean posterior variance of the non-compositional model and compositional models.}
+	\caption{\label{fig:pos_var} Trace plot of mean posterior variance of the non-compositional model and compositional models. Y-axis denotes the average posterior covariance, and X-axis denotes the number of queries. The second plot magnifies the second half of the first plot.}
 \end{figure}
 
-We note that the compositional model performs worse than the model without 
-composition in this active setting. 
+We note that the compositional model performs worse than the non-compositional models,
+especially than PNORMAL, in this active setting. This is an interesting result because, 
+in general, we expect that the model that performs well in the predictive task also shows 
+a better performance in the active learning. 
+Of course, we also emphasis the difference between two experiments; 
+the goal of active acquisition is to maximise the number of triples 
+whereas the goal of knowledge completion in Section \ref{sec:exp1} is to maximise 
+the predictive performance. Nevertheless, the compositional models do not outperform 
+PNORMAL in the active learning.
+This result can be partially understood in terms of the balance between 
+exploration-exploitation. Figure \ref{fig:pos_var} shows the average posterior variance of 
+the entity vectors. We compute the eigenvalues of posterior covariance matrix $\Lambda_i^{-1}$ 
+and trace the average eigenvalues over the iterations. 
+As shown in the figure, the average variance of the compositional model shrinks much faster 
+than the PNORMAL. Because the exploration-exploitation of the Thompson sampling depends on the
+posterior uncertainty, the fast shrinkage in the posterior variance may indicate the under 
+exploration of the model. One new triple with the compositional models induces multiple new 
+observations in the compositional triples, therefore the uncertainties of entities and 
+relations are measured less than those with non-compositional model. The most of active 
+learning algorithm utilise an uncertainty of a model, and therefore, a model with augmented 
+structures such as the relation compositions should be considered more carefully to correctly 
+reflect its uncertainty.
+
 \eat{If the samples of the compositional model follows the posterior 
 distribution, it may show the similar performance with the passive learning 
 scenario, but this assumption does not always hold since the active sampling
