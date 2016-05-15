@@ -12,7 +12,7 @@ or human experts encode a prior knowledge manually.
 Despite the endeavour toward to construct a complete knowledge base, 
 even the commercialised knowledge bases are still far from complete~\cite{dong2014knowledge}. 
 {\bf Knowledge completion} task has been emerged as an complement of the knowledge extraction 
-to scale up the knowledge base construction. Unlike the knowledge extraction task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise the predictive performance on unseen triples given the extracted triples.
+to scale up the knowledge base construction. Unlike the knowledge extraction task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise the predictive performance on unseen triples through a statistical analysis on the extracted information \cite{guu2015traversing,Lao2010}.
 %There are two main knowledge completion approaches. First, latent feature models factorise entities and relations to predict unseen triples. Second, graph feature models 
 
 One major obstacle of knowledge base construction is a gap between knowledge 
@@ -38,8 +38,8 @@ The contributions of this paper can be summarised as follows:
 \item We propose a probabilistic reformulation of bilinear tensor factorisation that allows us to predict and measure the uncertainty of unobserved triples in Section \ref{sec:brescal}.
 \item We incorporate a compositional structure of knowledge graph into the proposed factorisation by modelling a composition of relations as an algebraic operation in the probabilistic embedding space in Section \ref{sec:comp}.
 \item We propose an active knowledge extraction method that efficiently explore the factorised space guided by a principled way of exploration-exploitation via Thompson sampling algorithm in Section \ref{sec:pts}.
-\item Experiments on the knowledge completion with three real-world dataset show that the compositional model uncovers a better factorisation in Section \ref{sec:exp1}.
-\item Experiments show the importance of uncertainty in the active acquisition. Especially, the better predictive model does not guarantee to have a better performance due to an improper uncertainty measure in Section \ref{sec:exp2}.
+\item Experiments on the knowledge completion with three real-world dataset show that the compositional model predicts unseen triples better than the bilinear factorisation model in Section \ref{sec:exp1}.
+\item Experiments show the importance of uncertainty in the active acquisition. Especially, the better predictive model does not guarantee to have a better knowledge acquisition due to an improper uncertainty measure in Section \ref{sec:exp2}.
 \end{itemize}
 
 \eat{

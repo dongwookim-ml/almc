@@ -1,9 +1,6 @@
 %!TEX root = ./cikm2016.tex
 \section{Knowledge Completion}
 \label{sec:exp1}
-We evaluate the compositional models on three benchmark datasets and compare the performance to various baseline 
-algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each 
-dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washington.edu/papers/kok07/}.
 
 \begin{table}[t]
 \centering
@@ -39,10 +36,15 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 %will increase exponentially as we increase the length of the composition.
 
 %In this experiment, instead running the Thompson sampling for the compositional models,
-We first evaluate our model in a non-active setting, 
+We first evaluate our model for the knowledge completion task
 %we follow the standard train/validation/test approach 
 to measure the performance of PRESCAL with all non compositional and compositional variants.
 %The results between active acquisition and training and testing are not always coincident, but if the Thompson sampling samples latent features from true posterior of the compositional model, the samples corresponds to the true posterior samples from the training set.
+
+We evaluate the PRESCAL models on three benchmark datasets and compare the performance to various baseline 
+algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each 
+dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washington.edu/papers/kok07/}.
+
 
 For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
 from 1\% to 13\% of datasets. For RESCAL, we use the authors' implementation, and measure performance over 10 runs with random initialisations. For PRESCAL and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
@@ -53,16 +55,16 @@ Given the test set, the performances of models are measured by ROC-AUC score:
 \end{align}
 where $X_p$ and $X_n$ are the set of positive and negative triples in the test set, respectively, and $\bar{x}$ is a reconstructed triple.
 
-Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We can see that PNORMAL or PLOGIT generally outperform RESCAL. We compare the compositional model with original RESCAL, PNORMAL, and PLOGIT. In general, PCOMP-MUL outperforms PCOMP-ADD, and performs better the other baseline models when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions. For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
+Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We can see that the PRESCAL with the normal output (PNORMAL) or logistic output (PLOGIT) generally outperform RESCAL. We compare the compositional model with original RESCAL, PNORMAL, and PLOGIT. In general, the multiplicative compositional model (PCOMP-MUL) outperforms the additive compositional model (PCOMP-ADD), and performs better the other baseline models when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions. For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
 
-We visualise the multi-dimensional entities of the NATION dataset into the two-dimensional space through tSNE \cite{VanDerMaaten2008} in Figure \ref{fig:tsne}. 
+We visualise the multi-dimensional entities inferred from RESCAL and PNORMAL of the NATION dataset into the two-dimensional space through tSNE \cite{VanDerMaaten2008} in Figure \ref{fig:tsne}. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities while the RESCAL cannot.
 
 \begin{figure*}[t]
 	\centering
 	
 	\includegraphics[width=0.8\linewidth]{images/embedding_nation.pdf}
 
-	\caption{\label{fig:tsne} Embedding multi-dimensional entities of the NATION dataset into the two-dimensional space through tSNE \cite{VanDerMaaten2008}. The size of circle in PNORMAL is proportional to the uncertainty of entities in the embedded space.}
+	\caption{\label{fig:tsne} Embedding multi-dimensional entities of the NATION dataset into the two-dimensional space through tSNE \cite{VanDerMaaten2008}. The size of circle in PNORMAL is proportional to the uncertainty of entities in the embedded space. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities.}
 \end{figure*}
 
 \section{Active Knowledge Acquisition}
@@ -91,7 +93,7 @@ In this section, we show results for Thomson sampling of the PRESCAL and its com
 	}
 %	\includegraphics[width=0.32\linewidth]{images/toy_5_10_5.pdf}			
 %	\includegraphics[width=0.32\linewidth]{images/toy_10_5_5.pdf}				
-	\caption{\label{fig:synthetic} Cumulative regret of particle Thompson sampling with Gaussian and logistic output ({\sc PNORMAL-TS, PLOGIT-TS}) against Passive learning 
+	\caption{\label{fig:synthetic} Cumulative regret of particle Thompson sampling with Gaussian and logistic output (PNORMAL-TS, PLOGIT-TS) against Passive learning 
 	on synthetic datasets with logistic	(top row, a, b) and Gaussian (bottom row, c, d) output variables.
 	%We compared the particle Thompson sampling with passive sampling method. 
 	The averaged cumulative regrets over 10 runs are plotted with one standard error. 
@@ -125,7 +127,7 @@ entities and relations. We compare the cumulative regret of the particle Thompso
 learning method where the model choose a random triple at each time. All results are averaged over 10 
 individual runs with different initialisations. 
 Note that the dataset with binary logistic output variables can be used to train both logistic-output PRESCAL (PLOGIT) and Gaussian-output PRESCAL (PNORMAL) whereas the dataset with the Gaussian output can only be trained by PNORMAL.
-Figure \ref{fig:syn1} and \ref{fig:syn2} show that with the logistic synthetic dataset both models are capable to learn the latent features of the generated triples, with logistic outperforming the Gaussian; Figure \ref{fig:syn3} and \ref{fig:syn4} show that PNORMAL-TS \rev{outperform passive learning in} the real valued dataset. 
+Figure \ref{fig:syn1} and \ref{fig:syn2} show that with the logistic synthetic dataset both models are capable to learn the latent features of the generated triples, with logistic outperforming the Gaussian; Figure \ref{fig:syn3} and \ref{fig:syn4} show that the Thompson sampling for PNORMAL (PNORMAL-TS) \rev{outperform passive learning in} the real valued dataset. 
 %For every experiment, the cumulative regret of the Thompson 
 %sampling method was bounded after a certain number of interactions whereas the cumulative regret of 
 %passive learning increases linearly. 
@@ -203,21 +205,21 @@ Figure \ref{fig:comp_synthetic} shows the cumulative regrets on synthetic
 datasets. The multiplicative and additive compositionality are used to 
 generate the dataset for Figure \ref{fig:comp_synthetic}(a) and 
 \ref{fig:comp_synthetic}(b), respectively. The results correspond to our 
-assumption: the multiplicative compositional model (BCOMP-MUL) shows lower 
+assumption: the Thompson sampling for multiplicative compositional model (BCOMP-MUL-TS) shows lower 
 regrets on the multiplicative data in Figure \ref{fig:comp_synthetic}(a), and 
-the additive compositional model (BCOMP-ADD) shows lower regrets on the 
+the Thompson sampling for additive compositional model (BCOMP-ADD-TS) shows lower regrets on the 
 additive compositional data in Figure \ref{fig:comp_synthetic}(b), 
-and both have lower regrets than passive learning or PNORMAL with no composition. 
+and both have lower regrets than passive learning or PNORMAL-TS without compositions. 
 
 \subsection{Thompson sampling on real datasets}
 
 Next, we evaluate particle Thompson sampling for both compositional and non-compositional models on real datasets.
 
 \textbf{Experimental settings}: 
-We compare our model with AMDC, and passive learning with PRESCAL.  
+We compare the Thompson sampling models with AMDC models, and PRESCAL for passive learning.  
 AMDC model has been proposed to achieve two different active learning goals, constructing a predictive
 model and maximising the valid triples in a knowledge base, with two different querying strategies
- \cite{kajino2015active}. 
+~\cite{kajino2015active}. 
 AMDC-PRED is a predictive model construction strategy and chooses a triple which is the most ambiguous (close to the decision boundary) at each time $t$.
 AMDC-POP is a population strategy which aims to maximise the number of valid triples in a knowledge base, choosing a triple with the highest expected value at each time.  
 To train all models we only use the observed triples up to the current time. For the passive learning with PRESCAL, we generate a random sample at each time period. For the particle Thompson sampling models, we set variance parameter $\sigma_e$ and $\sigma_r$ to 1, $\sigma_x$ to 0.1, and vary $\sigma_c$ from 1 to 100.
@@ -226,7 +228,7 @@ We leave 30 \% of triples as a test set to measure test error.
 At each time period, each model choose one triples to query, 
 if the selected triple is in the test set then we choose the next highest expected triple which is not in the test set.
 All models start from zero observation. 
-After every querying, the model obtains a label of the queried triples from an oracle,
+After every querying, a model obtains a label of the queried triples from an oracle,
 then the model updates the parameters. 
 
 \textbf{Evaluation metric}: We use two different evaluation metrics, ROC-AUC score, and cumulative gain,

@@ -32,7 +32,7 @@
 
 Thompson sampling has been gaining an increasing attention
 because of a competitive empirical performance as well as its conceptual
-simplicity~\cite{scott10bandit,li11thompson}. Let $y_{1:t}$ be a sequence of rewards up to time $t$, and $\theta$ is an underlying parameter governing the rewards. With Thompson sampling, an agent choose action $a$ according to its probability of being optimal:
+simplicity~\cite{li11thompson,scott10bandit}. Let $y_{1:t}$ be a sequence of rewards up to time $t$, and $\theta$ is an underlying parameter governing the rewards. With Thompson sampling, an agent choose action $a$ according to its probability of being optimal:
 \begin{align}
 \arg\max_a \int \mathbb{I}\bigg[ \mathbb{E}(r|a, \theta)
 = \max_{a'}\mathbb{E}(r|a',\theta) \bigg] p(\theta|y_{1:t-1}) d\theta, \notag
@@ -78,6 +78,11 @@ to $N/2$~\cite{Doucet2011}. Resampling removes low weight particles with high pr
 while keeping samples from the posterior.
 We summarise the particle Thompson sampling for PRESCAL with the
 Gaussian output variable in Algorithm \ref{alg:smc}.
+
+Both compositional models can use the same
+particle Thompson sampling scheme described in Algorithm \ref{alg:smc} with the conditional distributions.
+However, the model can only query the triples in the original tensor and 
+not in the expanded tensor because the compositional triples are not observable.
 
 We show that the Thompson sampling approach improves over passive PRESCAL in
 experiments with real and synthetic data.
