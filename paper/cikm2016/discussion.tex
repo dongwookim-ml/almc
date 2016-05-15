@@ -1,7 +1,7 @@
 %!TEX root = ./cikm2016.tex
 \section{Discussion}
 We have proposed a novel compositional relational model with uncertainty and presented the
-Thompson sampling for both compositional and non-compositional models to solve the active knowledge acquisition problem. 
+Thompson sampling for both compositional and non-compositional models to solve both knowledge completion and active knowledge acquisition problems.
 The compositional model aims to infer the latent features of knowledge 
 bases by incorporating an additional graph structure. In the passive 
 learning scenario, the compositional model outperforms the other models, 
@@ -12,7 +12,7 @@ importance of being balanced between exploration and exploitation.
 
 Previous work such as the one by \cite{kajino2015active} 
 views knowledge population 
-and predictive model construction are separate problems. 
+and knowledge completion are separate problems. 
 We find this observation true when the algorithm has a warm-start, 
 i.e. already having a fair amount of data before active learning starts; 
 when the information is sparse, the same strategy works for both maximizing 
@@ -29,7 +29,7 @@ was unclear. Throughout this work, we have empirically shown that maximising
 cumulative gain entails the predictive models as well.
 In the long run, we see this work as a promising step towards using a composition-aware knowledge 
 completion system to connect with the 
-knowledge extraction problem~\cite{dong2014knowledge}. %, with rich graph structures. 
+knowledge based construction problem~\cite{dong2014knowledge}. %, with rich graph structures. 
 
 %\begin{description}
 %  \item[Not useful theorem] In \cite{kawale2015efficient}, the theorem does not really give
