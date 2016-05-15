@@ -30,7 +30,9 @@
 \end{algorithmic}
 \end{algorithm}
 
-Thompson sampling has been gaining an increasing attention
+We now introduce a particle Thompson sampling algorithm for the active knowledge population with the proposed PRESCAL models. In active population task, a knowledge base starts with zero or initial observations, and at each time period, we select one triple to be queried and labelled by an external system, i.e. human experts, based on the observations. Each labelling requires a certain amount of expense, so the goal is to maximise the number of valid triples given limited budget.
+
+Thompson sampling provides a model based query selection process, and has been gaining an increasing attention
 because of a competitive empirical performance as well as its conceptual
 simplicity~\cite{li11thompson,scott10bandit}. Let $y_{1:t}$ be a sequence of rewards up to time $t$, and $\theta$ is an underlying parameter governing the rewards. With Thompson sampling, an agent choose action $a$ according to its probability of being optimal:
 \begin{align}
