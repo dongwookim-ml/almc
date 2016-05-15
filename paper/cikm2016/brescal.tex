@@ -64,14 +64,15 @@ R_k \sim \mathcal{MN}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
 \end{align}
 where $\text{vec}(R_k)$ denotes the flattening of the matrix.
 
-We consider two observation models for $x_{ikj}$: a real or random variable. By placing a
+We consider two observation models for $x_{ikj}$: real or binary variables. By placing a
 normal distribution over $x_{ikj}$,
 \begin{align}
   x_{ikj} |e_i, e_j, R_k \sim \mathcal{N}(e_i^{\top} R_k e_j, \sigma_x^2) \label{eqn:triple_gen}
 \end{align}
-we can control the confidence on different observations
+We model the value of triple as a real variable.
+This is not a natural choice since the triple is usually represented as a binary variable, however, we can control the confidence on different observations
 through the variance parameter $\sigma_x^2$.
-The role of this parameter will be further discussed in the compositional model section.
+%The role of this parameter will be further discussed in the compositional model section.
 
 We develop an efficient Gibbs sampler to perform inference for the probabilistic RESCAL (PPRESCAL).
 The key for achieving efficiency are the two conditional posteriors for latent features.
@@ -82,12 +83,12 @@ p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}(
 p(R_k|E, \mathcal{X}, \sigma_r, \sigma_x) &= \mathcal{N}(\text{vec}(R_k) |
 \mu_k, \Lambda_k^{-1}) \label{eqn:sample_r}
 \end{align}
-where the negative subscript $-i$ indicates the every other entity variables except $e_i$.
-The means and precision matrices are listed in Table~\ref{tab:brescalposterior}, where we have
+where the negative subscript $-i$ indicates the every other entity variables except entity $i$.
+Closed form of the posterior means and precision matrices are listed in Table~\ref{tab:brescalposterior}, where we have
 used the identity $e_i^{\top} R_k e_j = r_k^{\top} e_i \otimes e_j$.
 
 Alternatively, we may want to more precisely model the fact that the observations are binary.
-Therefore we model $x_{ikj}$ as a binomial distributed random variable whose
+Therefore we model $x_{ikj}$ as a binomial random variable whose
 probability is determined by logistic regression.
 \[
 p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
@@ -112,5 +113,3 @@ the quantification of uncertainty by the predictive distribution,
 the ability to utilise priors, and
 the availability of principled model selection.
 We show in the empirical experiments that PRESCAL outperforms standard RESCAL.
-In the following, we focus on the predictive distribution, which enables us to
-improve sequential knowledge acquisition.

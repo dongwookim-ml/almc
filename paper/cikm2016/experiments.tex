@@ -1,5 +1,5 @@
 %!TEX root = ./cikm2016.tex
-\section{Missing Triple Prediction}
+\section{Knowledge Completion}
 \label{sec:exp1}
 We evaluate the compositional models on three benchmark datasets and compare the performance to various baseline 
 algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each 
@@ -125,7 +125,7 @@ entities and relations. We compare the cumulative regret of the particle Thompso
 learning method where the model choose a random triple at each time. All results are averaged over 10 
 individual runs with different initialisations. 
 Note that the dataset with binary logistic output variables can be used to train both logistic-output PRESCAL (PLOGIT) and Gaussian-output PRESCAL (PNORMAL) whereas the dataset with the Gaussian output can only be trained by PNORMAL.
-Figure \ref{fig:syn1} and \ref{fig:syn2} show that with the logistic synthetic dataset both models are capable to learn the latent features of the generated triples, with logistic outperforming the Gaussian; Figure \ref{fig:syn3} and \ref{fig:syn4} show that PNORMAL \rev{outperform passive learning in} the real valued dataset. 
+Figure \ref{fig:syn1} and \ref{fig:syn2} show that with the logistic synthetic dataset both models are capable to learn the latent features of the generated triples, with logistic outperforming the Gaussian; Figure \ref{fig:syn3} and \ref{fig:syn4} show that PNORMAL-TS \rev{outperform passive learning in} the real valued dataset. 
 %For every experiment, the cumulative regret of the Thompson 
 %sampling method was bounded after a certain number of interactions whereas the cumulative regret of 
 %passive learning increases linearly. 
@@ -163,7 +163,7 @@ where $L=2$. We set both variance parameter $\sigma_x$ and $\sigma_c$ to 0.1. No
 	\subfigure[NATION]{
 	\includegraphics[width=0.3\linewidth]{images/present_vs_passive_greedy_thompson_nation_mcmc_vertical_line.pdf}				
 	}	
-	\caption{\label{fig:vs_greedy}Comparison between probabilistic RESCAL and greedy models. }
+	\caption{\label{fig:vs_greedy} The cumulative gain and ROC-AUC score of the Thompson sampling with passive learning and  AMDC models. Thompson sampling with PRESCAL (PNORMAL-TS) model achieves the highest cumulative gain to compare with AMDC and passive learning algorithms and shows comparable performance on ROC-AUC scores.}
 \end{figure*}
 
 \begin{figure*}[t]
@@ -178,7 +178,7 @@ where $L=2$. We set both variance parameter $\sigma_x$ and $\sigma_c$ to 0.1. No
 	\subfigure[NATION]{
 	\includegraphics[width=0.3\linewidth]{images/present_vs_comp_thompson_nation_mcmc_vertical_line.pdf}				
 	}	
-	\caption{\label{fig:vs_comp} Comparison between PNORMAL and two compositional models.}
+	\caption{\label{fig:vs_comp} The cumulative gain and ROC-AUC score of the Thompson sampling with the non-compositional model and compositional models. Unlike the knowledge completion task in Section \ref{sec:exp1}, both compositional models perform worse than PNORMAL-TS in the active knowledge acquisition.}
 \end{figure*}
 
 

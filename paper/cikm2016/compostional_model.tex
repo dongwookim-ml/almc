@@ -2,7 +2,7 @@
 \section{Compositional Relations}
 \label{sec:comp}
 
-In this section, we propose a compositional relation model that exploit the compositional structure of
+In this section, we propose a compositional relation model that exploits the compositional structure of
 knowledge graph to capture the latent semantic structure of the entities and relations.
 While previously suggested vector space models provide a statistical way to infer the latent semantic
 structure of entities and relations, but lack consideration of a graph structure of a knowledge base itself.
@@ -20,7 +20,7 @@ More formally, if there is a sequence of triples where the target entity of a fo
 latter triple in a consecutive pair of triples in the sequence, then we can form a compositional triples
 as follows.
 Given the sequence of triples
-$(i_1, k_1 ,j_1)$,  $(i_2, k_2, j_2)$, $(i_2, k_2, j_2)$ $\dots$ $(i_n, k_n, j_n)$, where $i_k = j_{k+1}$ for all $k
+$(i_1, k_1 ,j_1)$,  $(i_2, k_2, j_2)$, $(i_3, k_3, j_3)$ $\dots$ $(i_n, k_n, j_n)$, where $i_k = j_{k+1}$ for all $k
 $,  we form a compositional triple $(i_1, {c}(k_1, k_2, \dots, k_n), j_n)$, where $c$ denotes the compositional
 relation of the sequence of relations.
 
@@ -32,7 +32,7 @@ compositional triple $x_{icj}$ is an
 indicator variable that show the existence of the path from entity $i$ to entity $j$ through sequence
 of relations
 $c$ in $\mathcal{X}^{t}$. Note that the compositional relation $c$ is an abstract relation, and there might be a
-multiple possible paths from $i_1$ to $j_n$.
+multiple possible paths from entity $i_1$ to $j_n$.
 
 With these extended compositional triples, we again model $x_{icj}$ with a bilinear Gaussian distribution,
 \begin{align}
@@ -40,14 +40,16 @@ x_{(i, {{c}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{{c}(k_1,k_2)} e_j, \sig
 \end{align}
 where $R_{{c}(k_1,k_2)} \in \mathbb{R}^{D\times D}$ is a latent matrix of compositional relation $c$, and $
 \sigma_{c}^2$ is a covariance of the compositional triples. We keep the same latent vector $e$ for each entity
-to model both normal triples and compositional triples.
+to model both non-compositional triples and compositional triples.
 In the subsequent sections, we provide two different ways of modelling the compositional relation $R_c$.
 
 \subsection{Additive Compositionality}
-First, we define an additive compositional relation $R_c$ as a sequence of normalized summation over
+With the compositions of relations, the PRESCAL may place a different relation matrix $R_c$ for each composition $c$. However, the number of required matrices increases exponentially, as the length of composition increases linearly. Consequently, the computational cost will also increases exponentially.
+To limit the required number of parameters, we propose two different ways of modelling the compositional relation $R_c$.
+First, we define an additive compositional relation $R_c$ as a sequence of normalised summation over
 relation matrices in composition $c$, i.e.,
 $R_{{c}} = \frac{1}{|c|}(R_{c(1)} + R_{c(2)} + \dots + R_{c(|c|)})$, then compositional triple $x_{icj}$
-is modeled as
+is modelled as
 \begin{align}
 x_{(i, c, j)} &\sim \mathcal{N}(e_i^\top R_c e_j, \sigma_{c}^2) \\
 &= \mathcal{N}(e_i^\top \frac{1}{|c|}(R_{c(1)} + R_{c(2)} + \dots + R_{c(|c|)}) e_j, \sigma_{c}^2). \notag
@@ -84,13 +86,13 @@ x_{(i, c, j)} \sim \mathcal{N}(e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(|c|-1)}R_{c(
 \end{align}
 The multiplicative compositionality can be understood as a sequence of linear transformation from the original
 entity $i$ with the compositional relations, and the inner product between the transformed entity and target
-entity will form a value of the compositional triple.
+entity forms a value of the compositional triple.
 
 Given a sequence of relations including relation $k$, $R_k$ is placed in the middle of the compositional
 sequence, i.e., $e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(\delta_k)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j$, where $
 \delta_k$ is the index of relation $k$. For notational simplicity, we will denote the left side $e_i^\top R_{c(1)}
 R_{c(2)} \dots R_{c(\delta_k -1)}$ as $\bar{e}_{ic(:\delta_k)}^\top$, and the right side $R_{c(\delta_k + 1)} \dots
-R_{c(|c|-1)}R_{c(|c|)} e_j$ as $\bar{e}_{ic(\delta_k:)}$, therefore we can rewrite the mean parameter as $
+R_{c(|c|-1)}R_{c(|c|)} e_j$ as $\bar{e}_{ic(\delta_k:)}$. With this notation, we can rewrite the mean parameter as $
 \bar{e}_{ic(:\delta_k)}^\top R_{k} \bar{e}_{ic(\delta_k:)}$. With the simplified notations, the conditional of $R_k$
 is
 \begin{align}
