@@ -15,7 +15,7 @@
    \STATE $\mathcal{X}^{t} \leftarrow \mathcal{X}^{t-1} \cup \{x_{ikj}\}$
 
    \STATE \textit{Particle Filtering}:
-   \STATE $\forall h, w_h^{t} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighting
+   \STATE $\forall h, w_h^{t} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighing
    \IF{ESS$(\mathbf{w}^{t}) \leq N$}
    \STATE resample particles
    \STATE $w_h^{t} \leftarrow 1/H$

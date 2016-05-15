@@ -39,7 +39,7 @@ The contributions of this paper can be summarised as follows:
 \item We incorporate a compositional structure of knowledge graph into the proposed factorisation by modelling a composition of relations as an algebraic operation in the probabilistic embedding space in Section \ref{sec:comp}.
 \item We propose an active knowledge population method that efficiently explore the factorised space guided by a principled way of exploration-exploitation via Thompson sampling algorithm in Section \ref{sec:pts}.
 \item Experiments on the knowledge completion with three real-world dataset show that the compositional model predicts unseen triples better than the bilinear factorisation model in Section \ref{sec:exp1}.
-\item Experiments show the importance of uncertainty in the active acquisition. Especially, the better predictive model does not guarantee to have a better knowledge acquisition due to an improper uncertainty measure in Section \ref{sec:exp2}.
+\item Experiments show the importance of uncertainty in the active population. Especially, the better predictive model does not guarantee to have a better knowledge population due to an improper uncertainty measure in Section \ref{sec:exp2}.
 \end{itemize}
 
 \eat{
@@ -171,9 +171,9 @@ approach within a probabilistic framework with two compositional structures.
 As the amount of information codified in a computer readable fashion increases, the management
 of knowledge bases need to become increasingly more automated. In this paper, we study
 the problem of acquiring new knowledge given an existing knowledge base. Knowledge bases
-are modeled as a set of relations between pairs of entities, for example the factoid
+are modelled as a set of relations between pairs of entities, for example the factoid
 ``Barack Obama is the 44th president of the United States''
-is modeled as two entities (Barack Obama, United States) being related by ``president of''.
+is modelled as two entities (Barack Obama, United States) being related by ``president of''.
 Such relations have a natural representation as a sparse graph or a tensor of order 3.
 Given this representation, we model the acquisition of new knowledge as the
 identification of new triples that capture particular relations between two entities.
@@ -188,7 +188,7 @@ factorisation. Such low rank approximations can also be seen as a latent variabl
 model, which additionally captures the inherent uncertainty of noisy annotations.
 We propose a probabilistic model for tensor factorisation and explore both the Gaussian
 and Logistic model. The probabilistic model provides a natural way of implementing
-randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
+randomised probability matching, also known as Thompson sampling~\cite{scott10bandit}.
 Thompson sampling is an approach for solving the multi-armed bandit problem,
 which allows us to trade off exploration and exploitation when identifying new triples.
 This provides a principled approach to identify promising candidates for knowledge base

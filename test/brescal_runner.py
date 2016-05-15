@@ -52,7 +52,7 @@ if __name__ == '__main__':
         max_iter = np.prod(T.shape)
 
     # destination folder where model and log files are saved
-    dest = '../result/%s/%s/' % (dataset, model)
+    dest = '../result_posterior_variance/%s/%s/' % (dataset, model)
 
     p_obs = 0.00
     p_test = 0.3
