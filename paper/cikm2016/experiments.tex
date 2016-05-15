@@ -50,7 +50,7 @@ dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washing
 	
 	\includegraphics[width=0.8\linewidth]{images/embedding_nation.pdf}
 
-	\caption{\label{fig:tsne} Embedding multi-dimensional entities of the NATION dataset into the two-dimensional space through tSNE \cite{VanDerMaaten2008}. The size of circle in PNORMAL is proportional to the uncertainty of entities in the embedded space. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities.}
+	\caption{\label{fig:tsne} Embedding multi-dimensional entities of the NATION dataset into a two-dimensional space through tSNE \cite{VanDerMaaten2008}. The size of circle in PNORMAL is proportional to the uncertainty of entities in the embedded space. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities.}
 \end{figure*}
 
 For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
@@ -60,7 +60,7 @@ Given the test set, the performances of models are measured by ROC-AUC score:
 \begin{align}
 \frac{1}{|\mathcal{X}_p|  |\mathcal{X}_n|} \sum_{\{i,k,j\} \in \mathcal{X}_p, \{i',k',j'\} \in \mathcal{X}_n} \mathbb{I}[\bar{x}_{ikj} > \bar{x}_{ikj}],
 \end{align}
-where $X_p$ and $X_n$ are the set of positive and negative triples in the test set, respectively, and $\bar{x}$ is a reconstructed triple.
+where $\mathcal{X}_p$ and $\mathcal{X}_n$ are the set of positive and negative triples in the test set, respectively, and $\bar{x}$ is a reconstructed triple.
 
 Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We can see that the PRESCAL with the normal output (PNORMAL) or logistic output (PLOGIT) generally outperform RESCAL. We compare the compositional model with original RESCAL, PNORMAL, and PLOGIT. In general, the multiplicative compositional model (PCOMP-MUL) outperforms the additive compositional model (PCOMP-ADD), and performs better the other baseline models when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions. For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
 
@@ -227,18 +227,18 @@ AMDC-POP is a population strategy which aims to maximise the number of valid tri
 To train all models we only use the observed triples up to the current time. For the passive learning with PRESCAL, we generate a random sample at each time period. For the particle Thompson sampling models, we set variance parameter $\sigma_e$ and $\sigma_r$ to 1, $\sigma_x$ to 0.1, and vary $\sigma_c$ from 1 to 100.
 
 We leave 30 \% of triples as a test set to measure test error. 
-At each time period, each model choose one triples to query, 
+At each time period, each model choose one triple to query, 
 if the selected triple is in the test set then we choose the next highest expected triple which is not in the test set.
 All models start from zero observation. 
-After every querying, a model obtains a label of the queried triples from an oracle,
+After every querying, a model obtains a label of the queried triple from an oracle,
 then the model updates the parameters. 
 
-\textbf{Evaluation metric}: We use two different evaluation metrics, ROC-AUC score, and cumulative gain,
-for the performance comparison. One goal of the Thompson sampling is to maximise the knowledge 
+\textbf{Evaluation metric}: We use two different evaluation metrics, cumulative gain and ROC-AUC score,
+for the performance comparison. The goal of the Thompson sampling is to maximise the knowledge 
 population through the balanced querying strategy between exploration and exploitation. 
-To measure how many triples are obtained through the querying stage, we fist compute the cumulative 
-gain which is the number of valid triple obtained up to time $t$, and then compute the ROC-AUC score on 
-test set to understand how this balanced querying strategy results in making a predictive model.
+To measure how many triples are obtained through the querying stage, we compute the cumulative 
+gain which is the number of valid triple obtained up to time $t$. Additionally, we compute the ROC-AUC score on 
+the test set to understand how this balanced querying strategy results in making a predictive model.
 
 \textbf{Exploitation and exploration}: 
 Figure \ref{fig:vs_greedy} and \ref{fig:vs_comp} show
@@ -248,12 +248,11 @@ PNORMAL performs better than other baseline models for the cumulative gain, and 
 In the original AMDC work \cite{kajino2015active}, AMDC-POP model obtains more 
 valid triples than AMDC-PRED, and AMDC-PRED shows high ROC-AUC scores than AMDC-POP. 
 In our experiment, however, AMDC-POP shows comparable cumulative gain to AMDC-PRED 
-and even worse than AMDC-PRED for the UMLS. We conjecture the initial observation 
-results in the  different performances: in the original experiment, the model starts
-from a small set of training data so this gives the model focusing on exploit and advantage, 
+and even worse than AMDC-PRED for the UMLS. We conjecture the initial observation and query size results in the different performances: in the original experiment, the model starts
+from a small set of training data, and the query size was 1000 for KINSHIP and UMLS. So this gives the model focusing on exploit and advantage, 
 %a certain latent structure given an initially trained model
 whereas in our experiment, we start from zero 
-observation which makes the model hard to exploit the structure. This result shows 
+observation and query one triple at each time, which makes the model hard to exploit the structure. This result shows 
 the importance of balancing between exploitation and exploration.
 
 \begin{figure}[t]
@@ -275,7 +274,7 @@ the importance of balancing between exploitation and exploration.
 \end{figure}
 
 We note that the compositional model performs worse than the non-compositional models,
-especially than PNORMAL, in this active setting. This is an interesting result because, 
+especially than PNORMAL, as shown in Figure \ref{fig:vs_comp}. This is an interesting result because, 
 in general, we expect that the model that performs well in the predictive task also shows 
 a better performance in the active learning. 
 Of course, we also emphasis the difference between two experiments; 
