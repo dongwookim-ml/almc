@@ -14,16 +14,10 @@ We then use these dimensions to help position our work.
 %underlying model structure, we broadly categorise models into Bayesian 
 %and non-Bayesian models.
 \item[Probabilistic/Non-Probabilistic] This refers to two broad classes of model 
-formulation, whether the obtained model has a probabilistic interpretation or not. The probabilistic models are capable of placing priors and measuring uncertainty.
-%is a point estimate or posterior 
-%distribution, whether to incorporate priors, quantification of uncertainty, 
-%and so on. 
-%\item[Learning strategy] The models passively learn from labels of given 
-%data points, or the models actively learn by  requesting data points 
-%to be labeled.
+formulation, whether an obtained model has a probabilistic interpretation. The probabilistic models are capable of placing priors and measuring uncertainty.
 \item[Passive/Active] This refers to two different learning strategies, 
 of passively learning a model given labeled data points, or actively 
-requesting data points to be labeled.
+requesting data points to be labelled.
 \item[Matrix/Tensor/Composition] Relational learning problems can operate on 
 different data representations. Matrix representation is common when a dataset 
 can be represented as a bi-partite graph, such as (user, item) tuples in the 
@@ -37,7 +31,7 @@ relation2 -- entity3.
 \end{description}
 In Table \ref{tbl:relatedwork}, we summarise a sample of related recent work 
 along all combinations in each dimension. 
-Note that N-Pr,A,C, or Non-Probabilistic Active Composition model, can be done by 
+Note that N-Pr, A, C, or Non-Probabilistic Active Composition model, can be done by 
 simply using the query strategies from \cite{kajino2015active} on the 
 compositional model by \cite{guu2015traversing}. Our work address a critical gap 
 in probabilistic Tensor factorisation capable of learning in the 
@@ -53,15 +47,15 @@ Given this position, our work is inspired by, and most closely related to:
 active multi-relational data construction (AMDC) 
 with tensor factorisation~\cite{kajino2015active}, 
 Thomson sampling for matrix factorisation~\cite{kawale2015efficient}, 
-and compositions objectives in vector space~\cite{guu2015traversing}.
-Note that we re-formulate the compositions objectives probabilistically such that it can be used in an active setting; 
+and compositional objectives in vector space~\cite{guu2015traversing}.
+Note that we reformulate the compositional objectives probabilistically such that it can be used in an active setting; 
 our approach for active learning is a generalisation of
 Thomson sampling from matrixes to tensors; 
 AMDC find that reconstruction accuracy and knowledge population 
 cannot be achieved at the same time with strategies geared towards 
 either exploit or reducing uncertainty, 
 we show that the two objectives can be achieved at the same time with 
-a properly designed exploration and exploitation scheme. 
+a properly designed exploration-exploitation scheme. 
 
 \eat{show active knowledge base construction
 algorithm based on the low-rank structure. They proposed active 
