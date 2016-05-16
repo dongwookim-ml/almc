@@ -31,7 +31,9 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.7\linewidth]{images/path_prediction2.pdf}
-	\caption{\label{fig:path_pred} Path prediction result with UMLS. Both compositional models show consistent predictive performance to compare with the non-compositional models as the compositional length increases.}
+	\caption{\label{fig:path_pred} Path prediction result with UMLS. 
+	Both compositional models show consistent predictive performance 
+	whereas those of the non-compositional models drop sharply as the length increases.}
 \end{figure}
 
 \begin{table*}[t]
@@ -101,8 +103,29 @@ Given the test set, the performances of models are measured by ROC-AUC score:
 \end{align}
 where $\mathcal{X}_p$ and $\mathcal{X}_n$ are the set of positive and negative triples in the test set, respectively, and $\bar{x}$ is a reconstructed triple.
 
-Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We can see that the PRESCAL with the normal output (PNORMAL) or logistic output (PLOGIT) generally outperform RESCAL. We compare the compositional model with original RESCAL, PNORMAL, and PLOGIT. In general, the multiplicative compositional model (PCOMP-MUL) outperforms the additive compositional model (PCOMP-ADD), and performs better the other baseline models when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions. For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
+Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models 
+with the various baseline models. We can see that the PRESCAL with 
+the normal output (PNORMAL) or logistic output (PLOGIT) generally outperform RESCAL. 
+We compare the compositional model with original RESCAL, PNORMAL, and PLOGIT. 
+In general, the multiplicative compositional model (PCOMP-MUL) outperforms 
+the additive compositional model (PCOMP-ADD), and performs better the other baseline models 
+when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms 
+across the all training proportions. 
+For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
 
-We also conduct a compositional triple prediction. 10\% of UMLS dataset is used for training. We compute the expected value of unobserved compositional triples given a trained model. The non-compositional models are not capable to compute the expected value. In such case, we approximate the triples with multiplicative model assumption in Equation \ref{eqn:multi}. We vary the compositional length from 1 (triple) to 4, and measure ROC-AUC scores on the reconstructed compositional triples. Figure \ref{fig:path_pred} shows the result. Both compositional model shows consistent performance regardless of the compositional length. It is worth emphasising that although the compositional length for training is 2, the compositional models show consistent results on predicting triples of length 3 and 4. Table \ref{tbl:path_example} shows an example of the path prediction result starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces}. Both compositional and non-compositional models predict length-1 triples well. With length-2 compositional triples, only the compositional models can capture correct entities on top 5.
+We also conduct a compositional triple prediction. 
+10\% of UMLS dataset is used for training. 
+We compute the expected value of unobserved compositional triples given a trained model. 
+The non-compositional models are not capable to compute the expected value. 
+In such case, we approximate the triples with multiplicative model assumption in Equation \ref{eqn:multi}. 
+We vary the compositional length from 1 (triple) to 4, and measure ROC-AUC scores on the reconstructed compositional triples. 
+Figure \ref{fig:path_pred} shows the result. 
+Both compositional model shows consistent performance regardless of the compositional length. 
+It is worth emphasising that although the compositional length for training is 2, 
+the compositional models show consistent results on predicting triples of length 3 and 4. 
+Table \ref{tbl:path_example} shows an example of the path prediction result 
+starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces}. 
+Both compositional and non-compositional models predict length-1 triples well. 
+With length-2 compositional triples, only the compositional models can capture correct entities on top 5.
 
 We visualise the multi-dimensional entities inferred from RESCAL and PNORMAL of the NATION dataset into a two-dimensional space through tSNE \cite{VanDerMaaten2008} in Figure \ref{fig:tsne}. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities while the RESCAL cannot.
