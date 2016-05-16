@@ -28,6 +28,45 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 }
 \end{figure} 
 
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.8\linewidth]{images/path_prediction.pdf}
+	\caption{\label{fig:path_pred} Path prediction result with UMLS. Both compositional models show consistent predictive performance to compare with the non-compositional models.}
+\end{figure}
+
+\begin{table*}[t]
+\center
+\small
+\caption{\label{tbl:path_example} Example of path prediction from UMLS data. We predict triple and path starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations: \texttt{Affects}, and \texttt{Produces}. Correct entities are bolded.}
+
+\subfigure[Top 5 entities of triple prediction with entity \texttt{MB Dysf.} and relation \texttt{Affects}.]{
+\begin{tabular}{l | p{2.7cm}p{2.7cm}p{2.7cm}p{2.7cm}p{2.7cm}}
+Model & Top 1 & Top 2 & Top 3 & Top 4 & Top 5 \\ \hline
+PNORMAL & \textbf{Invertebrate}&\textbf{Reptile}&\textbf{Archaeon}&\textbf{Bird}&\textbf{Phy.-Function} \\ \hline
+PLOGIT & \textbf{Cell-Function}&\textbf{Disease-or-Syndrome}&\textbf{Cell-or-Molecular-Dysf.}&\textbf{Exp.-Model-of-Disease}&\textbf{Mental-Process} \\ \hline
+PCOMP-MUL & \textbf{Archaeon}&\textbf{Fish}&\textbf{Fungus}&\textbf{Invertebrate}&\textbf{Human} \\ \hline
+PCOMP-ADD & \textbf{Path.-Function}&\textbf{Bird}&\textbf{Cell-or-Molecular-Dysf.}&Drug-Delivery-Device&Congenital-Abnormality 
+
+\end{tabular}
+}
+\subfigure[Top 5 entities of path prediction starting from entity \texttt{MB Dysf.} followed by two relations: \texttt{Affects}, and \texttt{Produces}.]{
+\begin{tabular}{l | p{2.7cm}p{2.7cm}p{2.7cm}p{2.7cm}p{2.7cm}}
+
+PNORMAL & Clinical-Drug&Sign-or-Symptom&Org.-Attribute&Drug-Delivery-Device&Clinical-Attr. \\ \hline
+PLOGIT & Amphibian&Gov.-or-Reg.-Activity&Food&Biologic-Func.&Classification\\ \hline
+PCOMP-MUL & \textbf{Enzyme}&\textbf{Body-Substance}&\textbf{Biogenic-Amine}&Carbohydrate&\textbf{Immunologic-Factor} \\ \hline
+PCOMP-ADD & \textbf{Immunologic-Factor}&\textbf{Body-Substance}&Molecular-Biology-Research-Technique&Clinical-Drug&Chemical-Viewed-Structurally
+
+\end{tabular}
+}
+\end{table*}
+
+%\begin{figure}[t]
+%	\centering
+%	\includegraphics[width=\linewidth]{images/path_reconstruction.pdf}
+%	\caption{\label{fig:path_pred_example} Example of path-prediction from UMLS. From entity \texttt{Mental-or-Behavioral Dysfunction}, we predict entities after two relations \texttt{Affects}/\texttt{Produces} with different models. Y-axis indicates an ROC-AUC score after each prediction. Labels of x-axis show reachable entities after each relation.}
+%\end{figure}
+
 %Applying Thompson sampling to the compositional models is not straight forward. 
 %Because, in the compositional model, adding one valid triple in a knowledge base will 
 %change the accompanying compositional paths over the extended tensor $\mathcal{X}^L$. 
@@ -48,13 +87,13 @@ dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washing
 \begin{figure*}[t]
 	\centering
 	
-	\includegraphics[width=0.8\linewidth]{images/embedding_nation.pdf}
+	\includegraphics[width=0.7\linewidth]{images/embedding_nation.pdf}
 
 	\caption{\label{fig:tsne} Embedding multi-dimensional entities of the NATION dataset into a two-dimensional space through tSNE \cite{VanDerMaaten2008}. The size of circle in PNORMAL is proportional to the uncertainty of entities in the embedded space. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities.}
 \end{figure*}
 
 For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
-from 1\% to 13\% of datasets. For RESCAL, we use the authors' implementation, and measure performance over 10 runs with random initialisations. For PRESCAL and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
+from 1\% to 13\% of datasets. For RESCAL, we use the authors' implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For PRESCAL and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
 %Based on the trained model, measure the ROC-AUC scores on the test set.
 Given the test set, the performances of models are measured by ROC-AUC score:
 \begin{align}
@@ -64,12 +103,15 @@ where $\mathcal{X}_p$ and $\mathcal{X}_n$ are the set of positive and negative t
 
 Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models with the various baseline models. We can see that the PRESCAL with the normal output (PNORMAL) or logistic output (PLOGIT) generally outperform RESCAL. We compare the compositional model with original RESCAL, PNORMAL, and PLOGIT. In general, the multiplicative compositional model (PCOMP-MUL) outperforms the additive compositional model (PCOMP-ADD), and performs better the other baseline models when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms across the all training proportions. For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
 
-We visualise the multi-dimensional entities inferred from RESCAL and PNORMAL of the NATION dataset into the two-dimensional space through tSNE \cite{VanDerMaaten2008} in Figure \ref{fig:tsne}. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities while the RESCAL cannot.
+
+We also conduct an compositional triple prediction to show the performance of the compositional models. Given compositional path $c$, the compositional triple is computed by the compositional model assumptions. The non-compositional models are not capable to predict the compositional triples. We approximate the triples with multiplicative model assumption in Equation \ref{eqn:multi}. We vary the compositional length from 1 to 3, and measure ROC-AUC scores on reconstructed compositional triples. Figure \ref{fig:path_pred} shows the result of path prediction. Both compositional model shows consistent performance to compare with the non-compositional performance regardless of the compositional length. Table \ref{tbl:path_example} shows an example of path prediction starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces}. Non-compositional models, such as PNORMAL, predict length-1 triples well. However, with the compositional relation \texttt{Affects} and \texttt{Produces}, the compositional models are only capable to predict correct entities.
+
+We visualise the multi-dimensional entities inferred from RESCAL and PNORMAL of the NATION dataset into a two-dimensional space through tSNE \cite{VanDerMaaten2008} in Figure \ref{fig:tsne}. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities while the RESCAL cannot.
 
 \begin{figure}[t]
 	\centering
 	\subfigure[\scriptsize Logistic: N=10, K=10, D=5\label{fig:syn1}]{
-	\includegraphics[width=0.45\linewidth]{images/toy_logit_vs_normal_10_10_5.pdf}
+	\includegraphics[width=0.43\linewidth]{images/toy_logit_vs_normal_10_10_5.pdf}
 	}
 	\subfigure[\scriptsize Logistic: N=20, K=10, D=5\label{fig:syn2}]{
 	\includegraphics[width=0.45\linewidth]{images/toy_logit_vs_normal_20_10_5.pdf}
@@ -249,7 +291,7 @@ In the original AMDC work \cite{kajino2015active}, AMDC-POP model obtains more
 valid triples than AMDC-PRED, and AMDC-PRED shows high ROC-AUC scores than AMDC-POP. 
 In our experiment, however, AMDC-POP shows comparable cumulative gain to AMDC-PRED 
 and even worse than AMDC-PRED for the UMLS. We conjecture the initial observation and query size results in the different performances: in the original experiment, the model starts
-from a small set of training data, and the query size was 1000 for KINSHIP and UMLS. So this gives the model focusing on exploit and advantage, 
+from a small set of training data, and the query size was 1,000 for KINSHIP and UMLS. So this gives the model focusing on exploit and advantage, 
 %a certain latent structure given an initially trained model
 whereas in our experiment, we start from zero 
 observation and query one triple at each time, which makes the model hard to exploit the structure. This result shows 
@@ -274,8 +316,9 @@ the importance of balancing between exploitation and exploration.
 \end{figure}
 
 We note that the compositional model performs worse than the non-compositional models,
-especially than PNORMAL, as shown in Figure \ref{fig:vs_comp}. This is an interesting result because, 
-in general, we expect that the model that performs well in the predictive task also shows 
+especially than PNORMAL, as shown in Figure \ref{fig:vs_comp}.
+This is counter-intuitive to our general understanding where
+the model that performs well in the predictive task also shows 
 a better performance in the active learning. 
 Of course, we also emphasis the difference between two experiments; 
 the goal of active acquisition is to maximise the number of triples 
@@ -289,12 +332,11 @@ and trace the average eigenvalues over the iterations.
 As shown in the figure, the average variance of the compositional model shrinks much faster 
 than the PNORMAL. Because the exploration-exploitation of the Thompson sampling depends on the
 posterior uncertainty, the fast shrinkage in the posterior variance may indicate the under 
-exploration of the model. One new triple with the compositional models induces multiple new 
-observations in the compositional triples, therefore the uncertainties of entities and 
+exploration of the model. This is predictable to a certain extent in the sense that one new triple with the compositional models induces multiple new 
+observations in the compositional triples, so the uncertainties of entities and 
 relations are measured less than those with non-compositional model. The most of active 
 learning algorithm utilise an uncertainty of a model, and therefore, a model with augmented 
-structures such as the relation compositions should be considered more carefully to correctly 
-reflect its uncertainty.
+structures such as the relation compositions should be more careful about reflecting its uncertainty correctly.
 
 \eat{If the samples of the compositional model follows the posterior 
 distribution, it may show the similar performance with the passive learning 

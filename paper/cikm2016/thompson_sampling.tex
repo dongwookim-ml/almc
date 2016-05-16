@@ -30,7 +30,7 @@
 \end{algorithmic}
 \end{algorithm}
 
-We now introduce a particle Thompson sampling algorithm for the active knowledge population with the proposed PRESCAL models. In active population task, a knowledge base starts with zero or initial observations, and at each time period, we select one triple to be queried and labelled by an external system, i.e. human experts, based on the observations. Each labelling requires a certain amount of expense, so the goal is to maximise the number of valid triples given limited budget.
+We now introduce a particle Thompson sampling algorithm for the active knowledge population with the proposed PRESCAL models. In the active population task, a knowledge base starts with zero or initial observations, and at each time period, we select one triple to be queried and labelled by an external system, i.e. human experts. The queried triple is chosen selectively based on past observations. Each labelling requires a certain amount of expense, so the goal is to obtain as many valid triples as possible given a limited budget.
 
 Thompson sampling provides a model based query selection process, and has been gaining an increasing attention
 because of a competitive empirical performance as well as its conceptual
@@ -53,7 +53,7 @@ observed triple $x_{(i,k,j)^*}$, the system updates the posterior of the latent
 features.
 
 The main difficulty of applying Thompson sampling to this task is a sequential update of the posterior distribution of the latent features with new observations over time. Unlike the point estimation algorithms such as
-the maximum likelihood estimate, computing a full posterior with MCMC
+the maximum likelihood estimator, computing a full posterior with MCMC
 requires extensive computational cost. To make the algorithm feasible, we employ a sequential Monte-Carlo (SMC) method for online posterior inference, generalising an algorithm proposed
 in~\cite{kawale2015efficient} to tensors.
 
@@ -84,7 +84,7 @@ Gaussian output variable in Algorithm \ref{alg:smc}.
 Both compositional models can use the same
 particle Thompson sampling scheme described in Algorithm \ref{alg:smc} with the conditional distributions.
 However, the model can only query the triples in the original tensor and 
-not in the expanded tensor because the compositional triples are not observable.
+not in the expanded tensor because the compositional triples are unobservable.
 
 We show that the Thompson sampling approach improves over passive PRESCAL in
 experiments with real and synthetic data.

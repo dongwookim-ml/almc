@@ -10,9 +10,9 @@ structure of entities and relations, but lack consideration of a graph structure
 
 The compositionality represents a semantic meaning of a path over a knowledge graph that corresponds to a
 sequence of composable triples.
-For example, given two triples, ``Barack Obama is a 44th president of U.S.'' (BarackObama, PresidentOf,
-U.S) and ``Joe Biden was a running mate of Barack Obama'' (JoeBiden, RunningMateOf, BarackObama),
-one can naturally deduce that the ``Joe Biden is a vice president of U.S.'' (JoeBiden, VicePresidentOf, U.S.).
+For example, given two triples, ``Barack Obama is a 44th president of U.S.'' \texttt{(BarackObama, PresidentOf,
+U.S)} and ``Joe Biden was a running mate of Barack Obama'' \texttt{(JoeBiden, RunningMateOf, BarackObama)},
+one can naturally deduce that the ``Joe Biden is a vice president of U.S.'' \texttt{(JoeBiden, VicePresidentOf, U.S.)}.
 Here the composition of two relations, president of, and running mate of, yield to a compositional relation,
 vice president of.
 % Is every running mate always a vice president? maybe this is not a proper example.
@@ -82,6 +82,7 @@ Second, we define an multiplicative compositional relation $R_c$ as a sequence o
 relations in composition $c$, i.e. $R_c = R_{c(1)} R_{c(2)} \dots R_{c(|c|)}$, and the compositional triple as a
 bilinear Gaussian distribution with the compositional relation $R_c$,
 \begin{align}
+\label{eqn:multi}
 x_{(i, c, j)} \sim \mathcal{N}(e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j, \sigma_{c}^2)
 \end{align}
 The multiplicative compositionality can be understood as a sequence of linear transformation from the original
