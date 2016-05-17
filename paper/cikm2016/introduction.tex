@@ -3,138 +3,143 @@
 \section{Introduction}
 \label{sec:intro}
 
-Relational knowledge graphs structuralise our understanding about the world
+Relational knowledge graphs formalise our understanding about the world
 and help us reason and infer in a wide range of tasks such as information retrieval, question answering, and semantic parsing~\cite{Dong2015,jiang2015improving,kim2013context}.
-A construction of a knowledge graph is a very active research area with many important and challenging research questions.
+The construction of a knowledge graph is an active research area with many important and challenging research questions.
 %into the form of \textit{(entity1, relation, entity2)} triples
-The early stage of knowledge graph construction relies on {\bf knowledge population} task
-where the goal is to maximise the number of facts in the form of \texttt{(entity1, relation, entity2)} triples.
+The early stage of knowledge graph construction relies on the {\bf knowledge population} task
+where the goal is to maximise the number of discovered facts in the form of \texttt{(entity1, relation, entity2)} triples.
 External sources such as Wikipedia are used to extract the triples~\cite{hoffart2013yago2},
 or human experts encode a prior knowledge manually~\cite{bollacker2008freebase}.
-Despite the endeavour toward to construct a complete knowledge graph, 
-even the largest commercialised knowledge graph is still far from complete~\cite{dong2014knowledge}. 
-{\bf Knowledge completion} task has emerged as a complement of the knowledge population 
-to scale up the knowledge graph construction. 
-Unlike the knowledge population task, the goal of knowledge completion is to correctly predict unseen triples based on the known triples. 
+Despite efforts towards a comprehensive knowledge graph,
+even the largest commercial knowledge graph is still far from complete~\cite{dong2014knowledge}.
+The {\bf knowledge completion} task has emerged as a complement of the knowledge population task
+to scale up the knowledge graph construction.
+Unlike the knowledge population task, the goal of knowledge completion is to correctly predict unseen triples based on the known triples.
 Several statistical relational models has been proposed so far~\cite{Lao2010,nickel2011three}.
 %Unlike the knowledge population task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise a prediction performance on unseen triples through a statistical analysis on the extracted information \cite{guu2015traversing,Lao2010}.
-%There are two main knowledge completion approaches. First, latent feature models factorise entities and relations to predict unseen triples. Second, graph feature models 
+%There are two main knowledge completion approaches. First, latent feature models factorise entities and relations to predict unseen triples. Second, graph feature models
 
-One major obstacle of knowledge graph construction is a gap between knowledge 
+An obstacle to knowledge graph construction is a gap between knowledge
 population and completion. For example, when there is no external source to extract knowledge,
-the construction relies solely on the contribution of human experts.
-Manual labelling is often slow and costly. 
-Therefore, we need a systematic way of selecting triples that will be labelled, in order to maximise the performance of the following knowledge completion.
-Recently, Kajino et al. propose an active learning strategy for populating knowledge graph~\cite{kajino2015active}; 
-however the algorithm had problems simultaneously achieving high recall and faithful reconstruction.
-%Active learning may provide a systematic way of selecting a data point to be labelled. 
-%Many statistical models has been proposed for knowledge graph completion. 
+the construction relies solely on the contribution of human experts, which can be slow and costly.
+We need a systematic way of selecting triples to be labelled, in order to maximise the performance of the following knowledge completion.
+A recent attempt at active learning for knowledge population~\cite{kajino2015active},
+has had difficulties simultaneously achieving high recall and faithful reconstruction.
+%Active learning may provide a systematic way of selecting a data point to be labelled.
+%Many statistical models has been proposed for knowledge graph completion.
 %The combination between these models and active learning approach can be used for the active knowledge population.
 %However, it is not clear that which model from the knowledge completion should be used for the active selection because of the discrepancy between two different goals of the knowledge population and completion.
-%However, the selection of proper model is still ambiguous and arbitrary for the active acquisition task. 
-%In the active learning literature, it is often ignored that which model for a predictive task is appropriate for its active counterpart. 
+%However, the selection of proper model is still ambiguous and arbitrary for the active acquisition task.
+%In the active learning literature, it is often ignored that which model for a predictive task is appropriate for its active counterpart.
 
-We provide statistical relational models, which can be used for the active query selection. %, to answer the question. 
-We first reformulate a bilinear tensor factorisation~\cite{nickel2015review} in a probabilistic way, where entities and relations are embedded into a latent feature space. And then we propose a tensor factorisation model that incorporates the graph structure of knowledge graph into the factorisation. These two probabilistic models provide a natural way of exploit uncertainty of triples that is crucial to develop 
+We propose a statistical relational model, providing a common computational framework
+for both knowledge completion and knowledge population.
+%We provide statistical relational models, which can be used for the active query selection. %, to answer the question.
+We formulate bilinear tensor factorisation~\cite{nickel2015review} in a probabilistic way, where entities and relations are embedded into a latent feature space. We propose an extension to the tensor factorisation model that incorporates the graph structure (of knowledge graphs) into the factorisation. Both probabilistic models provide a natural way of exploiting uncertainty of triples, allowing us to develop
 an active triple selection for the incremental knowledge population.
-We employ a Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
+We employ Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
 to find an optimal trade-off between exploration and exploitation during active selection.
 
 Based on experiments with three commonly used benchmark datasets, we find that the additional graph structure helps predict unobserved triples, while the model without graph structure is more helpful in the incremental knowledge population task.
-%models outperforming in the knowledge completion may not perform well in the active knowledge population. 
-Because, for the knowledge completion, it is important to find a better latent structure, for the incremental population, however, it is more important to measure an uncertainty of a model in order to explore the latent space efficiently over time.
-As far as we know, this is the first study that explicitly reveals how the knowledge completion models result in different conclusions in the incremental knowledge population.
+%models outperforming in the knowledge completion may not perform well in the active knowledge population.
+This apparent contradiction in results can be explained by the different requirements on
+the latent structure. For knowledge completion, it is important to find good latent structures,
+However for incremental population, it is more important for accurately estimate uncertainty
+such that we can explore the latent space efficiently over time.
+As far as we know, this is the first study that explicitly investigates the contrasting
+effects of graph structure when applied to knowledge completion and incremental knowledge population.
 
 The contributions of this paper can be summarised as follows:
 \begin{itemize}
-\item We propose a probabilistic reformulation of bilinear tensor factorisation that allows us to predict and measure the uncertainty of unobserved triples (Section \ref{sec:brescal}).
-\item We incorporate a graph path structure of a knowledge graph into the proposed factorisation by modelling a composition of relations as an algebraic operation in the probabilistic embedding space (Section \ref{sec:comp}).
-\item We propose an incremental knowledge population method that efficiently explores the factorised space, guided by a principled way of exploration-exploitation via Thompson sampling algorithm (Section \ref{sec:pts}).
-\item Experiments on the knowledge completion with three real-world dataset show that the compositional model predicts unseen triples better than the bilinear factorisation model (Section \ref{sec:exp1}).
-\item Experiments show the importance of uncertainty in the incremental population. Especially, the better predictive model does not guarantee to have a better knowledge population due to an improper uncertainty measure (Section \ref{sec:exp2}).
+\item We propose a probabilistic formulation of bilinear tensor factorisation that allows us to predict the uncertainty of unobserved triples (Section \ref{sec:brescal}).
+\item We incorporate the graph path structure of a knowledge graph into the proposed factorisation by modelling a composition of relations as algebraic operations in the probabilistic embedding space (Section \ref{sec:comp}).
+\item We propose an incremental knowledge population method that searches the factorised space, trading of exploration and exploitation using Thompson sampling (Section \ref{sec:pts}).
+\item Experiments on the knowledge completion with three real-world datasets show that the compositional model predicts unseen triples better than the bilinear factorisation model (Section \ref{sec:exp1}).
+\item Experiments show the importance of uncertainty in the incremental knowledge base population task. The better predictive model does not guarantee a better knowledge population due to an improper uncertainty measure (Section \ref{sec:exp2}).
 \end{itemize}
 
 \eat{
 %KG background from text, completion
-Relational knowledge bases support reasoning, information retrieval, 
+Relational knowledge bases support reasoning, information retrieval,
 or question-answering tasks about entities and their relations.
-Most of them contain facts in the form of (entity1, relation, entity2) triples, 
+Most of them contain facts in the form of (entity1, relation, entity2) triples,
 such as (CarlFriedrichGauss, BornIn, Braunschweig).
 %(ThomasBayes, London, BornIn).
 Automatically acquiring, maintaining, and reasoning in
-knowledge bases is a very active topic area with many important and challenging research questions. 
-%, has sustained attention from both academia and industry. 
+knowledge bases is a very active topic area with many important and challenging research questions.
+%, has sustained attention from both academia and industry.
 Even the largest of such databases are known to be incomplete~\cite{dong2014knowledge}. %min2013distant
 There are two main ways to fill in the missing facts:
 the first learning new relations from large collections of text or hyper-text,
-%~\cite{Mintz2009,carlson2010toward}, 
-known as knowledge extraction, 
-the second is inferring facts from existing relations, %~\cite{Lao2010,nickel2015review} 
-known as knowledge completion. 
+%~\cite{Mintz2009,carlson2010toward},
+known as knowledge extraction,
+the second is inferring facts from existing relations, %~\cite{Lao2010,nickel2015review}
+known as knowledge completion.
 
-%There are two open 
-One challenge in knowledge base completion is 
-its disconnection from the knowledge extraction setting. 
-It would be nice, for example, to know which question to query for in 
-a search-based method for gathering triples~\cite{west2014knowledge}. 
-Recently \cite{kajino2015active} propose an active learning strategy for completing 
+%There are two open
+One challenge in knowledge base completion is
+its disconnection from the knowledge extraction setting.
+It would be nice, for example, to know which question to query for in
+a search-based method for gathering triples~\cite{west2014knowledge}.
+Recently \cite{kajino2015active} propose an active learning strategy for completing
 knowledge triples; however the algorithm had problems simultaneously achieving high recall and faithful reconstruction.
-% finds it difficult to achieve 
-%high recall and high reconstruction at the same time. 
-Having an active exploit-explore strategy would more effectively 
-connect knowledge completion and extraction problems. 
-Another challenge is leveraging compositional knowledge from existing triples. 
-Also known as paths in knowledge graphs, composition of facts is key to 
-achieving common reasoning tasks. 
+% finds it difficult to achieve
+%high recall and high reconstruction at the same time.
+Having an active exploit-explore strategy would more effectively
+connect knowledge completion and extraction problems.
+Another challenge is leveraging compositional knowledge from existing triples.
+Also known as paths in knowledge graphs, composition of facts is key to
+achieving common reasoning tasks.
 For example, the two triples (CarlFriedrichGauss, BornIn, Braunschweig)
-and (Braunschweig, LocatedIn, Germany) implies (CarlFriedrichGauss, BornIn Germany). 
+and (Braunschweig, LocatedIn, Germany) implies (CarlFriedrichGauss, BornIn Germany).
 Path ranking~\cite{Lao2010}, vector space traversal~\cite{guu2015traversing}
-and composition~\cite{Neelakantan2015} techniques 
-are recently developed to leverage such information for knowledge completion. 
-We note, however, that a principled formulation that can address 
-both open challenges is still missing -- namely, a relational model 
-that can model knowledge compositions in an active setting. 
+and composition~\cite{Neelakantan2015} techniques
+are recently developed to leverage such information for knowledge completion.
+We note, however, that a principled formulation that can address
+both open challenges is still missing -- namely, a relational model
+that can model knowledge compositions in an active setting.
 
 %\TODO{TODO}{revise summary-of-our-approach to be consistent w. the above}
-We propose a novel probabilistic reformulation of tensor factorisation,  
-one of the main competitive variants for knowledge completion~\cite{nickel2015review}. 
-%There are many advantages to a probabilistic formulation of tensor factorisation, 
-%such as the quantification of uncertainty by the predictive distribution, 
-%the ability to utilise priors, and the availability of principled model selection. 
+We propose a novel probabilistic reformulation of tensor factorisation,
+one of the main competitive variants for knowledge completion~\cite{nickel2015review}.
+%There are many advantages to a probabilistic formulation of tensor factorisation,
+%such as the quantification of uncertainty by the predictive distribution,
+%the ability to utilise priors, and the availability of principled model selection.
 We name our model probabilistic RESCAL (PRESCAL).
-The probabilistic model provides a natural way of 
-embracing uncertainty of triples that is crucial to develop 
+The probabilistic model provides a natural way of
+embracing uncertainty of triples that is crucial to develop
 %implementing
-an active triple selection for knowledge completion, using  
+an active triple selection for knowledge completion, using
 Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
 which allows us to trade-off exploration and exploitation when identifying new triples.
 %randomized probability matching, also known as Thompson sampling~\cite{scott10bandit}.
-We also perform compositional training for the probabilistic model, 
-by modeling relation compositions as algebraic operations in the probabilistic embedding space. 
-For inference, we design Gibbs sampling for PRESCAL with and without compositions. 
-%with by computing conditional posteriors. 
-We employ a sequential Monte-Carlo method for the active querying of new triples, 
-called particle Thompson sampling. 
+We also perform compositional training for the probabilistic model,
+by modeling relation compositions as algebraic operations in the probabilistic embedding space.
+For inference, we design Gibbs sampling for PRESCAL with and without compositions.
+%with by computing conditional posteriors.
+We employ a sequential Monte-Carlo method for the active querying of new triples,
+called particle Thompson sampling.
 
-We first test the proposed models with synthetic datasets. 
-We observe that Thompson sampling provides significant gain over random sampling of triples; 
-we also observe a clear gain in tensors with known composition structure. 
-We then evaluated the model on three real-world relation datasets. In the passive learning setting, 
-we find PRESCAL outperforming the non-probabilistic version of tensor factorisation, 
-and that compositions help when the training set is sparse. 
-In the active learning scenario, 
-we find that PRESCAL achieves the highest cumulative gain across all datasets. 
-It is encouraging to see the exploitation-exploration strategy with uncertainty outperforming 
-active learning strategies that focus solely on exploitation or exploration. 
+We first test the proposed models with synthetic datasets.
+We observe that Thompson sampling provides significant gain over random sampling of triples;
+we also observe a clear gain in tensors with known composition structure.
+We then evaluated the model on three real-world relation datasets. In the passive learning setting,
+we find PRESCAL outperforming the non-probabilistic version of tensor factorisation,
+and that compositions help when the training set is sparse.
+In the active learning scenario,
+we find that PRESCAL achieves the highest cumulative gain across all datasets.
+It is encouraging to see the exploitation-exploration strategy with uncertainty outperforming
+active learning strategies that focus solely on exploitation or exploration.
 
-We are pleased to be able to learn a vector-space model for entities and relations with uncertainty, 
-bridging the gap of probabilistic active sampling and knowledge compositions. 
-We look forward to follow-on work with better sampling strategies and computational scalability. 
+We are pleased to be able to learn a vector-space model for entities and relations with uncertainty,
+bridging the gap of probabilistic active sampling and knowledge compositions.
+We look forward to follow-on work with better sampling strategies and computational scalability.
 }
 
 \eat{
 Statistical relational models have been proposed to tackle
-various problems of knowledge bases. For example, it can be used 
+various problems of knowledge bases. For example, it can be used
 for question understanding and answering problems ,
 or it can be integrated into a search engine
 to improve the users' search experiment \cite{dong2014knowledge}.
@@ -152,8 +157,8 @@ A goal of knowledge base construction is to acquire a maximum number
 of valid triples with a limited budget.
 This goal corresponds to a general objective of the multi-armed bandit (MAP)
 problem where we want to minimise the cumulative regret or maximise
-the cumulative reward over time. 
-In recent years, Thompson sampling has been emerged as  
+the cumulative reward over time.
+In recent years, Thompson sampling has been emerged as
 an competitive solution in MAP problems.
 We borrow Thompson sampling, which provides a principled
 way to find an optimal trade off between exploration and exploitation,
@@ -161,21 +166,21 @@ to solve the knowledge base construction problem.
 }
 
 \eat{
-We propose a compositional relation model that exploit the compositional structure of 
+We propose a compositional relation model that exploit the compositional structure of
 knowledge graph to capture the latent semantic structure of the entities and relations.
-While previously suggested vector space models provide a statistical way to infer the latent semantic 
+While previously suggested vector space models provide a statistical way to infer the latent semantic
 structure of entities and relations, but lack consideration of a graph structure of a knowledge base itself.
 
-In a separate way from the vector space models, graph feature algorithms such as the path ranking algorithm 
-are suggested to fill a missing part of a knowledge graph \cite{Lao2010}. The graph feature algorithms 
-directly include graph structures, such as edge type, node type, and node degree, to learn and predict new 
-triples, however, the absence of latent structure makes the models failed to predict a new triple when the 
+In a separate way from the vector space models, graph feature algorithms such as the path ranking algorithm
+are suggested to fill a missing part of a knowledge graph \cite{Lao2010}. The graph feature algorithms
+directly include graph structures, such as edge type, node type, and node degree, to learn and predict new
+triples, however, the absence of latent structure makes the models failed to predict a new triple when the
 target entities does not have rich structural background\cite{nickel2015review}.
 
-We propose a compositional vector space model that benefits the latent representation of vector space model 
-along with the graph structure of the graph feature models. Recently, Guu et. al. suggest a compositional 
-training framework for vector space models \cite{gu2015traversing}, where paths over a knowledge graph act 
-as a new form of structural regularisation of the models. Based on their work, we extend the compositional 
+We propose a compositional vector space model that benefits the latent representation of vector space model
+along with the graph structure of the graph feature models. Recently, Guu et. al. suggest a compositional
+training framework for vector space models \cite{gu2015traversing}, where paths over a knowledge graph act
+as a new form of structural regularisation of the models. Based on their work, we extend the compositional
 approach within a probabilistic framework with two compositional structures.
 }
 
@@ -208,7 +213,7 @@ completion.
 We additionally consider compositional relations as an additional source of weak information
 to further utilise the existing (incomplete) knowledge items.
 
-Goal of this paper 1: Populating knowledge graph with an active label acquisition process 
+Goal of this paper 1: Populating knowledge graph with an active label acquisition process
 corresponding to [B,C,A] in Figure \ref{fig:related3d}.
 
 [B,C,P] could be an alternative direction (or both).
