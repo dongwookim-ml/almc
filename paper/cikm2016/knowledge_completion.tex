@@ -113,8 +113,14 @@ when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL out
 across the all training proportions. 
 For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
 
-We also conduct a compositional triple prediction. 
-10\% of UMLS dataset is used for training. 
+The goal of the compositional models is to factorise triples along with the graph structure as a whole. 
+The triple prediction task tells us the trained model is capable of triple prediction, 
+but does not tell whether the features containing the graph structure. 
+%Both models perform well in triple prediction, but this does not tell 
+If the model factorise the graph structure properly, 
+then the trained model can predict not only triples but the graph structure as well. 
+To validate the model assumption, we evaluate a path prediction task.
+For this task, we use 10\% of UMLS dataset for training. 
 We compute the expected value of unobserved compositional triples given a trained model. 
 The non-compositional models are not capable to compute the expected value. 
 In such case, we approximate the triples with multiplicative model assumption in Equation \ref{eqn:multi}. 
