@@ -30,14 +30,18 @@ def load_dataset(dataset):
         T[np.isnan(T)] = 0
     return T
 
-dataset = 'freebase'
+
+dataset = 'umls'
 models = ['brescal', 'bcomp_mul', 'bcomp_add', 'logit']
+# models = ['bcomp_mul', 'bcomp_add', 'logit']
 ps = np.linspace(0.01, 0.3, 10)
+ps = [0.1]
 n_dim = 10
 n_particle = 1
 var_x = 0.1
-var_comp = 10.
+var_comp = 1.
 n_test = 10
+n_test = 1
 max_iter = 0
 
 T = load_dataset(dataset)
@@ -47,6 +51,10 @@ result = dict()
 
 # keep the same index sequence for any experiments
 rnd = np.random.RandomState(seed=45342412)
+dest = '../result_tt/%s/' % (dataset)
+
+if not os.path.exists(dest):
+    os.makedirs(dest, exist_ok=True)
 
 for nt in range(n_test):
     indexes = [(k, i, j) for k, i, j in itertools.product(range(n_relation), range(n_entity), range(n_entity))]
@@ -60,23 +68,25 @@ for nt in range(n_test):
     for (k, i, j) in indexes[int(total * 0.7):]:
         testT[k, i, j] = 1
 
+    test_file = os.path.join(dest, 'test.pkl')
+    pickle.dump(testT, open(test_file, 'wb'))
+
     for p in ps:
         train = np.zeros_like(T)
         for (k, i, j) in indexes[:int(p * len(indexes))]:
             train[k, i, j] = 1
 
+        train_file = os.path.join(dest, '%.2f_train.pkl' % p)
+        pickle.dump(train, open(train_file, 'wb'))
+
         print(nt, 'Train Sum', np.sum(T[train == 1]), np.sum(train))
         for model in models:
             # destination folder where model and log files are saved
-            dest = '../result/%s/' % (dataset)
             if model == 'bcomp_add' or model == 'bcomp_mul':
                 output_file = os.path.join(dest, '%s_%.2f_%d_%.2f_%.2f_training_error.pkl' % (
-                model, p, n_dim, var_x, var_comp))
+                    model, p, n_dim, var_x, var_comp))
             else:
                 output_file = os.path.join(dest, '%s_%.2f_%d_training_error.pkl' % (model, p, n_dim))
-
-            if not os.path.exists(dest):
-                os.makedirs(dest, exist_ok=True)
 
             if not os.path.exists(output_file):
                 if model == 'brescal':
@@ -100,7 +110,7 @@ for nt in range(n_test):
                                                   var_comp=var_comp,
                                                   n_particles=n_particle, compute_score=False)
                 elif model == 'logit':
-                    _model = PFBayesianLogitRescal(n_dim, compute_score=False)
+                    _model = PFBayesianLogitRescal(n_dim, compute_score=False, n_particles=n_particle)
                 elif model == 'logit_mul':
                     _model = PFBayesianCompRescal(n_dim, compositionality='logit_mul',
                                                   n_particles=n_particle, compute_score=False)
@@ -116,4 +126,8 @@ for nt in range(n_test):
                 if (model, p) not in result:
                     result[(model, p)] = list()
                 result[(model, p)].append([val_auc, auc])
+                print(model, p, val_auc, auc)
                 pickle.dump(result, open(output_file, 'wb'))
+                pickle.dump(_model, open(os.path.join(dest, '%s_%.2f.pkl' % (model, p)), 'wb'))
+                pickle.dump(_model.E[particle], open(os.path.join(dest, 'E_%s_%.2f.pkl' % (model, p)), 'wb'))
+                pickle.dump(_model.R[particle], open(os.path.join(dest, 'R_%s_%.2f.pkl' % (model, p)), 'wb'))

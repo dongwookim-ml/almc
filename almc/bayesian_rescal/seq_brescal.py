@@ -270,6 +270,7 @@ class PFBayesianRescal:
                 tic = time.time()
                 if isinstance(givenR, type(None)):
                     self._sample_relations(cur_obs, obs_mask, E, R, self._var_r)
+                    self._sample_entities(cur_obs, obs_mask, E, R, self._var_e)
                 else:
                     self._sample_entities(cur_obs, obs_mask, E, R, self._var_e)
                 logger.info("Gibbs Init %d: %f", gi, time.time() - tic)
@@ -511,7 +512,7 @@ class PFBayesianRescal:
         E[i] = multivariate_normal(mu, inv_lambda)
 
         mean_var = np.mean(np.diag(inv_lambda))
-        logger.info('Mean variance E, %d, %f', i, mean_var)
+        # logger.info('Mean variance E, %d, %f', i, mean_var)
 
 
     def _sample_relations(self, X, mask, E, R, var_r):
@@ -542,7 +543,7 @@ class PFBayesianRescal:
             # R[k] = normal(mu, _lambda).reshape([self.n_dim, self.n_dim])
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
             mean_var = np.mean(np.diag(inv_lambda))
-            logger.info('Mean variance R, %d, %f', k, mean_var)
+            # logger.info('Mean variance R, %d, %f', k, mean_var)
         except:
             pass
 

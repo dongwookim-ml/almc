@@ -214,7 +214,7 @@ class PFBayesianCompRescal:
             # initialize latent variables with gibbs sampling
             E = np.random.random([self.n_entities, self.n_dim])
             R = np.random.random([self.n_pure_relations, self.n_dim, self.n_dim])
-            R = givenR
+            #R = givenR
 
             for gi in range(self.gibbs_iter):
                 tic = time.time()
@@ -507,7 +507,7 @@ class PFBayesianCompRescal:
         try:
             E[i] = multivariate_normal(mu, inv_lambda)
             mean_var = np.mean(np.diag(inv_lambda))
-            logger.info('Mean variance E, %d, %f', i, mean_var)
+            # logger.info('Mean variance E, %d, %f', i, mean_var)
         except:
             logger.debug('Sample E error, %d', i)
 
@@ -616,7 +616,7 @@ class PFBayesianCompRescal:
         try:
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
             mean_var = np.mean(np.diag(inv_lambda))
-            logger.info('Mean variance R, %d, %f', k, mean_var)
+            # logger.info('Mean variance R, %d, %f', k, mean_var)
         except:
             logger.debug('Sample R error, %d', k)
 
@@ -654,7 +654,7 @@ class PFBayesianCompRescal:
         try:
             R[k] = multivariate_normal(mu, inv_lambda).reshape([self.n_dim, self.n_dim])
             mean_var = np.mean(np.diag(inv_lambda))
-            logger.info('Mean variance R, %d, %f', k, mean_var)
+            # logger.info('Mean variance R, %d, %f', k, mean_var)
         except:
             logger.debug('Sample R error, %d', k)
 
