@@ -32,7 +32,7 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 	\centering
 	\includegraphics[width=0.7\linewidth]{images/path_prediction2.pdf}
 	\caption{\label{fig:path_pred} Path prediction result with UMLS. 
-	Both compositional models show consistent predictive performance 
+	The performances of both compositional models remain consistent 
 	whereas those of the non-compositional models drop sharply as the length increases.}
 \end{figure}
 
@@ -120,7 +120,7 @@ The non-compositional models are not capable to compute the expected value.
 In such case, we approximate the triples with multiplicative model assumption in Equation \ref{eqn:multi}. 
 We vary the compositional length from 1 (triple) to 4, and measure ROC-AUC scores on the reconstructed compositional triples. 
 Figure \ref{fig:path_pred} shows the result. 
-Both compositional model shows consistent performance regardless of the compositional length. 
+Both compositional models show consistent performance regardless of the compositional length. 
 It is worth emphasising that although the compositional length for training is 2, 
 the compositional models show consistent results on predicting triples of length 3 and 4. 
 Table \ref{tbl:path_example} shows an example of the path prediction result 

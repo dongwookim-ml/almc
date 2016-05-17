@@ -102,7 +102,9 @@ Equation \ref{eqn:triple_gen}. We then synthesise two sets of expanded tensors
 using the previously used entities and relations based on the multiplicative 
 and additive compositional assumptions, defined in Sec \ref{sec:comp}, 
 respectively. So we synthesise fully observable expanded tensor $\mathcal{X}^L$ 
-where $L=2$. We set both variance parameter $\sigma_x$ and $\sigma_c$ to 0.1. Note that in real world situation, the expanded tensor can be only constructed through the observed triples, and the triples in the expanded tensor cannot be queried.
+where $L=2$. We set both variance parameter $\sigma_x$ and $\sigma_c$ to 0.1. 
+Note that in a real world situation, the expanded tensor can only be constructed 
+through the observed triples, and the triples in the expanded tensor cannot be queried.
 
 \begin{figure*}[t]
 	\centering
@@ -158,7 +160,9 @@ model and maximising the valid triples in a knowledge base, with two different q
 ~\cite{kajino2015active}. 
 AMDC-PRED is a predictive model construction strategy and chooses a triple which is the most ambiguous (close to the decision boundary) at each time $t$.
 AMDC-POP is a population strategy which aims to maximise the number of valid triples in a knowledge base, choosing a triple with the highest expected value at each time.  
-To train all models we only use the observed triples up to the current time. For the passive learning with PRESCAL, we generate a random sample at each time period. For the particle Thompson sampling models, we set variance parameter $\sigma_e$ and $\sigma_r$ to 1, $\sigma_x$ to 0.1, and vary $\sigma_c$ from 1 to 100.
+To train all models we only use the observed triples up to the current time. 
+For the passive learning with PRESCAL, we generate a random sample at each time period. 
+For the particle Thompson sampling models, we set variance parameter $\sigma_e$ and $\sigma_r$ to 1, $\sigma_x$ to 0.1, and vary $\sigma_c$ from 1 to 100.
 
 We leave 30 \% of triples as a test set to measure test error. 
 At each time period, each model choose one triple to query, 
