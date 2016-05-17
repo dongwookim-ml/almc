@@ -181,7 +181,7 @@ the test set to understand how this balanced querying strategy results in making
 \textbf{Exploitation and exploration}: 
 Figure \ref{fig:vs_greedy} and \ref{fig:vs_comp} show
 the cumulative gains and ROC-AUC scores of the Thompson sampling on three real datasets.
-PNORMAL performs better than other baseline models for the cumulative gain, and shows comparable result for the ROC-AUC scores. Both compositional models perform worse than PNORMAL across all datasets.
+PNORMAL-TS performs better than other baseline models for the cumulative gain, and shows comparable result for the ROC-AUC scores. Both compositional models perform worse than PNORMAL-TS across all datasets.
 
 In the original AMDC work \cite{kajino2015active}, AMDC-POP model obtains more 
 valid triples than AMDC-PRED, and AMDC-PRED shows high ROC-AUC scores than AMDC-POP. 
@@ -212,7 +212,7 @@ the importance of balancing between exploitation and exploration.
 \end{figure}
 
 We note that the compositional model performs worse than the non-compositional models,
-especially than PNORMAL, as shown in Figure \ref{fig:vs_comp}.
+especially than PNORMAL-TS, as shown in Figure \ref{fig:vs_comp}.
 This is counter-intuitive to our general understanding where
 the model that performs well in the predictive task also shows 
 a better performance in the active learning. 
@@ -220,13 +220,13 @@ Of course, we also emphasis the difference between two experiments;
 the goal of active acquisition is to maximise the number of triples 
 whereas the goal of knowledge completion in Section \ref{sec:exp1} is to maximise 
 the predictive performance. Nevertheless, the compositional models do not outperform 
-PNORMAL in the active learning.
+PNORMAL-TS in the active learning.
 This result can be partially understood in terms of the balance between 
 exploration-exploitation. Figure \ref{fig:pos_var} shows the average posterior variance of 
 the entity vectors. We compute the eigenvalues of posterior covariance matrix $\Lambda_i^{-1}$ 
 and trace the average eigenvalues over the iterations. 
 As shown in the figure, the average variance of the compositional model shrinks much faster 
-than the PNORMAL. Because the exploration-exploitation of the Thompson sampling depends on the
+than the PNORMAL-TS. Because the exploration-exploitation of the Thompson sampling depends on the
 posterior uncertainty, the fast shrinkage in the posterior variance may indicate the under 
 exploration of the model. This is predictable to a certain extent in the sense that one new triple with the compositional models induces multiple new 
 observations in the compositional triples, so the uncertainties of entities and 
