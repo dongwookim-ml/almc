@@ -1,32 +1,40 @@
 %!TEX root = ./cikm2016.tex
-\section{Discussion}
-We have proposed a novel compositional relational model with uncertainty and presented the
-Thompson sampling for both compositional and non-compositional models to solve both knowledge completion and active knowledge population problems.
-The compositional model aims to infer the latent features of knowledge 
-bases by incorporating an additional graph structure. In the passive 
-learning scenario, the compositional model outperforms the other models, 
-especially, when training size is relatively small. 
-In the active learning scenario, probabilistic RESCAL achieves the highest 
-cumulative gain across all datasets. Again, this result emphasise the 
-importance of being balanced between exploration and exploitation. 
+\section{Discussion and Conclusion}
+We consider two tasks when constructing knowledge graphs:
+populating it from external sources,
+and completing it using known knowledge items~\cite{dong2014knowledge}.
+In contrast to previous work~\cite{kajino2015active}, that
+views knowledge population and knowledge completion as separate problems,
+we propose an approach that enables a common modelling and computation solution
+for both tasks.
+\eat{
+We find this observation true when the algorithm has a warm-start,
+i.e. already having a fair amount of data before active learning starts;
+when the information is sparse, the same strategy works for both maximising
+recall and reducing uncertainty.
+}
+We propose a novel compositional relational model with uncertainty and
+demonstrate that it improves over the non-probabilistic and non-compositional
+model~\cite{nickel2011three}.
+The compositional model infers the latent features of knowledge
+bases by incorporating an additional graph structure~\cite{guu2015traversing}.
+We investigate the paths arising from the compositional
+models and show that it can capture previously unavailable knowledge. A visualisation
+of the entity embeddings show a correlation with the types provided in the meta-data.
+Using the same model, we investigate the incremental knowledge population task, and propose
+a Thompson sampling method for both compositional and non-compositional models.
+In the passive learning scenario, the compositional model outperforms the other models,
+especially, when training size is relatively small.
+In the active learning scenario, probabilistic RESCAL achieves the highest
+cumulative gain across all datasets. This result emphasises the
+importance of balancing exploration and exploitation.
 
-Previous work such as the one by \cite{kajino2015active} 
-views knowledge population 
-and knowledge completion are separate problems. 
-We find this observation true when the algorithm has a warm-start, 
-i.e. already having a fair amount of data before active learning starts; 
-when the information is sparse, the same strategy works for both maximising 
-recall and reducing uncertainty.  
-\eat{This finding
-may hold for some scenarios where their is already a proper amount of 
-information to exploit the structure we want to maximise, but the finding 
-is not consistence in more conservative cases.}
-Thompson sampling has been studied in the context of multi-armed bandit 
-problems where the goal is to maximise cumulative gains or minimise cumulative 
-regrets over time, whereas its performance on making a predictive model has not 
-been widely discussed so far. Its performance on building a generalisable model 
-was unclear. Throughout this work, we have empirically shown that maximising 
-cumulative gain entails the predictive models as well.
-In the long run, we see this work as a promising step towards using a composition-aware knowledge 
-completion system to connect with the 
-knowledge based construction problem~\cite{dong2014knowledge}. %, with rich graph structures. 
+Thompson sampling has been studied in the context of multi-armed bandit
+problems where the goal is to maximise cumulative gains or minimise cumulative
+regrets over time, whereas its performance on making a predictive model has not
+been widely discussed so far. Its performance on building a generalisable model
+was unclear. Throughout this work, we have empirically shown that maximising
+cumulative gain entails good predictive models as well.
+In the long run, we see this work as a promising step towards using a composition-aware knowledge
+completion system to connect with the
+knowledge based construction problem. %, with rich graph structures.
