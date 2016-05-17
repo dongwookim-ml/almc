@@ -15,7 +15,8 @@ Despite the endeavour toward to construct a complete knowledge graph,
 even the largest commercialised knowledge graph is still far from complete~\cite{dong2014knowledge}. 
 {\bf Knowledge completion} task has emerged as a complement of the knowledge population 
 to scale up the knowledge graph construction. 
-Unlike the knowledge population task, the goal of knowledge completion is to maximise the prediction performance on unseen triples. Several statistical relational models has been proposed to infer missing facts from known facts~\cite{Lao2010,nickel2011three}.
+Unlike the knowledge population task, the goal of knowledge completion is to correctly predict unseen triples based on the known triples. 
+Several statistical relational models has been proposed so far~\cite{Lao2010,nickel2011three}.
 %Unlike the knowledge population task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise a prediction performance on unseen triples through a statistical analysis on the extracted information \cite{guu2015traversing,Lao2010}.
 %There are two main knowledge completion approaches. First, latent feature models factorise entities and relations to predict unseen triples. Second, graph feature models 
 
@@ -25,7 +26,7 @@ the construction relies solely on the contribution of human experts.
 Manual labelling is often slow and costly. 
 Therefore, we need a systematic way of selecting triples that will be labelled, in order to maximise the performance of the following knowledge completion.
 Recently, Kajino et al. propose an active learning strategy for populating knowledge graph~\cite{kajino2015active}; 
-however the algorithm have problems simultaneously achieving both construction goals.
+however the algorithm had problems simultaneously achieving high recall and faithful reconstruction.
 %Active learning may provide a systematic way of selecting a data point to be labelled. 
 %Many statistical models has been proposed for knowledge graph completion. 
 %The combination between these models and active learning approach can be used for the active knowledge population.
