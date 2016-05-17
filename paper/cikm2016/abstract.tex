@@ -28,10 +28,10 @@ that balance recall and reconstruction accuracy.
 }
 
 A knowledge base construction consists of a two-step approach; extracting information from external sources, known as knowledge population, and inferring missing information through a statistical analysis on the extracted information, known as knowledge completion.
-In many cases, however, there is not enough external sources to extract information. An active knowledge population via labelling of human experts can help to reduce the gap between two processes. 
-In this paper, we propose a new probabilistic knowledge base factorisation method that benefits from the graph path structure of existing knowledge (e.g. syllogism). This explicit probabilistic formulation enable us to develop an active population model based on exploitation-exploration strategies.
-We demonstrate that the compositional knowledge factorisation results a better performance on the knowledge completion task. Whereas the model performs worse in the active population.
-The result leads to a counter-intuitive conclusion; a better predictive model does not guarantee to have a better active population model.
+In many cases, however, there is not enough external sources to extract information. 
+An incremental knowledge population via labelling of human experts can help to reduce the gap between two processes. 
+In this paper, we propose a new probabilistic knowledge base factorisation method that benefits from the graph path structure of existing knowledge (e.g. syllogism). This explicit probabilistic formulation enable us to develop an incremental population model based on exploitation-exploration strategies.
+We demonstrate that the factorisation model with the graph path performs better on the knowledge completion task. Whereas the model without the graph path performs better in the incremental population.
+The result leads to a counter-intuitive conclusion; a better predictive model does not guarantee to have a better performance in incremental population.
 An additional experiment explains the degeneracy under the model uncertainty.
-
 \end{abstract}

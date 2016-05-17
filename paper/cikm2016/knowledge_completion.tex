@@ -5,7 +5,7 @@
 \begin{table}[t]
 \centering
 \caption{\label{tbl:dataset}Description of datasets. 
-Sparsity denotes the ration of valid triples to invalid triples.}
+Sparsity denotes the ratio of valid triples to invalid triples.}
 \vskip 0.15in
 \begin{tabular}{l | r | r | r | r}
 Dataset &  \# rel & \# entities & \# triples & sparsity \\ \hline
@@ -126,7 +126,8 @@ The non-compositional models are not capable to compute the expected value.
 In such case, we approximate the triples with multiplicative model assumption in Equation \ref{eqn:multi}. 
 We vary the compositional length from 1 (triple) to 4, and measure ROC-AUC scores on the reconstructed compositional triples. 
 Figure \ref{fig:path_pred} shows the result. 
-Both compositional models show consistent performance regardless of the compositional length. 
+Both compositional models show consistent performance regardless of the path length. However, the performance of the non-compositional models drops sharply as the length increases.
+The results show the compositional models preserve a graph structure in the embedded space.
 It is worth emphasising that although the compositional length for training is 2, 
 the compositional models show consistent results on predicting triples of length 3 and 4. 
 Table \ref{tbl:path_example} shows an example of the path prediction result 

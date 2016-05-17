@@ -30,7 +30,7 @@
 \end{algorithmic}
 \end{algorithm}
 
-We now introduce a particle Thompson sampling algorithm for the active knowledge population with the proposed PRESCAL models. In the active population task, a knowledge base starts with zero or initial observations, and at each time period, we select one triple to be queried and labelled by an external system, i.e. human experts. The queried triple is chosen selectively based on past observations. Each labelling requires a certain amount of expense, so the goal is to obtain as many valid triples as possible given a limited budget.
+We now introduce a particle Thompson sampling algorithm for the incremental knowledge population with the proposed PRESCAL models. In the incremental population task, a knowledge base starts with zero or initial observations, and at each time period, we select one triple to be queried and labelled by an external system, i.e. human experts. The queried triple is chosen selectively based on past observations. Each labelling requires a certain amount of expense, so the goal is to obtain as many valid triples as possible given a limited budget.
 
 Thompson sampling provides a model based query selection process, and has been gaining an increasing attention
 because of a competitive empirical performance as well as its conceptual
@@ -42,7 +42,7 @@ simplicity~\cite{li11thompson,scott10bandit}. Let $y_{1:t}$ be a sequence of rew
 where $\mathbb{I}$ is an indicator function. Note that it is sufficient
 to draw a random sample from the posterior instead computing the integral.
 
-We formulate Thompson sampling for active knowledge population
+We formulate Thompson sampling for incremental knowledge population
 system as follows.
 First, we assume there are optimal latent features $E^*$ and $R^*$, and
 the triples are generated through Equation \ref{eqn:entity_gen}$-$

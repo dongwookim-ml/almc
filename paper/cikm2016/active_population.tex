@@ -32,7 +32,7 @@
 
 
 
-\section{Experiments on Active \\ Knowledge Population}
+\section{Experiments on incremental\\ Knowledge Population}
 \label{sec:exp2}
 
 In this section, we show results for Thomson sampling of the PRESCAL and its compositional variants, first, on two synthetic datasets, and then on three common benchmarks used in the knowledge graph completion task.
@@ -118,7 +118,7 @@ through the observed triples, and the triples in the expanded tensor cannot be q
 	\subfigure[NATION]{
 	\includegraphics[width=0.3\linewidth]{images/present_vs_comp_thompson_nation_mcmc_vertical_line.pdf}				
 	}	
-	\caption{\label{fig:vs_comp} The cumulative gain and ROC-AUC score of the Thompson sampling with the non-compositional model and compositional models. Unlike the knowledge completion task in Section \ref{sec:exp1}, both compositional models perform worse than PNORMAL-TS in the active knowledge population.}
+	\caption{\label{fig:vs_comp} The cumulative gain and ROC-AUC score of the Thompson sampling with the non-compositional model and compositional models. Unlike the knowledge completion task in Section \ref{sec:exp1}, both compositional models perform worse than PNORMAL-TS in the incremental knowledge population.}
 \end{figure*}
 
 
@@ -217,7 +217,7 @@ This is counter-intuitive to our general understanding where
 the model that performs well in the predictive task also shows 
 a better performance in the active learning. 
 Of course, we also emphasis the difference between two experiments; 
-the goal of active acquisition is to maximise the number of triples 
+the goal of incremental population is to maximise the number of triples 
 whereas the goal of knowledge completion in Section \ref{sec:exp1} is to maximise 
 the predictive performance. Nevertheless, the compositional models do not outperform 
 PNORMAL-TS in the active learning.
