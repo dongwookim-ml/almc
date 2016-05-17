@@ -3,42 +3,49 @@
 \section{Introduction}
 \label{sec:intro}
 
-Relational knowledge bases structuralise our understanding about the world into the form of \textit{(entity1, relation, entity2)} triples
-that help reasoning and inferring in a wide range of tasks such as information retrieval, question answering, and semantic parsing~\cite{Dong2015,jiang2015improving,kim2013context,sondhi2014mining}.
-A construction of a knowledge base is a very active research area with many important and challenging research questions.
-The early stage of knowledge base construction relies on {\bf knowledge population} task
+Relational knowledge graphs structuralise our understanding about the world
+and help us reason and infer in a wide range of tasks such as information retrieval, question answering, and semantic parsing~\cite{Dong2015,jiang2015improving,kim2013context,sondhi2014mining}.
+A construction of a knowledge graph is a very active research area with many important and challenging research questions.
+%into the form of \textit{(entity1, relation, entity2)} triples
+The early stage of knowledge graph construction relies on {\bf knowledge population} task
 in which structured information from external sources is extracted, 
 or human experts encode a prior knowledge manually.
-Despite the endeavour toward to construct a complete knowledge base, 
-even the largest commercialised knowledge base is still far from complete~\cite{dong2014knowledge}. 
-{\bf Knowledge completion} task has been emerged as a complement of the knowledge population 
-to scale up the knowledge base construction. Unlike the knowledge population task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise the predictive performance on unseen triples through a statistical analysis on the extracted information \cite{guu2015traversing,Lao2010}.
+Despite the endeavour toward to construct a complete knowledge graph, 
+even the largest commercialised knowledge graph is still far from complete~\cite{dong2014knowledge}. 
+{\bf Knowledge completion} task has emerged as a complement of the knowledge population 
+to scale up the knowledge graph construction. Unlike the knowledge population task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise a prediction on unseen triples through a statistical analysis on the extracted information \cite{guu2015traversing,Lao2010}.
 %There are two main knowledge completion approaches. First, latent feature models factorise entities and relations to predict unseen triples. Second, graph feature models 
 
-One major obstacle of knowledge base construction is a gap between knowledge 
+One major obstacle of knowledge graph construction is a gap between knowledge 
 population and completion. For example, when there is no external source to extract knowledge,
 the construction relies solely on the contribution of human experts.
-Manual labelling is often painful and tedious. 
+Manual labelling is often slow and costly. 
 Therefore, triples that will be labelled should be chosen selectively, in order to maximise the performance of the following knowledge completion.
-Active learning may provide a systematic way of selecting a data point to be labelled based on a knowledge completion model~\cite{Settles2010}. However, it is not clear that which model from the knowledge completion should be used for the active selection because of the discrepancy between two different goals of the knowledge population and completion.
+Active learning may provide a systematic way of selecting a data point to be labelled. 
+%Many statistical models has been proposed for knowledge graph completion. 
+%The combination between these models and active learning approach can be used for the active knowledge population.
+%However, it is not clear that which model from the knowledge completion should be used for the active selection because of the discrepancy between two different goals of the knowledge population and completion.
 %However, the selection of proper model is still ambiguous and arbitrary for the active acquisition task. 
 %In the active learning literature, it is often ignored that which model for a predictive task is appropriate for its active counterpart. 
 
-We provide a model based active query selection approach to answer this question. We first reformulate a bilinear tensor factorisation~\cite{nickel2015review} in a probabilistic way, where entities and relations are embedded into latent feature space. And then we propose a novel tensor factorisation model that incorporates the graph structure of knowledge base into the factorisation model. These two probabilistic models provide a natural way of embracing uncertainty of triples that is crucial to develop 
+We provide statistical relational models, which can be used for the active query selection.%, to answer the question. 
+We first reformulate a bilinear tensor factorisation~\cite{nickel2015review} in a probabilistic way, where entities and relations are embedded into a latent feature space. And then we propose a tensor factorisation model that incorporates the graph structure of knowledge graph into the factorisation. These two probabilistic models provide a natural way of exploit uncertainty of triples that is crucial to develop 
 an active triple selection for the active knowledge population.
-With Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
-the model find an optimal trade-off between exploration and exploitation when identifying new triples.
+We employ a Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
+to find an optimal trade-off between exploration and exploitation during active selection.
 
-Based on experiments with three real-world datasets, we find that models outperforming in the knowledge completion may not perform well in the active knowledge population. Because, for the knowledge completion, it is important to find a better latent structure given current observations, for the active population, however, it is more important to measure an uncertainty of a current model in order to explore the latent space efficiently over time.
+Based on experiments with three commonly used benchmark datasets, we find that the additional graph structure helps predict unobserved triples, while the model without graph structure is more helpful in the active knowledge population task.
+%models outperforming in the knowledge completion may not perform well in the active knowledge population. 
+Because, for the knowledge completion, it is important to find a better latent structure given current observations, for the active population, however, it is more important to measure an uncertainty of a model in order to explore the latent space efficiently over time.
 As far as we know, this is the first study that explicitly reveals how the knowledge completion models result in different conclusions in the active knowledge population.
 
 The contributions of this paper can be summarised as follows:
 \begin{itemize}
-\item We propose a probabilistic reformulation of bilinear tensor factorisation that allows us to predict and measure the uncertainty of unobserved triples in Section \ref{sec:brescal}.
-\item We incorporate a compositional structure of a knowledge base into the proposed factorisation by modelling a composition of relations as an algebraic operation in the probabilistic embedding space in Section \ref{sec:comp}.
-\item We propose an active knowledge population method that efficiently explores the factorised space, guided by a principled way of exploration-exploitation via Thompson sampling algorithm in Section \ref{sec:pts}.
-\item Experiments on the knowledge completion with three real-world dataset show that the compositional model predicts unseen triples better than the bilinear factorisation model in Section \ref{sec:exp1}.
-\item Experiments show the importance of uncertainty in the active population. Especially, the better predictive model does not guarantee to have a better knowledge population due to an improper uncertainty measure in Section \ref{sec:exp2}.
+\item We propose a probabilistic reformulation of bilinear tensor factorisation that allows us to predict and measure the uncertainty of unobserved triples (Section \ref{sec:brescal}).
+\item We incorporate a graph path structure of a knowledge graph into the proposed factorisation by modelling a composition of relations as an algebraic operation in the probabilistic embedding space (Section \ref{sec:comp}).
+\item We propose an active knowledge population method that efficiently explores the factorised space, guided by a principled way of exploration-exploitation via Thompson sampling algorithm (Section \ref{sec:pts}).
+\item Experiments on the knowledge completion with three real-world dataset show that the compositional model predicts unseen triples better than the bilinear factorisation model (Section \ref{sec:exp1}).
+\item Experiments show the importance of uncertainty in the active population. Especially, the better predictive model does not guarantee to have a better knowledge population due to an improper uncertainty measure (Section \ref{sec:exp2}).
 \end{itemize}
 
 \eat{
