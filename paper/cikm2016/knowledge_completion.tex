@@ -37,8 +37,8 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 \end{figure}
 
 \begin{table*}[t]
-\center
 \small
+\center
 \caption{\label{tbl:path_example} Example of path prediction from UMLS data. We predict top 5 entities in compositional triples starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces}. Correct entities are bolded.}
 
 \subfigure[Triple prediction: \texttt{(MB Dysfunction, Affects, -)}]{
@@ -86,13 +86,14 @@ We evaluate the PRESCAL models on three benchmark datasets and compare the perfo
 algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each 
 dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washington.edu/papers/kok07/}.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 	\centering
 	
-	\includegraphics[width=0.7\linewidth]{images/embedding_nation.pdf}
+%	\includegraphics[width=0.7\linewidth]{images/embedding_nation.pdf}
+	\includegraphics[width=0.95\linewidth]{images/embedding_nation_small.pdf}	
 
 	\caption{\label{fig:tsne} Embedding multi-dimensional entities of the NATION dataset into a two-dimensional space through tSNE \cite{VanDerMaaten2008}. The size of circle in PNORMAL is proportional to the uncertainty of entities in the embedded space. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities.}
-\end{figure*}
+\end{figure}
 
 For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
 from 1\% to 13\% of datasets. For RESCAL, we use the authors' implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For PRESCAL and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
@@ -121,18 +122,18 @@ If the model factorise the graph structure properly,
 then the trained model can predict not only triples but the graph structure as well. 
 To validate the model assumption, we evaluate a path prediction task.
 For this task, we use 10\% of UMLS dataset for training. 
-We compute the expected value of unobserved compositional triples given a trained model. 
+We compute the expected value of unobserved path given a trained model. 
 The non-compositional models are not capable to compute the expected value. 
-In such case, we approximate the triples with multiplicative model assumption in Equation \ref{eqn:multi}. 
-We vary the compositional length from 1 (triple) to 4, and measure ROC-AUC scores on the reconstructed compositional triples. 
+In such case, we approximate paths with multiplicative model assumption in Equation \ref{eqn:multi}. 
+We vary the path length from 1 (triple) to 4, and measure ROC-AUC scores on the reconstructed compositional triples. 
 Figure \ref{fig:path_pred} shows the result. 
 Both compositional models show consistent performance regardless of the path length. However, the performance of the non-compositional models drops sharply as the length increases.
 The results show the compositional models preserve a graph structure in the embedded space.
 It is worth emphasising that although the compositional length for training is 2, 
-the compositional models show consistent results on predicting triples of length 3 and 4. 
+the compositional models show consistent results on predicting path of length 3 and 4. 
 Table \ref{tbl:path_example} shows an example of the path prediction result 
 starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces}. 
-Both compositional and non-compositional models predict length-1 triples well. 
-With length-2 compositional triples, only the compositional models can capture correct entities on top 5.
+Both compositional and non-compositional models predict triples well. 
+For length-2 path prediction, only the compositional models can capture correct entities on top 5.
 
 We visualise the multi-dimensional entities inferred from RESCAL and PNORMAL of the NATION dataset into a two-dimensional space through tSNE \cite{VanDerMaaten2008} in Figure \ref{fig:tsne}. The probabilistic interpretation gives a systematic way to measure the uncertainty of obtained entities while the RESCAL cannot.
