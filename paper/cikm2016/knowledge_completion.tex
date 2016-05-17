@@ -116,7 +116,7 @@ For KINSHIP, however, the model performs better when the training proportion is 
 
 The goal of the compositional models is to factorise triples along with the graph structure as a whole. 
 The triple prediction task tells us the trained model is capable of triple prediction, 
-but does not tell whether the features containing the graph structure. 
+but does not tell whether the features can recover the graph structure. 
 %Both models perform well in triple prediction, but this does not tell 
 If the model factorise the graph structure properly, 
 then the trained model can predict not only triples but the graph structure as well. 
@@ -127,7 +127,8 @@ The non-compositional models are not capable to compute the expected value.
 In such case, we approximate paths with multiplicative model assumption in Equation \ref{eqn:multi}. 
 We vary the path length from 1 (triple) to 4, and measure ROC-AUC scores on the reconstructed compositional triples. 
 Figure \ref{fig:path_pred} shows the result. 
-Both compositional models show consistent performance regardless of the path length. However, the performance of the non-compositional models drops sharply as the length increases.
+Both compositional models show consistent performance regardless of the path length. 
+However, the performance of the non-compositional models drops sharply as the length increases.
 The results show the compositional models preserve a graph structure in the embedded space.
 It is worth emphasising that although the compositional length for training is 2, 
 the compositional models show consistent results on predicting path of length 3 and 4. 
