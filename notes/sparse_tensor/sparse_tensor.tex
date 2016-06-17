@@ -1,0 +1,101 @@
+% !TEX TS-program = pdflatexmk
+\documentclass{article}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[a4paper, total={6in, 8in}]{geometry}
+\usepackage{amsthm}
+\usepackage{natbib}
+
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\title{Sparse Graph Prior for Knowledge Graph}
+\date{\today}
+\author{Dongwoo Kim\\ANU}
+
+\begin{document}
+
+\maketitle
+
+\section{CRM}
+A CRM $\mu$ on $\mathbb{R}_+$ is a random measure such that for any countable number of disjoint measurable sets $A_1, A_2, ...$ of $\mathbb{R}_+$, the random variable $\mu(A_1), \mu(A_2), ...$ are independent and $\mu(\cup_i A_i) = \sum_i \mu(A_i)$. If one assumes that the distribution of $\mu([t,s])$ only depends on $t-s$ then the CRM takes the form of $\mu = \sum_{i=1}^{\infty}w_i\delta_{\theta_i}$ where $(w_i, \theta_i)$ are the points of a Poisson point process on $\mathbb{R}_+^2$ with mean measure $\nu(dw, d\theta) = \rho(dw)\lambda(d\theta)$. The Laplace transform of $\mu(A)$ on any measurable set $A$ has a following representation: $\mathbb{E}[e^{-t\mu(A)}] = \exp(-\int_{\mathbb{R}_+ \times A}(1-e^{-tw})\rho(dw)\lambda(d\theta))$ for any $t>0$ and $\rho$ such that $\int_{\mathbb{R}_+}(1-e^{-w})\rho(dw) < \infty$.
+
+\section{Caron and Fox Model}
+
+\cite{Caron2015} propose a simple point process on $\mathbb{R}^2$ as a product measure of a complete random measure. They propose a hierarchical model for undirected graphs
+\begin{align}
+\mu &= \sum_{i=1}^{\infty} w_i \delta_{\theta_i} & &\mu \sim \text{CRM}(\rho, \lambda)\\
+D &= \sum_{i,j} n_{ij} \delta_{\theta_i, \theta_j} & &D|\mu \sim \text{PP}(\mu \times \mu)\\
+Z &=\sum_{i,j} \min(n_{ij} + n_{ji}, 1)\delta_{\theta_i, \theta_j}, \label{eqn:cnf}&&
+\end{align}
+with L\'{e}vy intensity measure $\rho$ and Lebesgue measure $\lambda$ where $\rho$ is a jump part of the measure. $D$ is simply generated from a Poisson process with a product measure as an intensity and can be interpreted as a directed multi-graph.
+Given $\mu$, we can directly specify the undirected graph $Z$ as
+\[ Pr(z_{ij}=1|w) = 
+  \begin{cases}
+    1 - \exp(-2w_iw_j)       & \quad i \neq j\\
+    1 - \exp(-w_i^2) & \quad i = j.\\
+  \end{cases}
+\]
+
+They show that the resulting graph is sparse, i.e. \# of edges = $o$(\# of nodes$^2$)\footnote{only counts the nodes which has at least one edge}, if the intensity measure is
+\begin{align}
+\rho(dw) = \frac{1}{\Gamma(1-\sigma)}w^{-1-\sigma}e^{-\tau w}dw,
+\end{align}
+where the two parameters range
+\begin{align}
+(\sigma, \tau) \in (0,1) \times [0, +\infty)
+\end{align}
+and dense if the intensity measure is finite activity, i.e. $\int_{0}^{\infty} \rho(w)dw < \infty$.
+
+The general construction of the sparse graph in Equation \ref{eqn:cnf} results an infinite number of edges due to $\mu(\mathbb{R}_+) = \infty$. A restriction of Lebesgue measure $\lambda$ on $[0, \alpha]$ is used to obtain a finite graph ($\lambda_\alpha = \lambda\delta_{[0, \alpha]}$). Therefore, restricted graph $Z_\alpha$ is defined on the box $[0,\alpha]^2$. We also denote the total mass on $[0, \alpha]^2$ by $Z_\alpha^* = Z_\alpha([0, \alpha]^2)$, and similarly for $D_\alpha^*$ and $\mu_\alpha^*$.
+
+\section{Sparse Prior for Knowledge Graph}
+A knowledge base consists of a set of triples (entity, entity, relation) such as (BarackObama, bornIn, Hawaii). The set of triples can be represented as a binary-valued three-way tensor where three dimensions represent entity, entity, and relation, respectively. Here, we directly extend the Caron and Fox's model for the three-way tensor based on two independent completely random measures.
+\begin{align}
+\mu &= \sum_{i=1}^{\infty} w_i \delta_{\theta_i} & &\mu \sim \text{CRM}(\rho, \lambda)\\
+\mu' &= \sum_{k=1}^{\infty} w_k \delta_{\theta_k'} & &\mu' \sim \text{CRM}(\rho', \lambda)\\
+D &= \sum_{i,j,k} n_{ijk} \delta_{\theta_i, \theta_j, \theta_k'}& &D \sim \text{PP}(\mu \times \mu \times \mu') && \\
+Z &=\sum_{i,j,k} \min(n_{ijk}, 1)\delta_{\theta_i, \theta_j, \theta_k'}, &&
+\end{align}
+where $Z$ is asymmetric in $i$ and $j$ since the knowledge graph is a directed multi-graph. As done in the original model, we can also specify $Z$ as
+\[ Pr(z_{ijk}=1|w, w') = 
+  \begin{cases}
+    1 - \exp(-w_iw_jw_k')       & \quad i \neq j\\
+    1 - \exp(-w_i^2w_k') & \quad i = j.\\
+  \end{cases}
+\]
+If we consider $\theta_i$, $\theta_j$, and $\theta_k'$ as nodes in the graph, the above construction will generate a hypergraph where each edge connects three nodes. In the notion of knowledge graphs, it is more intuitive that the relation is a type of edge between two entities. In this case, we define two random measures on $\mathbb{R}_+^2$:
+\begin{align}
+\bar{D} &= \sum_{i,j}\sum_{k}z_{ijk}\delta_{\theta_i,\theta_j}\\
+\bar{Z} &= \sum_{i,j}\min(\bar{D}(\{\theta_i, \theta_j\}), 1) \delta_{\theta_i,\theta_j},
+\end{align}
+where $\bar{D}$ is a multigraph, and $\bar{Z}$ is a binary graph of a knowledge base.
+\[ Pr(\bar{z}_{ij}=1|w, w') = 
+  \begin{cases}
+    1 - \exp(-w_iw_j\sum_{k}w_k')       & \quad i \neq j\\
+    1 - \exp(-w_i^2\sum_{k}w_k') & \quad i = j.\\
+  \end{cases}
+\]
+To obtain a finite hypergraph (the number of edges is finite), we consider restrictions ${D}_{\alpha\beta}$ and ${Z}_{\alpha\beta}$ to the box $[0,\alpha]^2\times[0,\beta]$. We denote by $Z_{\alpha\beta}^* = Z_{\alpha\beta}([0,\alpha]^2\times[0,\beta])$ the total mass on the restricted area, and similar for $D_{\alpha\beta}^*$ and $\mu_{\alpha}^*$.
+
+\subsection{Sparsity}
+
+\begin{theorem} Consider the point process $\bar{Z}$ with infinite-activity intensity measures $\rho(dw)$ and $\rho'(dw')$. Given $\mu'$ from $\rho'(dw')$, the number of edges in $\bar{Z}_{\alpha}$ grows quadratically as $\alpha \rightarrow \infty$ almost surely.
+\end{theorem}
+\begin{proof}
+$\sum_{k=1}^{\infty} w_k' < \infty$ a.s.
+\end{proof}
+
+\begin{theorem} Consider the point process $\bar{Z}$ with infinite-activity intensity measures $\rho(dw)$ and $\rho'(dw')$. Given $\mu'$ from $\rho'(dw')$, the number of nodes in $\bar{Z}_{\alpha}$ grows superlinearly as $\alpha \rightarrow \infty$ almost surely.
+\end{theorem}
+\begin{proof}
+\end{proof}
+
+\bibliographystyle{apalike}
+\bibliography{ref}
+
+\end{document}
