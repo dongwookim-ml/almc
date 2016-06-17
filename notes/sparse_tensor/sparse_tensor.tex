@@ -87,12 +87,17 @@ To obtain a finite hypergraph (the number of edges is finite), we consider restr
 \begin{theorem} Consider the point process $\bar{Z}$ with infinite-activity intensity measures $\rho(dw)$ and $\rho'(dw')$. Given $\mu'$ from $\rho'(dw')$, the number of edges in $\bar{Z}_{\alpha}$ grows quadratically as $\alpha \rightarrow \infty$ almost surely.
 \end{theorem}
 \begin{proof}
-$\sum_{k=1}^{\infty} w_k' < \infty$ a.s.
+$\sum_{k=1}^{\infty} w_k' < \infty$ a.s. When $\mu'$ is given and the sum of $w_k'$ is finite a.s., we can use the same proof technique used in \cite{Caron2015}.
 \end{proof}
+What if $\mu'$ is not given? Let $(X_i)$ and $(Y_k)$ be i.i.d. real-valued random variable from $p$ and $q$, respectively, and let $h(x_1, x_2, y_1)$ be a measurable function symmetric in the first two arugments. 
+\begin{align}
+\frac{2 \sum_{i<j}\sum_{k} h(X_i, X_j, Y_k)}{n_x(n_x -1) n_y} \xrightarrow[]{?} \mathbb{E}[h(X_i, X_j, Y_k)]\quad a.s.\quad as \quad n\rightarrow \infty
+\end{align}
 
 \begin{theorem} Consider the point process $\bar{Z}$ with infinite-activity intensity measures $\rho(dw)$ and $\rho'(dw')$. Given $\mu'$ from $\rho'(dw')$, the number of nodes in $\bar{Z}_{\alpha}$ grows superlinearly as $\alpha \rightarrow \infty$ almost surely.
 \end{theorem}
 \begin{proof}
+.
 \end{proof}
 
 \bibliographystyle{apalike}

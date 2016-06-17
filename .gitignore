@@ -70,3 +70,4 @@ result
 notes/*.pdf
 paper/*.pdf
 result*/
+sparse_tensor.pdf
