@@ -29,8 +29,8 @@ A CRM $\mu$ on $\mathbb{R}_+$ is a random measure such that for any countable nu
 \cite{Caron2015} propose a simple point process on $\mathbb{R}^2$ as a product measure of a complete random measure. They propose a hierarchical model for undirected graphs
 \begin{align}
 \mu &= \sum_{i=1}^{\infty} w_i \delta_{\theta_i} & &\mu \sim \text{CRM}(\rho, \lambda)\\
-D &= \sum_{i,j} n_{ij} \delta_{\theta_i, \theta_j} & &D|\mu \sim \text{PP}(\mu \times \mu)\\
-Z &=\sum_{i,j} \min(n_{ij} + n_{ji}, 1)\delta_{\theta_i, \theta_j}, \label{eqn:cnf}&&
+D &= \sum_{i,j} n_{ij} \delta_{(\theta_i, \theta_j)} & &D|\mu \sim \text{PP}(\mu \times \mu)\\
+Z &=\sum_{i,j} \min(n_{ij} + n_{ji}, 1)\delta_{(\theta_i, \theta_j)}, \label{eqn:cnf}&&
 \end{align}
 with L\'{e}vy intensity measure $\rho$ and Lebesgue measure $\lambda$ where $\rho$ is a jump part of the measure. $D$ is simply generated from a Poisson process with a product measure as an intensity and can be interpreted as a directed multi-graph.
 Given $\mu$, we can directly specify the undirected graph $Z$ as
@@ -41,7 +41,7 @@ Given $\mu$, we can directly specify the undirected graph $Z$ as
   \end{cases}
 \]
 
-They show that the resulting graph is sparse, i.e. \# of edges = $o$(\# of nodes$^2$)\footnote{only counts the nodes which has at least one edge}, if the intensity measure is
+They show that the resulting graph is sparse, i.e. \# of edges = $o$(\# of nodes$^2$)\footnote{only counts the nodes which has at least one edge}, if the intensity measure\footnote{This is the L\'{e}vy intensity of the generalised gamma process} is
 \begin{align}
 \rho(dw) = \frac{1}{\Gamma(1-\sigma)}w^{-1-\sigma}e^{-\tau w}dw,
 \end{align}
@@ -58,8 +58,8 @@ A knowledge base consists of a set of triples (entity, entity, relation) such as
 \begin{align}
 \mu &= \sum_{i=1}^{\infty} w_i \delta_{\theta_i} & &\mu \sim \text{CRM}(\rho, \lambda)\\
 \mu' &= \sum_{k=1}^{\infty} w_k \delta_{\theta_k'} & &\mu' \sim \text{CRM}(\rho', \lambda)\\
-D &= \sum_{i,j,k} n_{ijk} \delta_{\theta_i, \theta_j, \theta_k'}& &D \sim \text{PP}(\mu \times \mu \times \mu') && \\
-Z &=\sum_{i,j,k} \min(n_{ijk}, 1)\delta_{\theta_i, \theta_j, \theta_k'}, &&
+D &= \sum_{i,j,k} n_{ijk} \delta_{(\theta_i, \theta_j, \theta_k')}& &D \sim \text{PP}(\mu \times \mu \times \mu') && \\
+Z &=\sum_{i,j,k} \min(n_{ijk}, 1)\delta_{(\theta_i, \theta_j, \theta_k')}, &&
 \end{align}
 where $Z$ is asymmetric in $i$ and $j$ since the knowledge graph is a directed multi-graph. As done in the original model, we can also specify $Z$ as
 \[ Pr(z_{ijk}=1|w, w') = 
@@ -68,10 +68,10 @@ where $Z$ is asymmetric in $i$ and $j$ since the knowledge graph is a directed m
     1 - \exp(-w_i^2w_k') & \quad i = j.\\
   \end{cases}
 \]
-If we consider $\theta_i$, $\theta_j$, and $\theta_k'$ as nodes in the graph, the above construction will generate a hypergraph where each edge connects three nodes. In the notion of knowledge graphs, it is more intuitive that the relation is a type of edge between two entities. In this case, we define two random measures on $\mathbb{R}_+^2$:
+If we consider $\theta_i$, $\theta_j$, and $\theta_k'$ as nodes in the graph, the above construction will generate a hypergraph where each edge connects three nodes. In the notion of knowledge graphs, it is more intuitive to consider a relation as a type of edge between two entities. In this case, we define two random measures on $\mathbb{R}_+^2$:
 \begin{align}
 \bar{D} &= \sum_{i,j}\sum_{k}z_{ijk}\delta_{\theta_i,\theta_j}\\
-\bar{Z} &= \sum_{i,j}\min(\bar{D}(\{\theta_i, \theta_j\}), 1) \delta_{\theta_i,\theta_j},
+\bar{Z} &= \sum_{i,j}\min(\bar{D}(\{\theta_i, \theta_j\}), 1) \delta_{(\theta_i,\theta_j)},
 \end{align}
 where $\bar{D}$ is a multigraph, and $\bar{Z}$ is a binary graph of a knowledge base.
 \[ Pr(\bar{z}_{ij}=1|w, w') = 
@@ -81,6 +81,46 @@ where $\bar{D}$ is a multigraph, and $\bar{Z}$ is a binary graph of a knowledge 
   \end{cases}
 \]
 To obtain a finite hypergraph (the number of edges is finite), we consider restrictions ${D}_{\alpha\beta}$ and ${Z}_{\alpha\beta}$ to the box $[0,\alpha]^2\times[0,\beta]$. We denote by $Z_{\alpha\beta}^* = Z_{\alpha\beta}([0,\alpha]^2\times[0,\beta])$ the total mass on the restricted area, and similar for $D_{\alpha\beta}^*$ and $\mu_{\alpha}^*$.
+
+\subsection{Generative Process through Urn approach}
+Given restriction $\alpha$ and $\beta$, the generative process of $D_{\alpha\beta}$ can be specified as follows:
+\begin{enumerate}
+\item $\mu_\alpha \sim \text{CRM}(\rho, \lambda_\alpha)$
+\item $\mu_\beta' \sim \text{CRM}(\rho', \lambda_\beta)$
+\item $D_{\alpha\beta}^* | \mu_\alpha, \mu_\beta' \sim \text{Poisson}(\mu_\alpha^{*2}\mu_\beta^{'*})$
+\item For $d=1,...,D_{\alpha\beta}^*$:
+\begin{enumerate}
+\item $\theta_{di} \sim \frac{\mu_\alpha}{\mu_\alpha^*}$
+\item $\theta_{dj} \sim \frac{\mu_\alpha}{\mu_\alpha^*}$
+\item $\theta_{dk}' \sim \frac{\mu_\beta}{\mu_\beta^{'*}}$
+\end{enumerate}
+\item $D_{\alpha\beta} = \sum_{d=1}^{D_{\alpha\beta}^*} \delta_{(\theta_{di}, \theta_{dj}, \theta_{dk})}$,
+\end{enumerate}
+where we have used that the total mass of $D_{\alpha\beta}^*$ follows the Poisson distribution. Each node $\theta_i$ is drawn from the normalised CRM (NRM), $\frac{\mu_\alpha}{\mu_\alpha^*}$, which is discrete with probability 1. However, it is not possible to sample $\mu_\alpha$ and $\mu'_\beta$ since these measures have infinite number of atoms. Instead we can simulate finite-dimensional generative process through the urn formulation. Let $\theta_1, ..., \theta_n$ drawn from the normalised CRM $\frac{\mu_\alpha}{\mu_\alpha^*}$. Since NRM is discrete, variables $\theta_1, ..., \theta_n$ takes $l \leq n$ distinct values $\phi_l$, and $m_l$ is the number of variables corresponding to $\phi_l$.
+Since  Given total mass $\mu_\alpha^*$ and $\theta_1, ..., \theta_n$, the conditional distribution of $\theta_{n+1}$ can be modelled in terms of exchangeable partition probability function (EPPF):
+\begin{align}
+\label{eqn:eppf}
+\theta_{n+1} | \mu_\alpha^*, \theta_1,...,\theta_n \sim \frac{\Pi_{n+1}^{l+1}(m_1, ..., m_l, 1 | \mu_\alpha^*)}{\Pi_{n}^{l}(m_1, ..., m_l | \mu_\alpha^*)} \frac{1}{\alpha} \lambda_\alpha
++ \sum_{i=1}^{l}\frac{\Pi_{n+1}^{k}(m_1, ..., m_{i}+1, ..., m_l | \mu_\alpha^*)}{\Pi_{n}^{k}(m_1, ..., m_l| \mu_\alpha^*)} \delta_{\phi_l}
+\end{align}
+where
+\begin{align}
+\Pi_{n}^l(m_1, ..., m_l|\mu_\alpha^*) = \frac{\sigma^l \mu_\alpha^{*-n}}{\Gamma(n-l\sigma)g_{\sigma}(\mu_\alpha^*)} \int_{0}^{\mu_\alpha^*}s^{n-l\sigma-1}g_{\sigma}(\mu_\alpha^*-s)ds(\prod_{i=1}^{k} \frac{\Gamma(m_i-\sigma)}{\Gamma(1-\sigma)} ),
+\end{align}
+and $g_\sigma$ is the pdf of the positive stable distribution.
+Finally, the total mass of $\mu_\alpha^*$ and $\mu_\beta^{'*}$ follows an exponentially tilted stable distribution where the exact sampler exists \citep{devroye2009random,hofert2011sampling}. 
+
+Using this urn representation, we can rewrite the generative process as
+\begin{enumerate}
+\item $\mu_\alpha^* \sim P_{\mu_\alpha^*}$
+\item $\mu_\beta^{'*} \sim P_{\mu_\beta^{'*}}$
+\item $D_{\alpha\beta}^* | \mu_\alpha, \mu_\beta' \sim \text{Poisson}(\mu_\alpha^{*2}\mu_\beta^{'*})$
+\item For $d=1,...,D_{\alpha\beta}^*$:
+\begin{enumerate}
+\item Sample $\theta_{di}$, $\theta_{dj}$, and $\theta_{dk}'$ with Urn process in Eqn \ref{eqn:eppf}
+\end{enumerate}
+\item $D_{\alpha\beta} = \sum_{d=1}^{D_{\alpha\beta}^*} \delta_{(\theta_{di}, \theta_{dj}, \theta_{dk})}$,
+\end{enumerate}
 
 \subsection{Sparsity}
 
@@ -93,6 +133,7 @@ What if $\mu'$ is not given? Let $(X_i)$ and $(Y_k)$ be i.i.d. real-valued rando
 \begin{align}
 \frac{2 \sum_{i<j}\sum_{k} h(X_i, X_j, Y_k)}{n_x(n_x -1) n_y} \xrightarrow[]{?} \mathbb{E}[h(X_i, X_j, Y_k)]\quad a.s.\quad as \quad n\rightarrow \infty
 \end{align}
+If this strong law of the large numbers for two samples is correct, we may proof Theorem 3.1 in more general case ($\mu'$ is not given).
 
 \begin{theorem} Consider the point process $\bar{Z}$ with infinite-activity intensity measures $\rho(dw)$ and $\rho'(dw')$. Given $\mu'$ from $\rho'(dw')$, the number of nodes in $\bar{Z}_{\alpha}$ grows superlinearly as $\alpha \rightarrow \infty$ almost surely.
 \end{theorem}
