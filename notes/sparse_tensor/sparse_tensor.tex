@@ -22,7 +22,7 @@
 \maketitle
 
 \section{CRM}
-A CRM $\mu$ on $\mathbb{R}_+$ is a random measure such that for any countable number of disjoint measurable sets $A_1, A_2, ...$ of $\mathbb{R}_+$, the random variable $\mu(A_1), \mu(A_2), ...$ are independent and $\mu(\cup_i A_i) = \sum_i \mu(A_i)$. If one assumes that the distribution of $\mu([t,s])$ only depends on $t-s$ then the CRM takes the form of $\mu = \sum_{i=1}^{\infty}w_i\delta_{\theta_i}$ where $(w_i, \theta_i)$ are the points of a Poisson point process on $\mathbb{R}_+^2$ with mean measure $\nu(dw, d\theta) = \rho(dw)\lambda(d\theta)$. The Laplace transform of $\mu(A)$ on any measurable set $A$ has a following representation: $\mathbb{E}[e^{-t\mu(A)}] = \exp(-\int_{\mathbb{R}_+ \times A}(1-e^{-tw})\rho(dw)\lambda(d\theta))$ for any $t>0$ and $\rho$ such that $\int_{\mathbb{R}_+}(1-e^{-w})\rho(dw) < \infty$.
+A CRM $\mu$ on $\mathbb{R}_+$ is a random measure such that for any countable number of disjoint measurable sets $A_1, A_2, ...$ of $\mathbb{R}_+$, the random variable $\mu(A_1), \mu(A_2), ...$ are independent and $\mu(\cup_i A_i) = \sum_i \mu(A_i)$. If one assumes that the distribution of $\mu([t,s])$ only depends on $t-s$ then the CRM takes the form of $\mu = \sum_{i=1}^{\infty}w_i\delta_{\theta_i}$ where $(w_i, \theta_i)$ are the points of a Poisson point process on $\mathbb{R}_+^2$ with L\'{e}vy intensity measure $\nu(dw, d\theta) = \rho(dw)\lambda(d\theta)$. The Laplace transform of $\mu(A)$ on any measurable set $A$ has a following representation: $\mathbb{E}[e^{-t\mu(A)}] = \exp(-\int_{\mathbb{R}_+ \times A}(1-e^{-tw})\rho(dw)\lambda(d\theta))$ for any $t>0$ and $\rho$ such that $\int_{\mathbb{R}_+}(1-e^{-w})\rho(dw) < \infty$.
 
 \section{Caron and Fox Model}
 
@@ -32,7 +32,7 @@ A CRM $\mu$ on $\mathbb{R}_+$ is a random measure such that for any countable nu
 D &= \sum_{i,j} n_{ij} \delta_{(\theta_i, \theta_j)} & &D|\mu \sim \text{PP}(\mu \times \mu)\\
 Z &=\sum_{i,j} \min(n_{ij} + n_{ji}, 1)\delta_{(\theta_i, \theta_j)}, \label{eqn:cnf}&&
 \end{align}
-with L\'{e}vy intensity measure $\rho$ and Lebesgue measure $\lambda$ where $\rho$ is a jump part of the measure. $D$ is simply generated from a Poisson process with a product measure as an intensity and can be interpreted as a directed multi-graph.
+with intensity measure $\nu$ factorising as $\nu(dw, d\theta) = \rho(dw) \lambda(d\theta)$ for a jump part of the measure $\rho$ and Lebesgue measure $\lambda$. $D$ is simply generated from a Poisson process with a product measure as an intensity and can be interpreted as a directed multi-graph.
 Given $\mu$, we can directly specify the undirected graph $Z$ as
 \[ Pr(z_{ij}=1|w) = 
   \begin{cases}
@@ -101,11 +101,11 @@ Since  Given total mass $\mu_\alpha^*$ and $\theta_1, ..., \theta_n$, the condit
 \begin{align}
 \label{eqn:eppf}
 \theta_{n+1} | \mu_\alpha^*, \theta_1,...,\theta_n \sim \frac{\Pi_{n+1}^{l+1}(m_1, ..., m_l, 1 | \mu_\alpha^*)}{\Pi_{n}^{l}(m_1, ..., m_l | \mu_\alpha^*)} \frac{1}{\alpha} \lambda_\alpha
-+ \sum_{i=1}^{l}\frac{\Pi_{n+1}^{k}(m_1, ..., m_{i}+1, ..., m_l | \mu_\alpha^*)}{\Pi_{n}^{k}(m_1, ..., m_l| \mu_\alpha^*)} \delta_{\phi_l}
++ \sum_{i=1}^{l}\frac{\Pi_{n+1}^{l}(m_1, ..., m_{i}+1, ..., m_l | \mu_\alpha^*)}{\Pi_{n}^{l}(m_1, ..., m_l| \mu_\alpha^*)} \delta_{\phi_l}
 \end{align}
 where
 \begin{align}
-\Pi_{n}^l(m_1, ..., m_l|\mu_\alpha^*) = \frac{\sigma^l \mu_\alpha^{*-n}}{\Gamma(n-l\sigma)g_{\sigma}(\mu_\alpha^*)} \int_{0}^{\mu_\alpha^*}s^{n-l\sigma-1}g_{\sigma}(\mu_\alpha^*-s)ds(\prod_{i=1}^{k} \frac{\Gamma(m_i-\sigma)}{\Gamma(1-\sigma)} ),
+\Pi_{n}^l(m_1, ..., m_l|\mu_\alpha^*) = \frac{\sigma^l \mu_\alpha^{*-n}}{\Gamma(n-l\sigma)g_{\sigma}(\mu_\alpha^*)} \int_{0}^{\mu_\alpha^*}s^{n-l\sigma-1}g_{\sigma}(\mu_\alpha^*-s)ds \bigg(\prod_{i=1}^{l} \frac{\Gamma(m_i-\sigma)}{\Gamma(1-\sigma)} \bigg),
 \end{align}
 and $g_\sigma$ is the pdf of the positive stable distribution.
 Finally, the total mass of $\mu_\alpha^*$ and $\mu_\beta^{'*}$ follows an exponentially tilted stable distribution where the exact sampler exists \citep{devroye2009random,hofert2011sampling}. 
