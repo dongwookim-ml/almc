@@ -21,8 +21,8 @@
 
 \maketitle
 
-\section{CRM}
-A CRM $\mu$ on $\mathbb{R}_+$ is a random measure such that for any countable number of disjoint measurable sets $A_1, A_2, ...$ of $\mathbb{R}_+$, the random variable $\mu(A_1), \mu(A_2), ...$ are independent and $\mu(\cup_i A_i) = \sum_i \mu(A_i)$. If one assumes that the distribution of $\mu([t,s])$ only depends on $t-s$ then the CRM takes the form of $\mu = \sum_{i=1}^{\infty}w_i\delta_{\theta_i}$ where $(w_i, \theta_i)$ are the points of a Poisson point process on $\mathbb{R}_+^2$ with L\'{e}vy intensity measure $\nu(dw, d\theta) = \rho(dw)\lambda(d\theta)$. The Laplace transform of $\mu(A)$ on any measurable set $A$ has a following representation: $\mathbb{E}[e^{-t\mu(A)}] = \exp(-\int_{\mathbb{R}_+ \times A}(1-e^{-tw})\rho(dw)\lambda(d\theta))$ for any $t>0$ and $\rho$ such that $\int_{\mathbb{R}_+}(1-e^{-w})\rho(dw) < \infty$.
+\section{Completely Random Measure}
+A completely random measure (CRM) $\mu$ on $\mathbb{R}_+$ is a random measure such that for any countable number of disjoint measurable sets $A_1, A_2, ...$ of $\mathbb{R}_+$, the random variable $\mu(A_1), \mu(A_2), ...$ are independent and $\mu(\cup_i A_i) = \sum_i \mu(A_i)$. If one assumes that the distribution of $\mu([t,s])$ only depends on $t-s$ then the CRM takes the form of $\mu = \sum_{i=1}^{\infty}w_i\delta_{\theta_i}$ where $(w_i, \theta_i)$ are the points of a Poisson point process on $\mathbb{R}_+^2$ with L\'{e}vy intensity measure $\nu(dw, d\theta) = \rho(dw)\lambda(d\theta)$. The Laplace transform of $\mu(A)$ on any measurable set $A$ has a following representation: $\mathbb{E}[e^{-t\mu(A)}] = \exp(-\int_{\mathbb{R}_+ \times A}(1-e^{-tw})\rho(dw)\lambda(d\theta))$ for any $t>0$ and $\rho$ such that $\int_{\mathbb{R}_+}(1-e^{-w})\rho(dw) < \infty$.
 
 \section{Caron and Fox Model}
 
@@ -97,7 +97,7 @@ Given restriction $\alpha$ and $\beta$, the generative process of $D_{\alpha\bet
 \item $D_{\alpha\beta} = \sum_{d=1}^{D_{\alpha\beta}^*} \delta_{(\theta_{di}, \theta_{dj}, \theta_{dk})}$,
 \end{enumerate}
 where we have used that the total mass of $D_{\alpha\beta}^*$ follows the Poisson distribution. Each node $\theta_i$ is drawn from the normalised CRM (NRM), $\frac{\mu_\alpha}{\mu_\alpha^*}$, which is discrete with probability 1. However, it is not possible to sample $\mu_\alpha$ and $\mu'_\beta$ since these measures have infinite number of atoms. Instead we can simulate finite-dimensional generative process through the urn formulation. Let $\theta_1, ..., \theta_n$ drawn from the normalised CRM $\frac{\mu_\alpha}{\mu_\alpha^*}$. Since NRM is discrete, variables $\theta_1, ..., \theta_n$ takes $l \leq n$ distinct values $\phi_l$, and $m_l$ is the number of variables corresponding to $\phi_l$.
-Since  Given total mass $\mu_\alpha^*$ and $\theta_1, ..., \theta_n$, the conditional distribution of $\theta_{n+1}$ can be modelled in terms of exchangeable partition probability function (EPPF):
+Given total mass $\mu_\alpha^*$ and $\theta_1, ..., \theta_n$, the conditional distribution of $\theta_{n+1}$ can be modelled in terms of exchangeable partition probability function (EPPF):
 \begin{align}
 \label{eqn:eppf}
 \theta_{n+1} | \mu_\alpha^*, \theta_1,...,\theta_n \sim \frac{\Pi_{n+1}^{l+1}(m_1, ..., m_l, 1 | \mu_\alpha^*)}{\Pi_{n}^{l}(m_1, ..., m_l | \mu_\alpha^*)} \frac{1}{\alpha} \lambda_\alpha
@@ -124,7 +124,7 @@ Using this urn representation, we can rewrite the generative process as
 
 \subsection{Sparsity}
 
-\begin{theorem} Consider the point process $\bar{Z}$ with infinite-activity intensity measures $\rho(dw)$ and $\rho'(dw')$. Given $\mu'$ from $\rho'(dw')$, the number of edges in $\bar{Z}_{\alpha}$ grows quadratically as $\alpha \rightarrow \infty$ almost surely.
+\begin{theorem} \label{thm:edge} Consider the point process $\bar{Z}$ with infinite-activity intensity measures $\rho(dw)$ and $\rho'(dw')$. Given $\mu'$ from $\rho'(dw')$, the number of edges in $\bar{Z}_{\alpha}$ grows quadratically as $\alpha \rightarrow \infty$ almost surely.
 \end{theorem}
 \begin{proof}
 $\sum_{k=1}^{\infty} w_k' < \infty$ a.s. When $\mu'$ is given and the sum of $w_k'$ is finite a.s., we can use the same proof technique used in \cite{Caron2015}.
@@ -135,11 +135,33 @@ What if $\mu'$ is not given? Let $(X_i)$ and $(Y_k)$ be i.i.d. real-valued rando
 \end{align}
 If this strong law of the large numbers for two samples is correct, we may proof Theorem 3.1 in more general case ($\mu'$ is not given).
 
-\begin{theorem} Consider the point process $\bar{Z}$ with infinite-activity intensity measures $\rho(dw)$ and $\rho'(dw')$. Given $\mu'$ from $\rho'(dw')$, the number of nodes in $\bar{Z}_{\alpha}$ grows superlinearly as $\alpha \rightarrow \infty$ almost surely.
+\begin{theorem} Consider the point process $\bar{Z}$ with infinite-activity intensity measures $\rho(dw)$ and $\rho'(dw')$. Let $N_\alpha$ be a number of nodes having at least one connection. Given $\mu'$ from $\rho'(dw')$, the number of nodes $N_\alpha$ in $\bar{Z}_{\alpha}$ grows superlinearly as $\alpha \rightarrow \infty$ almost surely.
 \end{theorem}
 \begin{proof}
-.
+As \ref{thm:edge}.
 \end{proof}
+
+\subsection{Posterior inference}
+We first characterise the posterior of $\mu_\alpha$ given $\mu'_\beta$ and $D_{\alpha\beta}$. The conditional Laplace functional of $\mu_\alpha$ given $D_{\alpha\beta}$ is $\mathbb{E}[e^{-\mu_\alpha(f)}|\mu'_\beta, D_{\alpha\beta}]$, for any non-negative measurable function $f$. We have $\mu_\alpha(f) = \Pi(\tilde{f})$ where $\Pi = \sum_{i=1}^{\infty} \delta_{w_i, \theta_i}$ is a Poisson random measure on $(0, \infty) \times [0, \alpha]$ with mean measure $\rho \times \lambda$ and $\tilde{f}(w, \theta) = wf(\theta)$. Let $m_i = \sum_{j=1}^{N_\alpha}\sum_{k=1}^{N_\beta} n_{ijk} + n_{jik}$, $m'_k = \sum_{i=1}^{N_\alpha} \sum_{j=1}^{N_\alpha} n_{ijk}$, and $m^* = \sum_{i=1}^{N_\alpha} m_i$.
+
+\begin{align}
+\mathbb{E}_{\mu_\alpha}[e^{-\mu_\alpha(f)}|D_{\alpha\beta}, \mu'_\beta] = \mathbb{E}_{\Pi}[e^{-\Pi(\tilde{f})}|D_{\alpha\beta}, \mu'_\beta] = \frac{\mathbb{E}_{\Pi}[e^{-\int \tilde{f}(w, \theta)\Pi(dw, d\theta)} P(D_{\alpha\beta}|\Pi, \mu'_\beta)]}{\mathbb{E}_{\Pi}[P(D_{\alpha\beta}|\Pi, \mu'_\beta)]}
+\end{align}
+where
+\begin{align}
+P(D_{\alpha\beta}|\Pi, \mu'_\beta) & = P(D_{\alpha\beta}|\mu_\alpha, \mu'_\beta)\\
+& = \text{Poisson}(\mu_\alpha^{*2}\mu_\beta^{'*}) \times \prod_{i=1}^{N_\alpha} 
+P(m_i|\mu_\alpha) \times \prod_{k=1}^{N_\beta}P(m'_{k}| \mu'_\beta) \\
+& = \frac{ (\mu_\alpha^{*2}\mu_\beta^{'*})^{m^*} e^{-\mu_\alpha^{*2}\mu_\beta^{'*}} }{m^*!}
+%\frac{m^*!}{\prod_{i=1}^{N_\alpha}m_i!}
+\prod_{i=1}^{N_\alpha} \Big( \frac{w_\alpha}{\mu_\alpha^*} \Big)^{m_i} 
+\prod_{k=1}^{N_\beta} \Big( \frac{w'_\beta}{\mu_\beta^{'*}} \Big)^{m'_k}\\
+\mu_\alpha^* = \sum_{i=1}^{\infty} w_i, &\qquad \mu_\beta^{'*} = \sum_{k=1}^{\infty} w'_k
+\end{align}
+Let's focus on the numerator:
+\begin{align}
+\mathbb{E}_{\Pi}[e^{-\int \tilde{f}(w, \theta)\Pi(dw, d\theta)}P(D_\alpha|\Pi, \mu'_\beta)] = 
+\end{align}
 
 \bibliographystyle{apalike}
 \bibliography{ref}
