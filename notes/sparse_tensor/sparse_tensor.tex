@@ -87,12 +87,12 @@ Given restriction $\alpha$ and $\beta$, the generative process of $D_{\alpha\bet
 \begin{enumerate}
 \item $\mu_\alpha \sim \text{CRM}(\rho, \lambda_\alpha)$
 \item $\mu_\beta' \sim \text{CRM}(\rho', \lambda_\beta)$
-\item $D_{\alpha\beta}^* | \mu_\alpha, \mu_\beta' \sim \text{Poisson}(\mu_\alpha^{*2}\mu_\beta^{'*})$
+\item $D_{\alpha\beta}^* | \mu_\alpha, \mu_\beta' \sim \text{Poisson}(\mu_\alpha^{*2}{\mu'}_\beta^{*})$
 \item For $d=1,...,D_{\alpha\beta}^*$:
 \begin{enumerate}
 \item $\theta_{di} \sim \frac{\mu_\alpha}{\mu_\alpha^*}$
 \item $\theta_{dj} \sim \frac{\mu_\alpha}{\mu_\alpha^*}$
-\item $\theta_{dk}' \sim \frac{\mu_\beta}{\mu_\beta^{'*}}$
+\item $\theta_{dk}' \sim \frac{\mu_\beta}{{\mu'}_\beta^{*}}$
 \end{enumerate}
 \item $D_{\alpha\beta} = \sum_{d=1}^{D_{\alpha\beta}^*} \delta_{(\theta_{di}, \theta_{dj}, \theta_{dk})}$,
 \end{enumerate}
@@ -108,13 +108,13 @@ where
 \Pi_{n}^l(m_1, ..., m_l|\mu_\alpha^*) = \frac{\sigma^l \mu_\alpha^{*-n}}{\Gamma(n-l\sigma)g_{\sigma}(\mu_\alpha^*)} \int_{0}^{\mu_\alpha^*}s^{n-l\sigma-1}g_{\sigma}(\mu_\alpha^*-s)ds \bigg(\prod_{i=1}^{l} \frac{\Gamma(m_i-\sigma)}{\Gamma(1-\sigma)} \bigg),
 \end{align}
 and $g_\sigma$ is the pdf of the positive stable distribution.
-Finally, the total mass of $\mu_\alpha^*$ and $\mu_\beta^{'*}$ follows an exponentially tilted stable distribution where the exact sampler exists \citep{devroye2009random,hofert2011sampling}. 
+Finally, the total mass of $\mu_\alpha^*$ and ${\mu'}_\beta^{*}$ follows an exponentially tilted stable distribution where the exact sampler exists \citep{devroye2009random,hofert2011sampling}. 
 
 Using this urn representation, we can rewrite the generative process as
 \begin{enumerate}
 \item $\mu_\alpha^* \sim P_{\mu_\alpha^*}$
-\item $\mu_\beta^{'*} \sim P_{\mu_\beta^{'*}}$
-\item $D_{\alpha\beta}^* | \mu_\alpha, \mu_\beta' \sim \text{Poisson}(\mu_\alpha^{*2}\mu_\beta^{'*})$
+\item ${\mu'}_\beta^{*} \sim P_{{\mu'}_\beta^{*}}$
+\item $D_{\alpha\beta}^* | \mu_\alpha, \mu_\beta' \sim \text{Poisson}(\mu_\alpha^{*2}{\mu'}_\beta^{*})$
 \item For $d=1,...,D_{\alpha\beta}^*$:
 \begin{enumerate}
 \item Sample $\theta_{di}$, $\theta_{dj}$, and $\theta_{dk}'$ with Urn process in Eqn \ref{eqn:eppf}
@@ -142,25 +142,54 @@ As \ref{thm:edge}.
 \end{proof}
 
 \subsection{Posterior inference}
-We first characterise the posterior of $\mu_\alpha$ given $\mu'_\beta$ and $D_{\alpha\beta}$. The conditional Laplace functional of $\mu_\alpha$ given $D_{\alpha\beta}$ is $\mathbb{E}[e^{-\mu_\alpha(f)}|\mu'_\beta, D_{\alpha\beta}]$, for any non-negative measurable function $f$. We have $\mu_\alpha(f) = \Pi(\tilde{f})$ where $\Pi = \sum_{i=1}^{\infty} \delta_{w_i, \theta_i}$ is a Poisson random measure on $(0, \infty) \times [0, \alpha]$ with mean measure $\rho \times \lambda$ and $\tilde{f}(w, \theta) = wf(\theta)$. Let $m_i = \sum_{j=1}^{N_\alpha}\sum_{k=1}^{N_\beta} n_{ijk} + n_{jik}$, $m'_k = \sum_{i=1}^{N_\alpha} \sum_{j=1}^{N_\alpha} n_{ijk}$, and $m^* = \sum_{i=1}^{N_\alpha} m_i$.
+We first characterise the posterior of $\mu_\alpha$ given $\mu'_\beta$ and $D_{\alpha\beta}$. The conditional Laplace functional of $\mu_\alpha$ given $D_{\alpha\beta}$ is $\mathbb{E}[e^{-\mu_\alpha(f)}|\mu'_\beta, D_{\alpha\beta}]$, for any non-negative measurable function $f$ such that $\mu_\alpha(f) = \sum_{i=1}^{\infty}w_i f(\theta_i)$. We have $\mu_\alpha(f) = \Pi(\tilde{f})$ where $\Pi = \sum_{i=1}^{\infty} \delta_{w_i, \theta_i}$ is a Poisson random measure on $\mathcal{S} = (0, \infty) \times [0, \alpha]$ with mean measure $\rho \times \lambda$ and $\tilde{f}(w, \theta) = wf(\theta)$. Let $n_{i**} = \sum_{j=1}^{N_\alpha}\sum_{k=1}^{N_\beta}n_{ijk}$, $m_i = \sum_{j=1}^{N_\alpha}\sum_{k=1}^{N_\beta} n_{ijk} + n_{jik}$, and $m'_k = \sum_{i=1}^{N_\alpha} \sum_{j=1}^{N_\alpha} n_{ijk}$.
 
 \begin{align}
-\mathbb{E}_{\mu_\alpha}[e^{-\mu_\alpha(f)}|D_{\alpha\beta}, \mu'_\beta] = \mathbb{E}_{\Pi}[e^{-\Pi(\tilde{f})}|D_{\alpha\beta}, \mu'_\beta] = \frac{\mathbb{E}_{\Pi}[e^{-\int \tilde{f}(w, \theta)\Pi(dw, d\theta)} P(D_{\alpha\beta}|\Pi, \mu'_\beta)]}{\mathbb{E}_{\Pi}[P(D_{\alpha\beta}|\Pi, \mu'_\beta)]}
+\label{eqn:lpl_d}
+\mathbb{E}_{\mu_\alpha}[e^{-\mu_\alpha(f)}|D_{\alpha\beta}, \mu'_\beta] 
+&= \mathbb{E}_{\Pi}[e^{-\int \tilde{f}(w, \theta)\Pi(dw, d\theta)}|D_{\alpha\beta}, \mu'_\beta] \\
+&= \frac{\mathbb{E}_{\Pi}[ e^{-\Pi(\tilde{f})} P(D_{\alpha\beta}|\Pi, \mu'_\beta)]}{\mathbb{E}_{\Pi}[P(D_{\alpha\beta}|\Pi, \mu'_\beta)]}\\
+%&= \frac{\mathbb{E}_{\Pi}[e^{-\Pi(\tilde{f})} e^{-\Pi(h)^2{\mu'}_\beta^{*}} \prod_{i=1}^{N_\alpha} w_i^{m_i} \prod_{k=1}^{N_\beta} {w'_k}^{m_k} ]}{\mathbb{E}_{\Pi}[e^{-\Pi(h)^2{\mu'}_\beta^{*}} \prod_{i=1}^{N_\alpha} w_i^{m_i} \prod_{k=1}^{N_\beta} {w'_k}^{m_k} ]]}
+&= \frac{\mathbb{E}_{\Pi}[e^{-\Pi(\tilde{f})} e^{-\Pi(h)^2{\mu'}_\beta^{*}} \prod_{i=1}^{N_\alpha} w_i^{m_i}]}{\mathbb{E}_{\Pi}[e^{-\Pi(h)^2{\mu'}_\beta^{*}} \prod_{i=1}^{N_\alpha} w_i^{m_i}]]}
+\end{align}
+where $h(w, \theta) = w$ and
+\begin{align}
+P(D_{\alpha\beta}|\Pi, \mu'_\beta) & = P(D_{\alpha\beta}|\mu_\alpha, \mu'_\beta)\\
+& = \text{Poisson}(D^*_{\alpha\beta}|\mu_\alpha^{*2}{\mu'}_\beta^{*}) 
+\prod_{i=1}^{N_\alpha} P(n_{i**}|\mu_\alpha) \prod_{j=1}^{N_\alpha} P(n_{*j*}|\mu_\alpha)
+\prod_{k=1}^{N_\beta} P(n_{**k}|\mu_\beta) \\
+& = \frac{ (\mu_\alpha^{*2}{\mu'}_\beta^{*})^{D^*_{\alpha\beta}} e^{-\mu_\alpha^{*2}{\mu'}_\beta^{*}} }{D^*_{\alpha\beta}!}
+\prod_{i=1}^{N_\alpha} \Big( \frac{w_i}{\mu_\alpha^*} \Big)^{n_{i**}} 
+\prod_{j=1}^{N_\alpha} \Big( \frac{w_j}{\mu_\alpha^*} \Big)^{n_{*j*}} 
+\prod_{k=1}^{N_\beta} \Big( \frac{w'_k}{{\mu'}_\beta^{*}} \Big)^{n_{**k}}\\
+& =\frac{e^{-\mu_\alpha^{*2}{\mu'}_\beta^{*}} }{D^*_{\alpha\beta}!}
+\prod_{i=1}^{N_\alpha} w_i^{m_i}
+\prod_{k=1}^{N_\beta} {w'_k}^{m_k} 
+ =\frac{e^{-\Pi(h)^2{\mu'}_\beta^{*}} }{D^*_{\alpha\beta}!}
+\prod_{i=1}^{N_\alpha} w_i^{m_i}
+\prod_{k=1}^{N_\beta} {w'_k}^{m_k}\\
+\\
+\mu_\alpha^* & = \sum_{i=1}^{\infty} w_i, \qquad {\mu'}_\beta^{*} = \sum_{k=1}^{\infty} w'_k = \sum_{k=1}^{N_\beta} w'_k + {w'}^*
+\end{align}
+Applying the generalised Palm formula to the numerator yields
+\begin{align}
+&\mathbb{E}_{\Pi}\Big[e^{-\Pi(\tilde{f})} e^{-\Pi(h)^2{\mu'}_\beta^{*}} \prod_{i=1}^{N_\alpha} w_i^{m_i} \Big] &\\
+&= \mathbb{E}_{\Pi}\Big[e^{-\Pi(\tilde{f})} e^{-\Pi(h)^2{\mu'}_\beta^{*}} \prod_{i=1}^{N_\alpha} \sum_{w_j, \vartheta_j \in \Pi} w_j^{m_i} \mathbf{1}_{\theta_i}(\vartheta_j)\Big]& \\
+&= \mathbb{E}_{\Pi}\Big[\int_{\mathcal{S}^{N_\alpha}} e^{-\Pi(\tilde{f})} e^{-\Pi(h)^2{\mu'}_\beta^{*}}  \prod_{i=1}^{N_\alpha} w_j^{m_i} \mathbf{1}_{\theta_i}(\vartheta_j) \Pi(dw_j, d\vartheta_j)\Big]& \\
+&=  \int_{\mathcal{S}^{N_\alpha}} \mathbb{E}_{\Pi}\Big[ e^{-(\Pi+\sum_i^{N_\alpha}\delta_{(w_i, \theta_i)})(\tilde{f})} e^{-(\Pi+\sum_i^{N_\alpha}\delta_{(w_i, \theta_i)})(h)^2{\mu'}_\beta^{*}}\Big] \prod_{i=1}^{N_\alpha} w_j^{m_i} \mathbf{1}_{\theta_i}(\vartheta_j) \rho(dw_j)\lambda(d\vartheta_j) & \\
+&=  \int_{\mathcal{S}^{N_\alpha}} \mathbb{E}_{\mu_\alpha}\Big[ e^{-\mu_\alpha(f) - \sum_{i=1}^{N_\alpha}w_if(\vartheta_j)} e^{-(\mu_\alpha(1) + \sum_{i=1}^{N_\alpha} w_i)^2{\mu'}_\beta^{*}}\Big] \prod_{i=1}^{N_\alpha} w_j^{m_i} \mathbf{1}_{\theta_i}(\vartheta_j) \rho(dw_j)\lambda(d\vartheta_j) &\\
+&=  \int_{\mathcal{S}^{N_\alpha}} \mathbb{E}_{\mu_\alpha^*}\bigg[ \mathbb{E}_{\mu_\alpha} \Big[e^{-\mu_\alpha(f)}|\mu_\alpha^* \Big] e^{- \sum_{i=1}^{N_\alpha}w_if(\vartheta_j)} e^{-(\mu_\alpha^* + \sum_{i=1}^{N_\alpha} w_i)^2{\mu'}_\beta^{*}}\bigg] \prod_{i=1}^{N_\alpha} w_j^{m_i} \mathbf{1}_{\theta_i}(\vartheta_j) \rho(dw_j)\lambda(d\vartheta_j) &
+\end{align}
+The denominator is obtained by taking $f=0$.
+\begin{align}
+\mathbb{E}_{\mu_\alpha}[e^{-\mu_\alpha(f)}|D_{\alpha\beta}, \mu'_\beta] &= \int_{\mathbb{R}^{N_\alpha + 1}} E_{\mu_\alpha}[e^{-\mu_\alpha(f)}|\mu_\alpha^* = w^*]\\
+&\quad \times e^{\sum_{i=1}^{N_\alpha}w_i f(\theta_i)} p(w_1, ..., w_{N_\alpha}, w^*|D_{\alpha\beta}, \mu_\beta) dw_{1:N_\alpha}dw^*
 \end{align}
 where
 \begin{align}
-P(D_{\alpha\beta}|\Pi, \mu'_\beta) & = P(D_{\alpha\beta}|\mu_\alpha, \mu'_\beta)\\
-& = \text{Poisson}(\mu_\alpha^{*2}\mu_\beta^{'*}) \times \prod_{i=1}^{N_\alpha} 
-P(m_i|\mu_\alpha) \times \prod_{k=1}^{N_\beta}P(m'_{k}| \mu'_\beta) \\
-& = \frac{ (\mu_\alpha^{*2}\mu_\beta^{'*})^{m^*} e^{-\mu_\alpha^{*2}\mu_\beta^{'*}} }{m^*!}
-%\frac{m^*!}{\prod_{i=1}^{N_\alpha}m_i!}
-\prod_{i=1}^{N_\alpha} \Big( \frac{w_\alpha}{\mu_\alpha^*} \Big)^{m_i} 
-\prod_{k=1}^{N_\beta} \Big( \frac{w'_\beta}{\mu_\beta^{'*}} \Big)^{m'_k}\\
-\mu_\alpha^* = \sum_{i=1}^{\infty} w_i, &\qquad \mu_\beta^{'*} = \sum_{k=1}^{\infty} w'_k
-\end{align}
-Let's focus on the numerator:
-\begin{align}
-\mathbb{E}_{\Pi}[e^{-\int \tilde{f}(w, \theta)\Pi(dw, d\theta)}P(D_\alpha|\Pi, \mu'_\beta)] = 
+p(w_1, ..., w_{N_\alpha}, w^*|D_{\alpha\beta}, \mu_\beta)&
+= \frac{\prod_{i=1}^{N_\alpha} w_j^{m_i} \rho(w_i) e^{-(w^* + \sum_{i=1}^{N_\alpha} w_i)^2{\mu'}_\beta^{*}}}
+{\int_{\mathbb{R}^{N_\alpha + 1}}\prod_{i=1}^{N_\alpha} \tilde{w}_j^{m_i} \rho(\tilde{w}_i) e^{-(\tilde{w}^* + \sum_{i=1}^{N_\alpha} \tilde{w}_i)^2{\mu'}_\beta^{*}} d\tilde{w}_{1:N_\alpha}d\tilde{w}^*}
 \end{align}
 
 \bibliographystyle{apalike}
