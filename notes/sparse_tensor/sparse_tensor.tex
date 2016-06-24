@@ -188,9 +188,10 @@ The denominator is obtained by taking $f=0$.
 where
 \begin{align}
 p(w_1, ..., w_{N_\alpha}, w^*|D_{\alpha\beta}, \mu_\beta)&
-= \frac{\prod_{i=1}^{N_\alpha} w_j^{m_i} \rho(w_i) e^{-(w^* + \sum_{i=1}^{N_\alpha} w_i)^2{\mu'}_\beta^{*}}}
-{\int_{\mathbb{R}^{N_\alpha + 1}}\prod_{i=1}^{N_\alpha} \tilde{w}_j^{m_i} \rho(\tilde{w}_i) e^{-(\tilde{w}^* + \sum_{i=1}^{N_\alpha} \tilde{w}_i)^2{\mu'}_\beta^{*}} d\tilde{w}_{1:N_\alpha}d\tilde{w}^*}
+= \frac{\prod_{i=1}^{N_\alpha} w_j^{m_i} \rho(w_i) e^{-(w^* + \sum_{i=1}^{N_\alpha} w_i)^2{\mu'}_\beta^{*}} g^*_\alpha(w^*)}
+{\int_{\mathbb{R}^{N_\alpha + 1}}\prod_{i=1}^{N_\alpha} \tilde{w}_j^{m_i} \rho(\tilde{w}_i) e^{-(\tilde{w}^* + \sum_{i=1}^{N_\alpha} \tilde{w}_i)^2{\mu'}_\beta^{*}} g^*_\alpha(\tilde{w}^*) d\tilde{w}_{1:N_\alpha}d\tilde{w}^*}\\
 \end{align}
+$g^*_\alpha(w^*)$ is a density function of random variable $w^*$ of which Laplace transform is $\mathbb{E}[e^{tw^*}] = e^{\alpha\psi(t)}$.
 
 \bibliographystyle{apalike}
 \bibliography{ref}
