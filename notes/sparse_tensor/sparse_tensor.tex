@@ -22,7 +22,7 @@
 \maketitle
 
 \section{Completely Random Measure}
-A completely random measure (CRM) $\mu$ on $\mathbb{R}_+$ is a random measure such that for any countable number of disjoint measurable sets $A_1, A_2, ...$ of $\mathbb{R}_+$, the random variable $\mu(A_1), \mu(A_2), ...$ are independent and $\mu(\cup_i A_i) = \sum_i \mu(A_i)$. If one assumes that the distribution of $\mu([t,s])$ only depends on $t-s$ then the CRM takes the form of $\mu = \sum_{i=1}^{\infty}w_i\delta_{\theta_i}$ where $(w_i, \theta_i)$ are the points of a Poisson point process on $\mathbb{R}_+^2$ with L\'{e}vy intensity measure $\nu(dw, d\theta) = \rho(dw)\lambda(d\theta)$. The Laplace transform of $\mu(A)$ on any measurable set $A$ has a following representation: $\mathbb{E}[e^{-t\mu(A)}] = \exp(-\int_{\mathbb{R}_+ \times A}(1-e^{-tw})\rho(dw)\lambda(d\theta))$ for any $t>0$ and $\rho$ such that $\int_{\mathbb{R}_+}(1-e^{-w})\rho(dw) < \infty$.
+A completely random measure (CRM) $\mu$ on $\mathbb{R}_+$ is a random measure such that for any countable number of disjoint measurable sets $A_1, A_2, ...$ of $\mathbb{R}_+$, the random variable $\mu(A_1), \mu(A_2), ...$ are independent and $\mu(\cup_i A_i) = \sum_i \mu(A_i)$. If one assumes that the distribution of $\mu([t,s])$ only depends on $t-s$ then the CRM takes the form of $\mu = \sum_{i=1}^{\infty}w_i\delta_{\theta_i}$ where $(w_i, \theta_i)$ are the points of a Poisson point process on $\mathbb{R}_+^2$ with L\'{e}vy intensity measure $\nu(dw, d\theta) = \rho(dw)\lambda(d\theta)$. The Laplace transform of $\mu(A)$ on any measurable set $A$ has a following representation: $\mathbb{E}[e^{-t\mu(A)}] = \exp(-\int_{\mathbb{R}_+ \times A}(1-e^{-tw})\rho(dw)\lambda(d\theta))$ for any $t>0$ and $\rho$ such that $\int_{\mathbb{R}_+}(1-e^{-w})\rho(dw) < \infty$. Laplace exponent is $\psi(t) = \int_{\mathbb{R}} (1 - e^{-t w}) \rho(dw)$.
 
 \section{Caron and Fox Model}
 
@@ -191,7 +191,16 @@ p(w_1, ..., w_{N_\alpha}, w^*|D_{\alpha\beta}, \mu_\beta)&
 = \frac{\prod_{i=1}^{N_\alpha} w_j^{m_i} \rho(w_i) e^{-(w^* + \sum_{i=1}^{N_\alpha} w_i)^2{\mu'}_\beta^{*}} g^*_\alpha(w^*)}
 {\int_{\mathbb{R}^{N_\alpha + 1}}\prod_{i=1}^{N_\alpha} \tilde{w}_j^{m_i} \rho(\tilde{w}_i) e^{-(\tilde{w}^* + \sum_{i=1}^{N_\alpha} \tilde{w}_i)^2{\mu'}_\beta^{*}} g^*_\alpha(\tilde{w}^*) d\tilde{w}_{1:N_\alpha}d\tilde{w}^*}\\
 \end{align}
-$g^*_\alpha(w^*)$ is a density function of random variable $w^*$ of which Laplace transform is $\mathbb{E}[e^{tw^*}] = e^{\alpha\psi(t)}$.
+$g^*_\alpha(w^*)$ is a density function of random variable $w^*$ of which Laplace transform is $\mathbb{E}[e^{tw^*}] = e^{\alpha\psi(t)}$. Therefore, the conditional of $\mu_\alpha$ given $D_{\alpha\beta}, \mu'_\beta$ is
+\begin{align}
+w^* \sum_{i=1}^{\infty}\tilde{P}_i\delta_{\tilde\theta_i} + \sum_{i=1}^{N_\alpha} w_i \delta_{\theta_i} 
+\end{align}
+where $(\tilde{P})$ are distributed from a Poisson-Kingman distribution conditional on $w^*$, and the weights $w_1, ..., w_{N_\alpha}, w^*$ are jointly dependent conditional on $D_{\alpha\beta}$ and $\mu'_\beta$:
+\begin{align}
+p(w_1, ..., w_{N_\alpha}, w^* | D_{\alpha\beta}, \mu'_\beta) \propto \prod_{i=1}^{N_\alpha}{w_i}^{m_i} e^{(-w_* + \sum_{i=1}^{N_\alpha}w_i)^2 {\mu'}_\beta^*} \prod_{i=1}^{N_\alpha} \rho(w_i) g^*_\alpha(w^*)
+\end{align}
+
+The conditional Laplace functional of $\mu'_\beta$ given $\mu_\alpha$ and $D_{\alpha\beta}$ can be carried out in the same way as we've done in $\mu_\alpha$.
 
 \bibliographystyle{apalike}
 \bibliography{ref}
