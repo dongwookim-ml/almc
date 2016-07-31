@@ -1,5 +1,10 @@
 %!TEX root = ./cikm2016.tex
-\section{Discussion and Conclusion}
+% \section{Discussion and Conclusion}
+\section{Conclusion}
+Throughout the paper, we have considered the two knowledge base construction tasks: knowledge population and knowledge completion.
+Based on a probabilistic framework, we propose new knowledge base factorisation methods where the latent factorisation reflects a graph structure of a knowledge graph. The probabilistic formulation allows us to quantify the uncertainty of predictive distributions, which is then used for the knowledge population task. The experiments of two tasks on three dataset show that the compositional model benefits graph structure in the knolwedge completion, and the probabilistic formulation helps to explore the latent space efficiently efficiently in the knowledge population.
+
+\eat{
 We consider two tasks when constructing knowledge graphs:
 populating it from external sources,
 and completing it using known knowledge items~\cite{dong2014knowledge}.
@@ -38,3 +43,4 @@ cumulative gain entails good predictive models as well.
 In the long run, we see this work as a promising step towards using a composition-aware knowledge
 completion system to connect with the
 knowledge based construction problem. %, with rich graph structures.
+}
