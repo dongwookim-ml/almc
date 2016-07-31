@@ -74,7 +74,7 @@ This is not a natural choice since the triple is a binary variable, however, we 
 through the variance parameter $\sigma_x^2$.
 %The role of this parameter will be further discussed in the compositional model section.
 
-We develop a Gibbs sampler to perform the posterior inference for the probabilistic \textsc{Rescal} (\textsc{Brescal}). The conditional distribution of each latent variable is given by:
+We develop a Gibbs sampler to perform the posterior inference for the probabilistic \textsc{Rescal} (\textsc{Prescal}). The conditional distribution of each latent variable is given by:
 \begin{align}
 p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}(e_i | \mu_i,
 \Lambda_i^{-1})  \label{eqn:sample_e} \\
@@ -117,4 +117,4 @@ The probabilistic view of tensor factorisation has many advantages such as
 the quantification of uncertainty by the predictive distribution,
 the ability to utilise priors, and
 the availability of principled model selection.
-We show in the empirical experiments that \textsc{Brescal} outperforms standard \textsc{Rescal}.
+We show in the empirical experiments that \textsc{Prescal} outperforms standard \textsc{Rescal}.
