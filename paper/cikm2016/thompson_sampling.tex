@@ -3,7 +3,7 @@
 \label{sec:pts}
 
 \begin{algorithm}[t!]
-   \caption{Particle Thompson sampling for probabilistic RESCAL with Gaussian output variable}
+   \caption{Particle Thompson sampling for probabilistic \textsc{Rescal} with Gaussian output variable}
    \label{alg:smc}
 \begin{algorithmic}
    \STATE {\bfseries Input:} $\mathcal{X}^{0}, \sigma_x, \sigma_e, \sigma_r$.
@@ -30,7 +30,7 @@
 \end{algorithmic}
 \end{algorithm}
 
-We now introduce a particle Thompson sampling algorithm for the incremental knowledge population with the proposed PRESCAL models. In the incremental population task, a knowledge base starts with zero or initial observations, and at each time period, we select one triple to be queried and labelled by an external system, i.e. human experts. The queried triple is chosen selectively based on past observations. Each labelling requires a certain amount of expense, so the goal is to obtain as many valid triples as possible given a limited budget.
+We now introduce a particle Thompson sampling algorithm for the incremental knowledge population with the proposed \textsc{Prescal} models. In the incremental population task, a knowledge base starts with zero or initial observations, and at each time period, we select one triple to be queried and labelled by an external system, i.e. human experts. The queried triple is chosen selectively based on past observations. Each labelling requires a certain amount of expense, so the goal is to obtain as many valid triples as possible given a limited budget.
 
 Thompson sampling provides a model based query selection process, and has been gaining an increasing attention
 because of a competitive empirical performance as well as its conceptual
@@ -78,7 +78,7 @@ an effective sample size (ESS) is less than a predefined threshold.
 The ESS can be computed as $(\sum_h w_h^2)^{-1}$, and we set the threshold
 to $N/2$~\cite{Doucet2011}. Resampling removes low weight particles with high probability,
 while keeping samples from the posterior.
-We summarise the particle Thompson sampling for PRESCAL with the
+We summarise the particle Thompson sampling for \textsc{Prescal} with the
 Gaussian output variable in Algorithm \ref{alg:smc}.
 
 Both compositional models can use the same
@@ -86,7 +86,7 @@ particle Thompson sampling scheme described in Algorithm \ref{alg:smc} with the 
 However, the model can only query the triples in the original tensor and
 not in the expanded tensor because the compositional triples are unobservable.
 
-We show that the Thompson sampling approach improves over passive PRESCAL in
+We show that the Thompson sampling approach improves over passive \textsc{Prescal} in
 experiments with real and synthetic data.
 We also investigated the extension of the Rao-Blackwellisation approach as proposed
 in~\cite{kawale2015efficient}, but we did not observe any significant performance improvements.

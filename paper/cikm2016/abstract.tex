@@ -1,5 +1,31 @@
 %!TEX root = ./cikm2016.tex
 \begin{abstract}
+
+Knowledge base construction consists of two tasks: extracting information from external sources  (knowledge population), and inferring missing information through a statistical analysis on the extracted information (knowledge completion).
+In many cases, there are not enough external sources to extract information for a comprehensive
+knowledge base\eat{, hence the need for a separate completion step}.
+An incremental knowledge population approach via labelling of human experts can help to reduce the gap between these two processes.
+We propose a new probabilistic knowledge base factorisation method that benefits from the path structure of existing knowledge (e.g. syllogism). Our method enables a common computation
+and modelling approach to be used for both knowledge base construction tasks.
+Empirical experiments show that our model improves over the non-probabilistic and non-path counterparts on the knowledge completion task.
+The probabilistic formulation allows us to develop an incremental knowledge population model that trades off exploitation and exploration.
+%We demonstrate that the factorisation model with the path structure performs better on the knowledge completion task.
+We show that our proposed approach for incremental knowledge population performs significantly
+better than sampling knowledge triples at random.
+\eat{
+However the path structure does not seem
+to help in this setting.
+In applications where there is a continual improvement in knowledge bases,
+our common probabilistic model bridges the gap between knowledge population and knowledge
+completion.
+}
+
+\eat{
+Our incremental model performs better on empirical benchmarks than
+Whereas the model without the path structure performs better in the incremental population.
+The result leads to a counter-intuitive conclusion; a better predictive model does not guarantee to have a better performance in incremental population.
+An additional experiment explains the degeneracy under the model uncertainty.
+}
 \eat{
 %Automated processes for knowledge base completion benefit from models that account for
 %statistical uncertainty.
@@ -25,28 +51,5 @@ and that Thompson sampling provides effective exploitation-exploration strategie
 that balance recall and reconstruction accuracy.
 % and show the regimes where compositional models are
 %beneficial for knowledge base completion.
-}
-
-Knowledge base construction consists of two tasks: extracting information from external sources  (knowledge population), and inferring missing information through a statistical analysis on the extracted information (knowledge completion).
-In many cases, there are not enough external sources to extract information for a comprehensive
-knowledge base\eat{, hence the need for a separate completion step}.
-An incremental knowledge population approach via labelling of human experts can help to reduce the gap between these two processes.
-We propose a new probabilistic knowledge base factorisation method that benefits from the path structure of existing knowledge (e.g. syllogism). Our method enables a common computation
-and modelling approach to be used for both knowledge base construction tasks.
-Empirical experiments show that our model improves over the non-probabilistic and non-path counterparts on the knowledge completion task.
-The probabilistic formulation allows us to develop an incremental knowledge population model that trades off exploitation and exploration.
-%We demonstrate that the factorisation model with the path structure performs better on the knowledge completion task.
-We show that our proposed approach for incremental knowledge population performs significantly
-better than sampling knowledge triples at random. However the path structure does not seem
-to help in this setting.
-In applications where there is a continual improvement in knowledge bases,
-our common probabilistic model bridges the gap between knowledge population and knowledge
-completion.
-
-\eat{
-Our incremental model performs better on empirical benchmarks than
-Whereas the model without the path structure performs better in the incremental population.
-The result leads to a counter-intuitive conclusion; a better predictive model does not guarantee to have a better performance in incremental population.
-An additional experiment explains the degeneracy under the model uncertainty.
 }
 \end{abstract}

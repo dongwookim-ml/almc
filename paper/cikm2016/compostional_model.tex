@@ -44,7 +44,7 @@ to model both non-compositional triples and compositional triples.
 In the subsequent sections, we provide two different ways of modelling the compositional relation $R_c$.
 
 \subsection{Additive Compositionality}
-With the compositions of relations, the PRESCAL may place a different relation matrix $R_c$ for each composition $c$. However, the number of required matrices increases exponentially, as the length of composition increases linearly. Consequently, the computational cost will also increases exponentially.
+With the compositions of relations, the \textsc{Prescal} may place a different relation matrix $R_c$ for each composition $c$. However, the number of required matrices increases exponentially, as the length of composition increases linearly. Consequently, the computational cost will also increases exponentially.
 To limit the required number of parameters, we propose two different ways of modelling the compositional relation $R_c$.
 First, we define an additive compositional relation $R_c$ as a sequence of normalised summation over
 relation matrices in composition $c$, i.e.,
@@ -54,8 +54,11 @@ is modelled as
 x_{(i, c, j)} &\sim \mathcal{N}(e_i^\top R_c e_j, \sigma_{c}^2) \\
 &= \mathcal{N}(e_i^\top \frac{1}{|c|}(R_{c(1)} + R_{c(2)} + \dots + R_{c(|c|)}) e_j, \sigma_{c}^2). \notag
 \end{align}
-The conditional distribution of $e_i$ given $E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
-expanded from the posterior of PRESCAL by incorporating compositional triples.
+The conditional distribution of $e_i$ and $R_k$ given the rest can be obtained in the same way used for the posterior distribution of \textsc{Prescal}. The details of the parameter estimators are shown in the appendix.
+
+\eat{
+given $E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
+expanded from the posterior of \textsc{Prescal} by incorporating compositional triples.
 \begin{align} \label{eqn:comp_sample_e}
 p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}) &= \mathcal{N}(e_i | \mu_i, \Lambda_i^{-1}).
 \end{align}
@@ -75,7 +78,7 @@ p(R_k|E, \mathcal{X}^{t}, \mathcal{X}^{L(t)}, \sigma_r, \sigma_x)  &= \mathcal{N
 
 The mean and precision are obtained by expanding out the sum across $\mathcal{X}^{t}$ and
 $\mathcal{X}^{L(t)}$. The details of the parameters are shown in the appendix.
-
+}
 
 \subsection{Multiplicative Compositionality}
 Second, we define an multiplicative compositional relation $R_c$ as a sequence of multiplication over
@@ -87,8 +90,9 @@ x_{(i, c, j)} \sim \mathcal{N}(e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(|c|-1)}R_{c(
 \end{align}
 The multiplicative compositionality can be understood as a sequence of linear transformation from the original
 entity $i$ with the compositional relations, and the inner product between the transformed entity and target
-entity forms a value of the compositional triple.
+entity forms a value of the compositional triple. Again, the details of the parameter estimators are shown in the appendix.
 
+\eat{
 Given a sequence of relations including relation $k$, $R_k$ is placed in the middle of the compositional
 sequence, i.e., $e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(\delta_k)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j$, where $
 \delta_k$ is the index of relation $k$. For notational simplicity, we will denote the left side $e_i^\top R_{c(1)}
@@ -103,10 +107,11 @@ where
 the mean and precision are obtained by expanding out the product across $\mathcal{X}^{t}$ and
 $\mathcal{X}^{L(t)}$. The details of the parameters are shown in the appendix.
 The conditional distribution of $e_i$ given the rest is the same as Equation $\ref{eqn:comp_sample_e}$.
+}
 
 As the length of sequence $c$ increases, a small error in the first few multiplication will result a large
 differences in the final compositional relation. One way to mitigate the cascading error is to increase variance
-of compositional triples $\sigma_c$ as the length of the sequence increases.
+of compositional triples $\sigma_c^2$ as the length of the sequence increases.
 
 %If the determinant of latent relation $R_k$ is greater than 1, the compositional latent relation $R_c$ might
 %be exploded after multiplying a long sequence of relations. To obtain a stable scale of compositional

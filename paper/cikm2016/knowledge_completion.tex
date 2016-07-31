@@ -45,20 +45,20 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 \subfigure[Triple prediction: \texttt{(MB Dysfunction, Affects, -)}]{
 \begin{tabular}{l | p{2.7cm}p{2.7cm}p{2.7cm}p{2.7cm}p{2.7cm}}
 Model & Top 1 & Top 2 & Top 3 & Top 4 & Top 5 \\ \hline \hline
-PNORMAL & \textbf{Invertebrate}&\textbf{Reptile}&\textbf{Archaeon}&\textbf{Bird}&\textbf{Phy.-Function} \\ \hline
-PLOGIT & \textbf{Cell-Function}&\textbf{Disease-or-Syndrome}&\textbf{Cell-or-Molecular-Dysf.}&\textbf{Exp.-Model-of-Disease}&\textbf{Mental-Process} \\ \hline
-PCOMP-MUL & \textbf{Archaeon}&\textbf{Fish}&\textbf{Fungus}&\textbf{Invertebrate}&\textbf{Human} \\ \hline
-PCOMP-ADD & \textbf{Path.-Function}&\textbf{Bird}&\textbf{Cell-or-Molecular-Dysf.}&Drug-Delivery-Device&Congenital-Abnormality
+\textsc{Pnormal} & \textbf{Invertebrate}&\textbf{Reptile}&\textbf{Archaeon}&\textbf{Bird}&\textbf{Phy.-Function} \\ \hline
+\textsc{Plogit} & \textbf{Cell-Function}&\textbf{Disease-or-Syndrome}&\textbf{Cell-or-Molecular-Dysf.}&\textbf{Exp.-Model-of-Disease}&\textbf{Mental-Process} \\ \hline
+\textsc{Pcomp-mul} & \textbf{Archaeon}&\textbf{Fish}&\textbf{Fungus}&\textbf{Invertebrate}&\textbf{Human} \\ \hline
+\textsc{Pcomp-add} & \textbf{Path.-Function}&\textbf{Bird}&\textbf{Cell-or-Molecular-Dysf.}&Drug-Delivery-Device&Congenital-Abnormality
 
 \end{tabular}
 }
 \subfigure[Length-2 path prediction: \texttt{(MB Dysfunction, Affects, Produces, -)}]{
 \begin{tabular}{l | p{2.7cm}p{2.7cm}p{2.7cm}p{2.7cm}p{2.7cm}}
 Model & Top 1 & Top 2 & Top 3 & Top 4 & Top 5 \\ \hline \hline
-PNORMAL & Clinical-Drug&Sign-or-Symptom&Org.-Attribute&Drug-Delivery-Device&Clinical-Attr. \\ \hline
-PLOGIT & Amphibian&Gov.-or-Reg.-Activity&Food&Biologic-Func.&Classification\\ \hline
-PCOMP-MUL & \textbf{Enzyme}&\textbf{Body-Substance}&\textbf{Biogenic-Amine}&Carbohydrate&\textbf{Immunologic-Factor} \\ \hline
-PCOMP-ADD & \textbf{Immunologic-Factor}&\textbf{Body-Substance}&Molecular-Biology-Research-Technique&Clinical-Drug&Chemical-Viewed-Structurally
+\textsc{Pnormal} & Clinical-Drug&Sign-or-Symptom&Org.-Attribute&Drug-Delivery-Device&Clinical-Attr. \\ \hline
+\textsc{Plogit} & Amphibian&Gov.-or-Reg.-Activity&Food&Biologic-Func.&Classification\\ \hline
+\textsc{Pcomp-mul} & \textbf{Enzyme}&\textbf{Body-Substance}&\textbf{Biogenic-Amine}&Carbohydrate&\textbf{Immunologic-Factor} \\ \hline
+\textsc{Pcomp-add} & \textbf{Immunologic-Factor}&\textbf{Body-Substance}&Molecular-Biology-Research-Technique&Clinical-Drug&Chemical-Viewed-Structurally
 
 \end{tabular}
 }
@@ -81,10 +81,10 @@ PCOMP-ADD & \textbf{Immunologic-Factor}&\textbf{Body-Substance}&Molecular-Biolog
 %In this experiment, instead running the Thompson sampling for the compositional models,
 We first evaluate our model for the knowledge completion task
 %we follow the standard train/validation/test approach
-to measure the performance of PRESCAL with all non compositional and compositional variants.
+to measure the performance of \textsc{Prescal} with all non compositional and compositional variants.
 %The results between active acquisition and training and testing are not always coincident, but if the Thompson sampling samples latent features from true posterior of the compositional model, the samples corresponds to the true posterior samples from the training set.
 
-We evaluate the PRESCAL models on three benchmark datasets and compare the performance to various baseline
+We evaluate the \textsc{Prescal} models on three benchmark datasets and compare the performance to various baseline
 algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each
 dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washington.edu/papers/kok07/}.
 
@@ -100,7 +100,7 @@ dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washing
 }
 
 For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
-from 1\% to 13\% of datasets. For RESCAL, we use the authors' implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For PRESCAL and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
+from 1\% to 13\% of datasets. For \textsc{Rescal}, we use the authors' implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For \textsc{Prescal} and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
 %Based on the trained model, measure the ROC-AUC scores on the test set.
 Given the test set, the performances of models are measured by ROC-AUC score:
 \begin{align}
@@ -109,12 +109,12 @@ Given the test set, the performances of models are measured by ROC-AUC score:
 where $\mathcal{X}_p$ and $\mathcal{X}_n$ are the set of positive and negative triples in the test set, respectively, and $\bar{x}$ is a reconstructed triple.
 
 Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models
-with the various baseline models. We can see that the PRESCAL with
-the normal output (PNORMAL) or logistic output (PLOGIT) generally outperform RESCAL.
-We compare the compositional model with original RESCAL, PNORMAL, and PLOGIT.
-In general, the multiplicative compositional model (PCOMP-MUL) outperforms
-the additive compositional model (PCOMP-ADD), and performs better the other baseline models
-when the proportion of training set is small. For UMLS and NATION, BCOMP-MUL outperforms
+with the various baseline models. We can see that the \textsc{Prescal} with
+the normal output (\textsc{Pnormal}) or logistic output (\textsc{Plogit}) generally outperform \textsc{Rescal}.
+We compare the compositional model with original \textsc{Rescal}, \textsc{Pnormal}, and \textsc{Plogit}.
+In general, the multiplicative compositional model (\textsc{Pcomp-mul}) outperforms
+the additive compositional model (\textsc{Pcomp-add}), and performs better the other baseline models
+when the proportion of training set is small. For UMLS and NATION, \textsc{Pcomp-mul} outperforms
 across the all training proportions.
 For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
 
@@ -142,7 +142,7 @@ Table \ref{tbl:path_example} shows an example of the path prediction result
 starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces}.
 Both compositional and non-compositional models predict triples well.
 For length-2 path prediction, only the compositional models can capture correct entities on top 5.
-We also visualise the multi-dimensional entities inferred by PNORMAL and PCOMP-MUL
+We also visualise the multi-dimensional entities inferred by \textsc{Pnormal} and \textsc{Pcomp-mul}
 into a two-dimensional space through the spectral clustering \cite{von2007tutorial}
 in Figure \ref{fig:tsne}.
 A circle represents an entity,
@@ -150,5 +150,5 @@ and the size of the circle is proportional to the uncertainty of the entity in t
 In the UMLS dataset, the entities are categorised into 15 types,
 e.g. \texttt{Disorders}, \texttt{Living-Beings}, \texttt{Phenomena}, etc.
 We use the same color to represent the entities with the same type.
-The entities with the same type are located closer to each other with PCOMP-MUL than PNORMAL.
+The entities with the same type are located closer to each other with \textsc{Pcomp-mul} than \textsc{Pnormal}.
 }
