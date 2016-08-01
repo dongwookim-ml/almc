@@ -3,7 +3,7 @@
 \label{sec:comp}
 
 In this section, we propose a compositional relation model that exploits the compositional structure of
-knowledge graph to capture the latent semantic structure of the entities and relations.
+knowledge graphs to capture the latent semantic structure of the entities and relations.
 A very recent study shows the benefit of using compositionality in the vector space model~\cite{guu2015traversing}. Here, we further extend their framework in a probabilistic way.
 %While previously suggested vector space models provide a statistical way to infer the latent semantic
 %structure of entities and relations, but lack consideration of a graph structure of a knowledge graph itself.
@@ -14,18 +14,17 @@ sequence of composable triples.
 For example, given two triples, ``Barack Obama is a 44th president of U.S.'' \texttt{(BarackObama, PresidentOf,
 U.S)} and ``Joe Biden was a running mate of Barack Obama'' \texttt{(JoeBiden, RunningMateOf, BarackObama)},
 one can naturally deduce that the ``Joe Biden is a vice president of U.S.'' \texttt{(JoeBiden, VicePresidentOf, U.S.)}.
-Here the composition of two relations, president of, and running mate of, yield to a compositional relation,
+Here the composition of two relations, president of, and running mate of, yields a compositional relation,
 vice president of.
 % Is every running mate always a vice president? maybe this is not a proper example.
 More formally, if there is a sequence of triples where the target entity of a former triple is a source entity of a
-latter triple in a consecutive pair of triples in the sequence, then we can form a compositional triples
+latter triple in a consecutive pair of triples in the sequence, then we can form a compositional triple
 as follows.
-Given the sequence of triples
-$(i_1, k_1 ,j_1)$,  $(i_2, k_2, j_2)$, $(i_3, k_3, j_3)$ $\dots$ $(i_n, k_n, j_n)$, where $i_k = j_{k+1}$ for all $k
-$,  we form a compositional triple $(i_1, {c}(k_1, k_2, \dots, k_n), j_n)$, where $c$ denotes the compositional
+Given the sequence of $n$ triples
+$(i_1, k_1 ,j_1)$,  $(i_2, k_2, j_2)$, $(i_3, k_3, j_3)$ $\dots$ $(i_n, k_n, j_n)$, where $j_{k}=i_{k+1}$ for all $k$,  we form a compositional triple $(i_1, {c}(k_1, k_2, \dots, k_n), j_n)$, where $c$ denotes the compositional
 relation of the sequence of relations.
 
-Let $\mathcal{C}^{L}$ be a set of all possible compositions of which length is up to $L$, $c \in \mathcal{C}$
+Let $\mathcal{C}^{L}$ be a set of all possible compositions whose length is up to $L$, $c \in \mathcal{C}$
 be a sequence of relations, $c(i)$ be $i$th index of a relation in sequence $c$ and $|c|$ be the length of the
 sequence. With set of compositions $\mathcal{C}^{L}$, we can expand set of observed triples
 $\mathcal{X}^{t}$ to set of compositional triples $\mathcal{X}^{\mathcal{C}^{L}(t)}$ in which
@@ -44,10 +43,10 @@ where $R_{{c}(k_1,k_2)} \in \mathbb{R}^{D\times D}$ is a latent matrix of compos
 In the subsequent sections, we provide two different ways of modelling the compositional relation $R_c$.
 
 \subsection{Additive Compositionality}
-With the compositions of relations, the \textsc{Prescal} may place a different relation matrix $R_c$ for each composition $c$. The number of required matrices, however, increases exponentially, as the length of composition increases linearly. Consequently, the computational cost will also increase exponentially.
+With the compositions of relations, the \textsc{Prescal} may place a different relation matrix $R_c$ for each composition $c$. However the number of required matrices increases exponentially with respect to the length of composition. Consequently, the computational cost will also increase exponentially.
 To limit the required number of parameters, we propose two different ways of modelling the compositional relation $R_c$.
-First, we define an additive compositional relation $R_c$ as a sequence of normalised summation over
-relation matrices in composition $c$, i.e.,
+First, we define an additive compositional relation $R_c$ as a normalised sum over
+the sequence of relation matrices in composition $c$, i.e.,
 $R_{{c}} = \frac{1}{|c|}(R_{c(1)} + R_{c(2)} + \dots + R_{c(|c|)})$, then compositional triple $x_{icj}$
 is modelled as
 \begin{align}
@@ -109,7 +108,7 @@ $\mathcal{X}^{L(t)}$. The details of the parameters are shown in the appendix.
 The conditional distribution of $e_i$ given the rest is the same as Equation $\ref{eqn:comp_sample_e}$.
 }
 
-As the length of sequence $c$ increases, a small error in the first few multiplication will result a large
+As the length of sequence $c$ increases, a small error in the first few multiplications will result a large
 differences in the final compositional relation. One way to mitigate the cascading error is to increase variance
 of compositional triples $\sigma_c^2$ as the length of the sequence increases.
 

@@ -152,7 +152,7 @@ We leave 30 \% of triples as a test set to measure test error.
 At each time period, each model chooses one triple to query,
 if the selected triple is in the test set then we choose the next highest expected triple which is not in the test set.
 All models start from zero observation.
-After every querying, a model obtains a label of the queried triple from an oracle,
+After every query, a model obtains a label of the queried triple from an oracle,
 then the model updates the parameters.
 
 \textbf{Evaluation metric}: We use two different evaluation metrics, cumulative gain and ROC-AUC score,
@@ -214,8 +214,8 @@ than the \textsc{Pnormal-ts}. Because the exploration-exploitation of the Thomps
 posterior uncertainty, the fast shrinkage in the posterior variance may indicate the under
 exploration of the model. This is predictable to a certain extent in the sense that one new triple with the compositional models induces multiple new
 observations in the compositional triples, so the uncertainties of entities and
-relations are measured less than those with non-compositional model. The most of active
-learning algorithm utilise an uncertainty of a model, and therefore, a model with augmented
+relations are measured less than those with non-compositional model. Most active
+learning algorithms utilise model uncertainty, and hence a model with augmented
 structures such as the relation compositions should be more careful about reflecting its uncertainty correctly.
 
 \eat{If the samples of the compositional model follows the posterior

@@ -30,17 +30,17 @@
 \end{algorithmic}
 \end{algorithm}
 
-We now introduce a particle Thompson sampling algorithm for the incremental knowledge population with the proposed \textsc{Prescal} models. In the incremental population task, a knowledge base starts with zero or initial observations, and at each time period, we select one triple to be queried and labelled by an external system, i.e. human experts. The queried triple is chosen selectively based on past observations. Each labelling requires a certain amount of expense, so the goal is to obtain as many valid triples as possible given a limited budget.
+We now introduce a particle Thompson sampling algorithm for the incremental knowledge population with the proposed \textsc{Prescal} models. In the incremental population task, a knowledge base starts with some initial observations, and at each time period, the agent select one triple to be labelled by an external system, i.e. human experts. The queried triple is chosen selectively based on past observations. Each label incurs a cost, so the goal is to obtain as many valid triples as possible within a given budget.
 
 Thompson sampling provides a model based query selection process, and has been gaining an increasing attention
-because of a competitive empirical performance as well as its conceptual
-simplicity~\cite{li11thompson,scott10bandit}. Let $y_{1:t}$ be a sequence of rewards up to time $t$, and $\theta$ is an underlying parameter governing the rewards. With Thompson sampling, an agent choose action $a$ according to its probability of being optimal:
+because of its competitive empirical performance as well as conceptual
+simplicity~\cite{li11thompson,scott10bandit}. Let $y_{1:t}$ be a sequence of rewards up to time $t$, and $\theta$ is an underlying parameter governing the rewards. With Thompson sampling, an agent chooses action $a$ according to its probability of being optimal:
 \begin{align}
 \arg\max_a \int \mathbb{I}\bigg[ \mathbb{E}(r|a, \theta)
 = \max_{a'}\mathbb{E}(r|a',\theta) \bigg] p(\theta|y_{1:t-1}) d\theta, \notag
 \end{align}
 where $\mathbb{I}$ is an indicator function. Note that it is sufficient
-to draw a random sample from the posterior instead computing the integral.
+to draw a random sample from the posterior instead of computing the integral.
 
 We formulate Thompson sampling for incremental knowledge population
 system as follows.
