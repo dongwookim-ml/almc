@@ -47,7 +47,7 @@ Here, $E\in {\mathbb R}^{N \times D}$ contains the latent features of the
 entities $e_1, \ldots, e_N$ and $R_k\in {\mathbb R}^{D \times D}$ models the interaction of the
 latent features between entities in relation $k$.
 
-We propose a probabilistic framework that directly generalises \textsc{Rescal}
+We propose a probabilistic framework that directly generalises \textsc{Rescal} (\textsc{Prescal})
 by placing priors over the
 latent features. For each entity $i$, the latent feature of an entity $e_i \in
 \mathbb{R}^{D}$ is drawn from an isotropic multivariate-normal distribution.
@@ -73,8 +73,7 @@ we model the value of triple as a real variable.
 This is not a natural choice since the triple is a binary variable, however, we can control the confidence on different observations
 through the variance parameter $\sigma_x^2$.
 %The role of this parameter will be further discussed in the compositional model section.
-
-We develop a Gibbs sampler to perform the posterior inference for the probabilistic \textsc{Rescal} (\textsc{Prescal}). The conditional distribution of each latent variable is given by:
+We develop a Gibbs sampler to perform the posterior inference for the normally distributed observation model. The conditional distribution of each latent variable is given by:
 \begin{align}
 p(e_i |E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \sigma_e, \sigma_x) &= \mathcal{N}(e_i | \mu_i,
 \Lambda_i^{-1})  \label{eqn:sample_e} \\
@@ -85,15 +84,15 @@ where the negative subscript $-i$ indicates the every other entity variables exc
 Exact forms of the posterior means and precision matrices are listed in Table~\ref{tab:brescalposterior}, where we have
 used the identity $e_i^{\top} R_k e_j = r_k^{\top} e_i \otimes e_j$.
 
-Alternatively, we may want to model the binary observation more precisely.
-Therefore we model $x_{ikj}$ as a binomial random variable whose
+Alternatively, one may want to model the binary observation more precisely.
+Here, we model $x_{ikj}$ as a binomial random variable whose
 probability is determined by logistic regression:
 \[
 p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
 \]
 where $\sigma$ is a sigmoid function.
 We approximate the conditional posterior of
-$E$ and $R$ by Laplace approximation~\cite{bishop2006pattern}. The detail derivations are provided in the appendix\footnote{The appendix is avariable at: http://cm.cecs.anu.edu.au/prescal}.
+$E$ and $R$ by the Laplace approximation~\cite{bishop2006pattern} through an alternative sampling. The detail derivations are provided in the appendix\footnote{The appendix is available at: http://cm.cecs.anu.edu.au/post/prescal}.
 \eat{
 The maximum a posterior estimate of $e_i$ or $R_k$ given the rest can be computed through
 standard logistic regression solvers with the priors over $e_i$ and $R_k$ as regularisation parameters. Given the

@@ -21,7 +21,7 @@ In this section, we show results for Thomson sampling of the \textsc{Prescal} an
 	\subfigure[NATION]{
 	\includegraphics[width=0.295\linewidth]{images/thompson_nation_mcmc_vertical_line.pdf}
 	}
-	\caption{\label{fig:vs_greedy} The cumulative gain and ROC-AUC score of the Thompson sampling with passive learning and  AMDC models. Thompson sampling with PRESCAL (\textsc{PNORMAL-TS}) model achieves the highest cumulative gain to compare with AMDC and passive learning algorithms and shows comparable performance on ROC-AUC scores.}
+	\caption{\label{fig:vs_greedy} The cumulative gain and ROC-AUC score of the Thompson sampling with passive learning and  AMDC models. Thompson sampling with PRESCAL (\textsc{PNORMAL-TS}) model achieves the highest cumulative gain to compare with the other models and shows comparable performance on ROC-AUC scores.}
 \end{figure*}
 
 \eat{
@@ -149,7 +149,7 @@ For the passive learning with \textsc{Prescal}, we generate a random sample at e
 For the particle Thompson sampling models, we set variance parameter $\sigma_e$ and $\sigma_r$ to 1, $\sigma_x$ to 0.1, and vary $\sigma_c$ from 1 to 100.
 
 We leave 30 \% of triples as a test set to measure test error.
-At each time period, each model choose one triple to query,
+At each time period, each model chooses one triple to query,
 if the selected triple is in the test set then we choose the next highest expected triple which is not in the test set.
 All models start from zero observation.
 After every querying, a model obtains a label of the queried triple from an oracle,
@@ -200,7 +200,7 @@ especially than \textsc{Pnormal-ts}.
 This is counter-intuitive to our general understanding where
 the model that performs well in the predictive task also shows
 a better performance in the active learning.
-Of course, we also emphasis the difference between two experiments;
+Of course, we also emphasise the difference between two experiments;
 the goal of incremental population is to maximise the number of triples
 whereas the goal of knowledge completion in Section \ref{sec:exp1} is to maximise
 the predictive performance. Nevertheless, the compositional models do not outperform

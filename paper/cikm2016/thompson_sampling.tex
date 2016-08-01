@@ -52,7 +52,7 @@ from the posterior distribution, and then chooses an optimal triple $(i,k,j)^*
 observed triple $x_{(i,k,j)^*}$, the system updates the posterior of the latent
 features.
 
-The main difficulty of applying Thompson sampling to this task is a sequential update of the posterior distribution of the latent features with new observations over time. Unlike the point estimation algorithms such as
+The main difficulty of applying Thompson sampling is a sequential update for the posterior of the latent features with new observations over time. Unlike the point estimation algorithms such as
 the maximum likelihood estimator, computing a full posterior with MCMC
 requires extensive computational cost. To make the algorithm feasible, we employ a sequential Monte-Carlo (SMC) method for online posterior inference, generalising an algorithm proposed
 in~\cite{kawale2015efficient} to tensors.
@@ -67,7 +67,7 @@ every particle through the MCMC kernels with the new observation.
 We first sample the relation matrices using Equation \ref{eqn:sample_r}, and sample the entity vectors using Equation \ref{eqn:sample_e}.
 Under the mild assumption where
 $p(\Theta | \mathcal{X}^{t-1}) \approx p(\Theta | \mathcal{X}^{t})$, $\Theta = \{E, \mathcal{R}\}$,
-the weight of each particle at time $t$ can be computed as follows~\cite{del2006sequential,chopin2002sequential}:
+the weight of each particle at time $t$ can be computed as follows~\cite{del2006sequential}:
 \begin{align}
 w_{h}^{t} = \frac{p(\mathcal{X}^{t} | \Theta)}{p(\mathcal{X}^{t-1} | \Theta)}
  = p(x^{t} | \Theta, \mathcal{X}^{t-1})

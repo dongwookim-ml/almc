@@ -25,7 +25,7 @@ population and completion. For example, when there is no external source to extr
 the construction relies solely on the contribution of human experts, which can be slow and costly.
 We need a systematic way of selecting triples to be labelled, in order to maximise the performance of the following knowledge completion.
 A recent attempt at active learning for knowledge population~\cite{kajino2015active},
-has had difficulties simultaneously achieving high recall and faithful reconstruction.
+has had difficulties simultaneously achieving a high population and faithful reconstruction.
 %Active learning may provide a systematic way of selecting a data point to be labelled.
 %Many statistical models has been proposed for knowledge graph completion.
 %The combination between these models and active learning approach can be used for the active knowledge population.
@@ -36,16 +36,16 @@ has had difficulties simultaneously achieving high recall and faithful reconstru
 We propose a statistical relational model, providing a common computational framework
 for both knowledge completion and knowledge population.
 %We provide statistical relational models, which can be used for the active query selection. %, to answer the question.
-We formulate bilinear tensor factorisation~\cite{nickel2015review} in a probabilistic way, where entities and relations are embedded into a latent feature space. We propose an extension to the tensor factorisation model that incorporates the graph structure (of knowledge graphs) into the factorisation. Both probabilistic models provide a natural way of exploiting uncertainty of triples, allowing us to develop
+We formulate bilinear tensor factorisation~\cite{nickel2011three} in a probabilistic way, where entities and relations are embedded into a latent feature space. We propose an extension to the tensor factorisation model that incorporates the graph structure of knowledge graphs into the factorisation. Both probabilistic models provide a natural way of exploiting uncertainty of triples, allowing us to develop
 an active triple selection for the incremental knowledge population.
 We employ Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
-to find an optimal trade-off between exploration and exploitation during active selection.
+to find an optimal trade-off between exploration and exploitation during the active selection.
 
 Based on experiments with three commonly used benchmark datasets, we find that the additional graph structure helps predict unobserved triples, while the model without graph structure is more helpful in the incremental knowledge population task.
 %models outperforming in the knowledge completion may not perform well in the active knowledge population.
 This apparent contradiction in results can be explained by the different requirements on
 the latent structure. For knowledge completion, it is important to find good latent structures,
-However for incremental population, it is more important for accurately estimate uncertainty
+However for incremental population, it is more important to accurately estimate uncertainty
 such that we can explore the latent space efficiently over time.
 As far as we know, this is the first study that explicitly investigates the contrasting
 effects of graph structure when applied to knowledge completion and incremental knowledge population.

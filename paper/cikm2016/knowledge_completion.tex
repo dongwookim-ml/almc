@@ -81,11 +81,10 @@ Model & Top 1 & Top 2 & Top 3 & Top 4 & Top 5 \\ \hline \hline
 %In this experiment, instead running the Thompson sampling for the compositional models,
 We first evaluate our model for the knowledge completion task
 %we follow the standard train/validation/test approach
-to measure the performance of \textsc{Prescal} with all non compositional and compositional variants.
+to measure the predictive performance of \textsc{Prescal} with all non compositional and compositional variants.
 %The results between active acquisition and training and testing are not always coincident, but if the Thompson sampling samples latent features from true posterior of the compositional model, the samples corresponds to the true posterior samples from the training set.
-
-We evaluate the \textsc{Prescal} models on three benchmark datasets and compare the performance to various baseline
-algorithms. We use three relational datasets: KINSHIP, UMLS, and NATION. Detailed description of each
+We evaluate the models on three benchmark datasets: KINSHIP, UMLS, and NATION, and compare  performances with the original \textsc{RESCAL}. 
+Detailed description of each
 dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washington.edu/papers/kok07/}.
 
 \eat{
@@ -102,7 +101,7 @@ dataset is shown in Table \ref{tbl:dataset} \footnote{https://alchemy.cs.washing
 For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
 from 1\% to 13\% of datasets. For \textsc{Rescal}, we use the authors' implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For \textsc{Prescal} and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
 %Based on the trained model, measure the ROC-AUC scores on the test set.
-Given the test set, the performances of models are measured by ROC-AUC score:
+The performances of models are measured by ROC-AUC score on the test set:
 \begin{align}
 \frac{1}{|\mathcal{X}_p|  |\mathcal{X}_n|} \sum_{\{i,k,j\} \in \mathcal{X}_p, \{i',k',j'\} \in \mathcal{X}_n} \mathbb{I}[\bar{x}_{ikj} > \bar{x}_{ikj}],
 \end{align}
@@ -113,7 +112,7 @@ with the various baseline models. We can see that the \textsc{Prescal} with
 the normal output (\textsc{Pnormal}) or logistic output (\textsc{Plogit}) generally outperform \textsc{Rescal}.
 We compare the compositional model with original \textsc{Rescal}, \textsc{Pnormal}, and \textsc{Plogit}.
 In general, the multiplicative compositional model (\textsc{Pcomp-mul}) outperforms
-the additive compositional model (\textsc{Pcomp-add}), and performs better the other baseline models
+the additive compositional model (\textsc{Pcomp-add}), and performs better than the other baseline models
 when the proportion of training set is small. For UMLS and NATION, \textsc{Pcomp-mul} outperforms
 across the all training proportions.
 For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
@@ -122,13 +121,13 @@ The goal of the compositional models is to factorise triples along with the grap
 The triple prediction task tells us the trained model is capable of triple prediction,
 but does not tell whether the features can recover the graph structure.
 %Both models perform well in triple prediction, but this does not tell
-If the model factorise the graph structure properly,
+If the model factorises the graph structure properly,
 then the trained model can predict not only triples but the graph structure as well.
 To validate the model assumption, we evaluate a path prediction task.
 For this task, we use 10\% of UMLS dataset for training.
 We compute the expected value of unobserved path given a trained model.
 The non-compositional models are not capable to compute the expected value.
-In such case, we approximate paths with multiplicative model assumption in Equation \ref{eqn:multi}.
+In such a case, we approximate paths with multiplicative model assumption in Equation \ref{eqn:multi}.
 We vary the path length from 1 (triple) to 4, and measure ROC-AUC scores on the reconstructed compositional triples.
 Figure \ref{fig:path_pred} shows the result.
 Both compositional models show consistent performance regardless of the path length.

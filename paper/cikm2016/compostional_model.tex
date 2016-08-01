@@ -4,8 +4,9 @@
 
 In this section, we propose a compositional relation model that exploits the compositional structure of
 knowledge graph to capture the latent semantic structure of the entities and relations.
-While previously suggested vector space models provide a statistical way to infer the latent semantic
-structure of entities and relations, but lack consideration of a graph structure of a knowledge graph itself.
+A very recent study shows the benefit of using compositionality in the vector space model~\cite{guu2015traversing}. Here, we further extend their framework in a probabilistic way.
+%While previously suggested vector space models provide a statistical way to infer the latent semantic
+%structure of entities and relations, but lack consideration of a graph structure of a knowledge graph itself.
 %%LX: the above para is also in intro right now.
 
 The compositionality represents a semantic meaning of a path over a knowledge graph that corresponds to a
@@ -39,12 +40,11 @@ With these extended compositional triples, we again model $x_{icj}$ with a bilin
 x_{(i, {{c}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{{c}(k_1,k_2)} e_j, \sigma_{c}^2),
 \end{align}
 where $R_{{c}(k_1,k_2)} \in \mathbb{R}^{D\times D}$ is a latent matrix of compositional relation $c$, and $
-\sigma_{c}^2$ is a covariance of the compositional triples. We keep the same latent vector $e$ for each entity
-to model both non-compositional triples and compositional triples.
+\sigma_{c}^2$ is a covariance of the compositional triples. Again the entity vectors are shared across the compositional and non-compositional triples.
 In the subsequent sections, we provide two different ways of modelling the compositional relation $R_c$.
 
 \subsection{Additive Compositionality}
-With the compositions of relations, the \textsc{Prescal} may place a different relation matrix $R_c$ for each composition $c$. However, the number of required matrices increases exponentially, as the length of composition increases linearly. Consequently, the computational cost will also increases exponentially.
+With the compositions of relations, the \textsc{Prescal} may place a different relation matrix $R_c$ for each composition $c$. The number of required matrices, however, increases exponentially, as the length of composition increases linearly. Consequently, the computational cost will also increase exponentially.
 To limit the required number of parameters, we propose two different ways of modelling the compositional relation $R_c$.
 First, we define an additive compositional relation $R_c$ as a sequence of normalised summation over
 relation matrices in composition $c$, i.e.,
