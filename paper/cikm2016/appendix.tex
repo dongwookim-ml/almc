@@ -1,6 +1,6 @@
 %!TEX root = ./cikm2016.tex
 \section{Rao-Blackwellisation particle Thompson sampling}
-We also develop Rao-Blackwellisation particle Thompson sampling algorithm for the RESCAL with the Gaussian output model. The outline of the algorithm is described in Algorithm \ref{alg:rbsmc}. With the Rao-Blackwellisation, we marginalise out the relation matrix $R_k$ while computing the weight of each particle, but we still keep the same MCMC kernel to generate the samples. In theory, this will reduce the degeneracy problems for long running particles, but in our experiment, the difference between two models is not significant.
+We also develop Rao-Blackwellisation particle Thompson sampling algorithm for the \textsc{Rescal} with the Gaussian output model. The outline of the algorithm is described in Algorithm \ref{alg:rbsmc}. With the Rao-Blackwellisation, we marginalise out the relation matrix $R_k$ while computing the weight of each particle, but we still keep the same MCMC kernel to generate the samples. In theory, this will reduce the degeneracy problems for long running particles, but in our experiment, the difference between two models is not significant.
 \begin{algorithm}[t!]
    \caption{Rao-Blackwellised Particle Thompson Sampling for Gaussian output}
    \label{alg:rbsmc}

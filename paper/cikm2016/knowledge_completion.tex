@@ -36,7 +36,7 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 	whereas those of the non-compositional models drop sharply as the length increases.}
 \end{figure}
 
-\eat{
+
 \begin{table*}[t]
 \small
 \center
@@ -63,7 +63,7 @@ Model & Top 1 & Top 2 & Top 3 & Top 4 & Top 5 \\ \hline \hline
 \end{tabular}
 }
 \end{table*}
-}
+
 
 %\begin{figure}[t]
 %	\centering
@@ -87,7 +87,6 @@ We evaluate the models on three benchmark datasets\footnote{https://alchemy.cs.w
 Detailed description of each
 dataset is shown in Table \ref{tbl:dataset}.
 
-\eat{
 \begin{figure*}[t]
 	\centering
 
@@ -96,7 +95,6 @@ dataset is shown in Table \ref{tbl:dataset}.
 
 	\caption{\label{fig:tsne} Embedding learned entities of the UMLS dataset into a two-dimensional space through the spectral clustering. Entities with the same type are represented by the same color.}
 \end{figure*}
-}
 
 For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
 from 1\% to 13\% of datasets. For \textsc{Rescal}, we use the authors' implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For \textsc{Prescal} and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
@@ -136,7 +134,6 @@ The results show the compositional models preserve a graph structure in the embe
 It is worth emphasising that although the compositional length for training is 2,
 the compositional models show consistent results on predicting path of length 3 and 4.
 
-\eat{
 Table \ref{tbl:path_example} shows an example of the path prediction result
 starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces}.
 Both compositional and non-compositional models predict triples well.
@@ -150,4 +147,3 @@ In the UMLS dataset, the entities are categorised into 15 types,
 e.g. \texttt{Disorders}, \texttt{Living-Beings}, \texttt{Phenomena}, etc.
 We use the same color to represent the entities with the same type.
 The entities with the same type are located closer to each other with \textsc{Pcomp-mul} than \textsc{Pnormal}.
-}
