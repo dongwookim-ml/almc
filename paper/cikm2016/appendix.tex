@@ -1,4 +1,24 @@
 %!TEX root = ./cikm2016.tex
+\section{Posterior of logistic output}
+\label{sec:posterior_logistic}
+The maximum a posterior estimate of $e_i$ or $R_k$ given the rest can be computed through
+standard logistic regression solvers with the priors over $e_i$ and $R_k$ as regularisation parameters. Given the
+maximum a posteriori parameters $e_i^*$, the posterior covariance $S_i$ of entity
+$i$ takes the form
+\begin{align*}
+S_i^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{*\top} R_k e_{j}) (1 - \sigma(e_{i}^{*\top} R_k e_{j})) R_k
+e_{j}(R_k e_{j})^\top\\
+ + \sum_{x_{jki}} \sigma(e_{j}^{\top} R_k e_{i}^*) ( 1- \sigma(e_{j}^{\top} R_k e_{i}^*)) R_k^\top e^*_{i}(R_k^\top e^*_{i})^\top + I\sigma_e^{-1}
+.
+\end{align*}
+The posterior covariance of $R_k$ can be computed in the same way. Let $R_k^*$ is a maximum a posterior solution of $R_k$ given $E$. Then, the conditional posterior covariance $S_k$ of relation $k$ has the form of:
+\begin{align}
+S_k^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{\top} R_k^* e_{j}) (1 - \sigma(e_{i}^{\top} R_k^* e_{j}))
+\bar{e}_{ij}\bar{e}_{ij}^\top + I\sigma_r^{-1}, \notag
+\end{align}
+where $\bar{e}_{ij} = e_i \otimes e_j$.
+
+\eat{
 \section{Rao-Blackwellisation particle Thompson sampling}
 We also develop Rao-Blackwellisation particle Thompson sampling algorithm for the \textsc{Rescal} with the Gaussian output model. The outline of the algorithm is described in Algorithm \ref{alg:rbsmc}. With the Rao-Blackwellisation, we marginalise out the relation matrix $R_k$ while computing the weight of each particle, but we still keep the same MCMC kernel to generate the samples. In theory, this will reduce the degeneracy problems for long running particles, but in our experiment, the difference between two models is not significant.
 \begin{algorithm}[t!]
@@ -28,3 +48,4 @@ We also develop Rao-Blackwellisation particle Thompson sampling algorithm for th
    \ENDFOR
 \end{algorithmic}
 \end{algorithm}
+}

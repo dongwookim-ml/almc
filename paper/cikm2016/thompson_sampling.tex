@@ -90,13 +90,4 @@ We show that the Thompson sampling approach improves over passive \textsc{Presca
 experiments with real and synthetic data.
 We also investigated the extension of the Rao-Blackwellisation approach as proposed
 in~\cite{kawale2015efficient}, but we did not observe any significant performance improvements.
-We describe our extension in the appendix.
-
-%\subsection{(?)Particle Thompson sampling with SGLD kernel}
-%Above two algorithms are not well suitable for large scale dataset because the sample requires quantities estimated over all possible triples.
-%
-%Is it possible to use the stochastic gradient Langevin dynamics (SGLD) \cite{welling2011bayesian} kernel $K(E' | E)$ to sample $E'$ given $E$ with or without auxiliary variable $R_k$?
-%\begin{align}
-%e_i' \leftarrow e_i + \frac{\epsilon_t}{2}\Bigg\{\nabla \log p(\mathcal{X}|e_i) + \nabla \log p(e_i|\sigma_e)\Bigg\} + \nu_t
-%\end{align}
-%where, $\nu_t \sim \mathcal{N}(0, \epsilon_t I)$.
+%We describe our extension in the appendix.

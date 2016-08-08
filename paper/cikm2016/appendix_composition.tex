@@ -4,7 +4,7 @@
 We provide the conditional posterior distributions of the compositional models.
 
 \subsection{Additive Compositionality}
-
+\label{sec:add_comp_posterior}
 The conditional distribution of $e_i$ given $E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
 expanded from the posterior of \textsc{Prescal} by incorporating compositional triples.
 \begin{align} \label{eqn:comp_sample_e}
@@ -70,7 +70,7 @@ Completing the square results Equation \ref{eqn:comp_cond_r}.
 %compositional triple $(i, c, j)$.
 
 \subsection{Multiplicative Compositionality}
-
+\label{sec:mult_comp_posterior}
 Given a sequence of relations including relation $k$, $R_k$ is placed in the middle of the compositional
 sequence, i.e., $e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(\delta_k)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j$, where $
 \delta_k$ is the index of relation $k$. For notational simplicity, we will denote the left side $e_i^\top R_{c(1)}
