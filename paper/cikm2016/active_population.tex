@@ -42,7 +42,7 @@ For the particle Thompson sampling models, we set variance parameter $\sigma_e$ 
 
 We leave 30 \% of triples as a test set to measure test error.
 At each time period, each model chooses one triple to query,
-if the selected triple is in the test set then we choose the next highest expected triple which is not in the test set.
+if the selected triple is in the test set then we choose the next highest expected triple that is not in the test set.
 All models start from zero observation.
 After every query, a model obtains a label of the queried triple from an oracle,
 then the model updates the parameters.

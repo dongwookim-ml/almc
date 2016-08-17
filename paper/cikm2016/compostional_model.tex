@@ -32,11 +32,11 @@ compositional triple $x_{icj}$ is an
 indicator variable that show the existence of the path from entity $i$ to entity $j$ through sequence
 of relations
 $c$ in $\mathcal{X}$. Note that the compositional relation $c$ is an abstract relation, and there might be a
-multiple possible paths from entity $i_1$ to $j_n$.
+multiple possible paths from entity $i$ to $j$.
 
 With these extended compositional triples, we again model $x_{icj}$ with a bilinear Gaussian distribution,
 \begin{align}
-x_{(i, {{c}(k_1, k_2)}, l)} \sim \mathcal{N}(e_i^\top R_{{c}(k_1,k_2)} e_j, \sigma_{c}^2),
+x_{(i, {{c}(k_1, k_2)}, j)} \sim \mathcal{N}(e_i^\top R_{{c}(k_1,k_2)} e_j, \sigma_{c}^2),
 \end{align}
 where $R_{{c}(k_1,k_2)} \in \mathbb{R}^{D\times D}$ is a latent matrix of compositional relation $c$, and $
 \sigma_{c}^2$ is a covariance of the compositional triples. Again the entity vectors are shared across the compositional and non-compositional triples.
@@ -91,6 +91,9 @@ The multiplicative compositionality can be understood as a sequence of linear tr
 entity $i$ with the compositional relations, and the inner product between the transformed entity and target
 entity forms a value of the compositional triple. Again, the details of the parameter estimators are shown in Appendix \ref{sec:mult_comp_posterior}.
 
+To compare with the additive model, the multiplicative model preserves the ordering in a compositional relation, and hence the different orderings of relations result different relations in the compositional model. 
+%We can control a contribution of the compositional triples by variance parameter $\sigma_c^2$ for both compositional models.
+
 \eat{
 Given a sequence of relations including relation $k$, $R_k$ is placed in the middle of the compositional
 sequence, i.e., $e_i^\top R_{c(1)}R_{c(2)} \dots R_{c(\delta_k)} \dots R_{c(|c|-1)}R_{c(|c|)} e_j$, where $
@@ -107,8 +110,6 @@ the mean and precision are obtained by expanding out the product across $\mathca
 $\mathcal{X}^{L(t)}$. The details of the parameters are shown in the appendix.
 The conditional distribution of $e_i$ given the rest is the same as Equation $\ref{eqn:comp_sample_e}$.
 }
-
-We can control a contribution of the compositional triples by variance parameter $\sigma_c^2$ for both compositional models.
 
 %As the length of sequence $c$ increases, a small error in the first few multiplications will result a large
 %differences in the final compositional relation. One way to mitigate the cascading error is to increase variance
