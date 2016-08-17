@@ -1,48 +1,9 @@
 %!TEX root = ./cikm2016.tex
 \begin{abstract}
-
-Knowledge base construction consists of two tasks: extracting information from external sources  (knowledge population) and inferring missing information through a statistical analysis on the extracted information (knowledge completion).
-In many cases, there are not enough external sources to extract information for a comprehensive
-knowledge base.
-An incremental knowledge population approach via labelling of human experts can help to reduce the gap between these two processes.
-We propose a new probabilistic knowledge base factorisation method that benefits from the path structure of existing knowledge (e.g. syllogism). Our method enables a common computation
-and modelling approach to be used for both knowledge base construction tasks.
-Empirical experiments show that our model improves over the non-probabilistic and non-path counterparts on the knowledge completion task.
-The probabilistic formulation allows us to develop an incremental knowledge population model that trades off exploitation and exploration.
-% We demonstrate that the factorisation model with the path structure performs better on the knowledge completion task.
-We show that our proposed approach for incremental knowledge population performs significantly
-better than sampling knowledge triples at random.
-
-\eat{
-Our incremental model performs better on empirical benchmarks than
-Whereas the model without the path structure performs better in the incremental population.
-The result leads to a counter-intuitive conclusion; a better predictive model does not guarantee to have a better performance in incremental population.
-An additional experiment explains the degeneracy under the model uncertainty.
-}
-\eat{
-%Automated processes for knowledge base completion benefit from models that account for
-%statistical uncertainty.
-We are concerned with the problem of knowledge base completion, or inferring missing facts from known relations.
-%  It is desirable to take into account paths and compositions, and
-%  able to connect to the knowledge extraction problem by actively
-%  acquiring labeled data points.
-%  Recent knowledge completion algorithms could do either, but not both.
-A human can readily infer a new fact through the composition of known facts in knowledge base,
-whereas the current statistical relational models lack the consideration of
-active knowledge acquisition through the composition of knowledge.
-We propose a probabilistic model to bridge this gap.
-We start from a new formulation of vector space embedding for knowledge tensors  %which generalises the RESCAL model to
-that explicitly model distributions of relations. This
-enables us to extend Thompson sampling approach to knowledge bases, and
-%we demonstrate the benefit of active knowledge acquisition. We
-also incorporate additive and multiplicative
-approaches for composing relations.
-On synthetic and real world datasets,
-we find that learning with composition is helpful
-when training data is sparse,
-and that Thompson sampling provides effective exploitation-exploration strategies
-that balance recall and reconstruction accuracy.
-% and show the regimes where compositional models are
-%beneficial for knowledge base completion.
-}
+Knowledge base construction consists of two tasks: extracting information from external resources  (knowledge population) and inferring missing information through a statistical analysis on the extracted information (knowledge completion). 
+In many cases, a lack of sufficient external resources in the knowledge population hinders the following statistical inference.
+The gap between these two processes can be reduced by an incremental population approach via labelling of human experts.
+We propose a new probabilistic knowledge base factorisation method that benefits from the path structure of existing knowledge (e.g. syllogism) and enables a common modelling approach to be used for both incremental population and knowledge completion tasks.
+More specifically, the probabilistic formulation allows us to develop an incremental population algorithm that trades off exploitation-exploration.
+Experiments on three benchmark dataset shows that the balanced exploitation-exploration helps the incremental population, and the additional path structure helps to predict missing information in the knowledge completion.
 \end{abstract}
