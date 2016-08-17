@@ -1,14 +1,14 @@
 %!TEX root = ./cikm2016.tex
 
 %\section{Related Work}
-\textbf{Related work}:
+\textbf{Related work}
 The literature on data factorisation and vector space models for 
 relational data is vast. 
 %or low-rank approximation is vast. 
 We give a brief overview of related work along three design choices:
 %with respect to three orthogonal dimensions, 
 the method, the learning strategy, and the data representation. 
-We then use these dimensions to help position our work. 
+%We then use these dimensions to help position our work. 
 \begin{description}
 %\item[Statistical method] With an statistical assumption used to develop 
 %underlying model structure, we broadly categorise models into Bayesian 
@@ -19,25 +19,20 @@ formulation, whether an obtained model has a probabilistic interpretation.
 \item[Passive/Active] This refers to two different learning strategies, 
 of passively learning a model given labeled data points, or actively 
 requesting data points to be labelled.
-\item[Matrix/Tensor/Composition] Relational learning problems can operate on 
-different data representations. Matrix representation is common when a dataset 
-can be represented as a bi-partite graph, such as (user, item). 
-Tensor representation is handy when edges in the 
-graph have labels, i.e. (entity1, relation, entity2). We can think of 
-compositions as paths in the graph, i.e. entity1 -- relation1 -- entity2 -- 
-relation2 -- entity3.
-%\item[Data representation] Data for a factorisation problem can be 
-%represented as a matrix or tensor. A graph representation of tensor reveals
-%a compositional structure of the data.
+\item[Matrix/Tensor/Composition] This refers to three data representations. Matrix represents single relational data such as \texttt{(user, item)}.
+% Matrix representation of data is common when a dataset can be represented as a bi-partite graph, such as (user, item). 
+Tensor represents multiple relational data such as \texttt{(entity, relation, entity2)}.
+%Tensor representation is handy when edges in the graph have labels, i.e. (entity1, relation, entity2).
+Composition includes more complex structures of multiple relational data such as \texttt{(entity1 -- relation1 -- entity2 -- relation2 -- entity3)}.
+%We can think of compositions as paths in the graph, i.e. (entity1 -- relation1 -- entity2 -- relation2 -- entity3).
 \end{description}
-In Table \ref{tbl:relatedwork}, we summarise a sample of related recent work 
-along all combinations in each dimension. 
+In Table \ref{tbl:relatedwork}, we summarise related work along all combinations in each dimension.
 %Note that N-Pr, A, C, or Non-Probabilistic Active Composition model, can be done by 
 %simply using the query strategies from \cite{kajino2015active} on the 
 %compositional model by \cite{guu2015traversing}. 
-Our work address a critical gap 
-in probabilistic Tensor factorisation capable of learning in the 
-Active setting with relation Compositions.
+Our work address the uncovered combination of three design choices in the probabilistic method.
+% a critical gap 
+%in Probabilistic tensor factorisation (Pr) capable of Active learning (A) with Compositions of  relations (C).
 \eat{The knowledge graph construction has been widely focused in the natural 
 language processing communities. 
 Manual data acquisition with human crafted 

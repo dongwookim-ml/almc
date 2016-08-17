@@ -16,47 +16,39 @@ Despite efforts towards a comprehensive knowledge graph,
 even the largest commercial knowledge graph is still far from complete~\cite{dong2014knowledge}.
 The {\bf knowledge completion} task has emerged as a complement of the knowledge population task
 to scale up the knowledge graph construction.
-Unlike the knowledge population task, the goal of knowledge completion is to correctly predict unseen triples based on the known triples.
-Several statistical relational models has been proposed so far~\cite{Lao2010,nickel2011three}.
+Unlike the knowledge population task, the goal of knowledge completion is to correctly predict unknown triples based on a statistical analysis of the known triples~\cite{Lao2010,nickel2011three}.
 %Unlike the knowledge population task where the goal is to maximise the number of triples, the goal of knowledge completion is to maximise a prediction performance on unseen triples through a statistical analysis on the extracted information \cite{guu2015traversing,Lao2010}.
 %There are two main knowledge completion approaches. First, latent feature models factorise entities and relations to predict unseen triples. Second, graph feature models
 
 An obstacle to knowledge graph construction is a gap between knowledge
-population and completion. For example, when there is no external source to extract knowledge,
-the construction relies solely on the contribution of human experts, which can be slow and costly.
-We need a systematic way of selecting triples to be labelled, in order to maximise the performance of the following knowledge completion.
-A recent attempt at active learning for knowledge population~\cite{kajino2015active},
+population and completion. The more knowledge population, the better a statistical model predict the unknown triples. In many cases, however, there is insufficient external resource to extract knowledge, and thus the construction relies solely on the incremental population by human experts, which can be slow and costly.
+We need an active way of selecting triples to be labelled, in order to maximise the performance of the following knowledge completion.
+A recent attempt at active incremental population~\cite{kajino2015active}
 has had difficulties simultaneously achieving a high population and faithful reconstruction.
-%Active learning may provide a systematic way of selecting a data point to be labelled.
-%Many statistical models has been proposed for knowledge graph completion.
-%The combination between these models and active learning approach can be used for the active knowledge population.
-%However, it is not clear that which model from the knowledge completion should be used for the active selection because of the discrepancy between two different goals of the knowledge population and completion.
-%However, the selection of proper model is still ambiguous and arbitrary for the active acquisition task.
-%In the active learning literature, it is often ignored that which model for a predictive task is appropriate for its active counterpart.
 
-We propose a statistical relational model, providing a common computational framework
+We propose a statistical relational model, providing a probabilistic framework
 for both knowledge completion and knowledge population.
-%We provide statistical relational models, which can be used for the active query selection. %, to answer the question.
-We formulate bilinear tensor factorisation~\cite{nickel2011three} in a probabilistic way, where entities and relations are embedded into a latent feature space. We propose an extension to the tensor factorisation model that incorporates the graph structure of knowledge graphs into the factorisation. Both probabilistic models provide a natural way of exploiting uncertainty of triples, allowing us to develop
-an active triple selection for the incremental knowledge population.
-We employ Thompson sampling~\cite{scott10bandit} -- an approach for solving the multi-armed bandit problem,
+We formulate bilinear tensor factorisation~\cite{nickel2011three} in a probabilistic way, where entities and relations are embedded into a latent feature space. 
+We propose an extension to the tensor factorisation model that incorporates the path structure of knowledge graphs into the factorisation. 
+The probabilistic formulation provides a natural way of exploiting uncertainty of triples,
+allowing us to develop an active triple selection for the incremental population.
+We employ Thompson sampling~\cite{scott10bandit} % -- an approach for solving the multi-armed bandit problem,
 to find an optimal trade-off between exploration and exploitation during the active selection.
 
-Based on experiments with three commonly used benchmark datasets, we find that the additional graph structure helps predict unobserved triples, while the model without graph structure is more helpful in the incremental knowledge population task.
-%models outperforming in the knowledge completion may not perform well in the active knowledge population.
+Based on experiments with three benchmark datasets, we find that the additional graph structure helps predict unobserved triples, while the model without graph structure is more helpful in the incremental population.
 This apparent contradiction in results can be explained by the different requirements on
 the latent structure. For knowledge completion, it is important to find good latent structures,
-However for incremental population, it is more important to accurately estimate uncertainty
+For incremental population, however, it is more important to accurately estimate uncertainty
 such that we can explore the latent space efficiently over time.
 As far as we know, this is the first study that explicitly investigates the contrasting
-effects of graph structure when applied to knowledge completion and incremental knowledge population.
+effects of path structure in knowledge completion and incremental population.
 
 \eat{
 The contributions of this paper can be summarised as follows:
 \begin{itemize}
 \item We propose a probabilistic formulation of bilinear tensor factorisation that allows us to predict the uncertainty of unobserved triples (Section \ref{sec:brescal}).
 \item We incorporate the graph path structure of a knowledge graph into the proposed factorisation by modelling a composition of relations as algebraic operations in the probabilistic embedding space (Section \ref{sec:comp}).
-\item We propose an incremental knowledge population method that searches the factorised space, trading of exploration and exploitation using Thompson sampling (Section \ref{sec:pts}).
+\item We propose an incremental population method that searches the factorised space, trading of exploration and exploitation using Thompson sampling (Section \ref{sec:pts}).
 \item Experiments on the knowledge completion with three real-world datasets show that the compositional model predicts unseen triples better than the bilinear factorisation model (Section \ref{sec:exp1}).
 \item Experiments show the importance of uncertainty in the incremental knowledge base population task. The better predictive model does not guarantee a better knowledge population due to an improper uncertainty measure (Section \ref{sec:exp2}).
 \end{itemize}
