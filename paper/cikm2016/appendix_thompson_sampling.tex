@@ -2,34 +2,6 @@
 \section{Particle Thompson Sampling}
 \label{sec:pts}
 
-\begin{algorithm}[t!]
-   \caption{Particle Thompson sampling for probabilistic \textsc{Rescal} with Gaussian output variable}
-   \label{alg:smc}
-\begin{algorithmic}
-   \STATE {\bfseries Input:} $\mathcal{X}^{0}, \sigma_x, \sigma_e, \sigma_r$.
-   \FOR{$t=1,2, \dots$}
-   \STATE \textit{Thompson Sampling}:
-   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t-1})$
-   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_{t-1}}, \mathcal{R}^{h_{t-1}})$
-   \STATE Query $(i,k,j)$ and observe $x_{ikj}$
-   \STATE $\mathcal{X}^{t} \leftarrow \mathcal{X}^{t-1} \cup \{x_{ikj}\}$
-
-   \STATE \textit{Particle Filtering}:
-   \STATE $\forall h, w_h^{t} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighing
-   \IF{ESS$(\mathbf{w}^{t}) \leq N$}
-   \STATE resample particles
-   \STATE $w_h^{t} \leftarrow 1/H$
-   \ENDIF
-
-   \FOR{$h=1$ {\bfseries to} $H$}
-   \STATE $\forall k, R_k^{h_t} \sim p(R_k | \mathcal{X}^{t}, E^{h_{t-1}}, \mathcal{R}_{-k})$   \hfill $\triangleright$ see Table (\ref{tab:brescalposterior})
-   \STATE $\forall i, e^{h_t}_i \sim p(e_i | \mathcal{X}^{t}, E_{-i}, \mathcal{R}^{h_{t}})$ \hfill $\triangleright$ see Table (\ref{tab:brescalposterior})
-   \ENDFOR
-
-   \ENDFOR
-\end{algorithmic}
-\end{algorithm}
-
 We now introduce a particle Thompson sampling algorithm for the incremental knowledge population with the proposed \textsc{Prescal} models. In the incremental population task, a knowledge base starts with some initial observations, and at each time period, the agent select one triple to be labelled by an external system, i.e. human experts. The queried triple is chosen selectively based on past observations. Each label incurs a cost, so the goal is to obtain as many valid triples as possible within a given budget.
 
 Thompson sampling provides a model based query selection process, and has been gaining an increasing attention
@@ -91,3 +63,31 @@ experiments with real and synthetic data.
 We also investigated the extension of the Rao-Blackwellisation approach as proposed
 in~\cite{kawale2015efficient}, but we did not observe any significant performance improvements.
 %We describe our extension in the appendix.
+
+\begin{algorithm}[t!]
+   \caption{Particle Thompson sampling for probabilistic \textsc{Rescal} with Gaussian output variable}
+   \label{alg:smc}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} $\mathcal{X}^{0}, \sigma_x, \sigma_e, \sigma_r$.
+   \FOR{$t=1,2, \dots$}
+   \STATE \textit{Thompson Sampling}:
+   \STATE $h_t \sim $ Cat$(\mathbf{w}^{t-1})$
+   \STATE $(i,k,j) \leftarrow \arg\max p(x_{ikj}| E^{h_{t-1}}, \mathcal{R}^{h_{t-1}})$
+   \STATE Query $(i,k,j)$ and observe $x_{ikj}$
+   \STATE $\mathcal{X}^{t} \leftarrow \mathcal{X}^{t-1} \cup \{x_{ikj}\}$
+
+   \STATE \textit{Particle Filtering}:
+   \STATE $\forall h, w_h^{t} \propto p(x_{ikj} | E^{h}, \mathcal{R}^{h})$   \hfill $\triangleright$ Reweighing
+   \IF{ESS$(\mathbf{w}^{t}) \leq N$}
+   \STATE resample particles
+   \STATE $w_h^{t} \leftarrow 1/H$
+   \ENDIF
+
+   \FOR{$h=1$ {\bfseries to} $H$}
+   \STATE $\forall k, R_k^{h_t} \sim p(R_k | \mathcal{X}^{t}, E^{h_{t-1}}, \mathcal{R}_{-k})$   \hfill $\triangleright$ see Table (\ref{tab:brescalposterior})
+   \STATE $\forall i, e^{h_t}_i \sim p(e_i | \mathcal{X}^{t}, E_{-i}, \mathcal{R}^{h_{t}})$ \hfill $\triangleright$ see Table (\ref{tab:brescalposterior})
+   \ENDFOR
+
+   \ENDFOR
+\end{algorithmic}
+\end{algorithm}
