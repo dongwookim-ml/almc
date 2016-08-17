@@ -1,6 +1,6 @@
 %!TEX root = ./cikm2016.tex
 \section{Thompson Sampling on synthetic data}
-
+In this section, we verify the sequential Thompson sampling through a compositional and non-compositional synthetic data sets.
 \label{sec:thompson_synthetic}
 \begin{figure}[t]
 	\centering
@@ -16,11 +16,8 @@
 	\subfigure[\scriptsize Gaussian: N=20, K=10, D=5\label{fig:syn4}]{
 	\includegraphics[width=0.45\linewidth]{images/toy_20_10_5.pdf}
 	}
-%	\includegraphics[width=0.32\linewidth]{images/toy_5_10_5.pdf}
-%	\includegraphics[width=0.32\linewidth]{images/toy_10_5_5.pdf}
 	\caption{\label{fig:synthetic} Cumulative regret of particle Thompson sampling with Gaussian and logistic output (PNORMAL-TS, PLOGIT-TS) against Passive learning
 	on synthetic datasets with logistic	(top row, a, b) and Gaussian (bottom row, c, d) output variables.
-	%We compared the particle Thompson sampling with passive sampling method.
 	The averaged cumulative regrets over 10 runs are plotted with one standard error.
 	As the model obtained more and more labeled samples from Thompson sampling,
 	the cumulative regrets increase sub-linearly.}
@@ -110,7 +107,7 @@ additive compositional data in Figure \ref{fig:comp_synthetic}(b),
 and both have lower regrets than passive learning or \textsc{Pnormal-ts} without compositions.
 
 
-\subsection{Posterior variance analysis}
+\section{Posterior variance analysis}
 \begin{figure}[t]
 	\centering
 
@@ -119,7 +116,8 @@ and both have lower regrets than passive learning or \textsc{Pnormal-ts} without
 	\caption{\label{fig:pos_var} Trace plot of mean posterior variance of the non-compositional model and compositional models. Y-axis denotes the average posterior covariance, and X-axis denotes the number of queries. The second plot magnifies the first plot.}
 \end{figure}
 
-Of course, we also emphasise the difference between two experiments;
+In section \ref{sec:exp2}, we find that the compositional model performs worse than the non-compositional models in the active incremental population. 
+We emphasise the difference between two experiments;
 the goal of incremental population is to maximise the number of triples
 whereas the goal of knowledge completion in Section \ref{sec:exp1} is to maximise
 the predictive performance. Nevertheless, the compositional models do not outperform
@@ -132,7 +130,7 @@ As shown in the figure, the average variance of the compositional model shrinks 
 than the \textsc{Pnormal-ts}. Because the exploration-exploitation of the Thompson sampling depends on the
 posterior uncertainty, the fast shrinkage in the posterior variance may indicate the under
 exploration of the model. This is predictable to a certain extent in the sense that one new triple with the compositional models induces multiple new
-observations in the compositional triples, so the uncertainties of entities and
+compositional triples, so the uncertainties of entities and
 relations are measured less than those with non-compositional model. Most active
 learning algorithms utilise model uncertainty, and hence a model with augmented
 structures such as the relation compositions should be more careful about reflecting its uncertainty correctly.

@@ -60,19 +60,18 @@ Detailed description of each
 dataset is shown in Table \ref{tbl:dataset}.
 %\footnote{https://alchemy.cs.washington.edu/papers/kok07/}
 
-For all experiments, we set the compositional length $L$ to 2, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
-from 1\% to 13\% of datasets. For \textsc{Rescal}, we use the authors' implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For \textsc{Prescal} and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
-%Based on the trained model, measure the ROC-AUC scores on the test set.
-The performances of models are measured by ROC-AUC score on the test set:
+For all experiments, we set the compositional length $L$ to two, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
+from 1\% to 13\% of datasets. For \textsc{Rescal}, we use the original implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For \textsc{Prescal} and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
+The performances of models are measured by the ROC-AUC score on the test set:
 \begin{align}
 \frac{1}{|\mathcal{X}_p|  |\mathcal{X}_n|} \sum_{\{i,k,j\} \in \mathcal{X}_p, \{i',k',j'\} \in \mathcal{X}_n} \mathbb{I}[\bar{x}_{ikj} > \bar{x}_{ikj}],
 \end{align}
 where $\mathcal{X}_p$ and $\mathcal{X}_n$ are the set of positive and negative triples in the test set, respectively, and $\bar{x}$ is a reconstructed triple.
 
 Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models
-with the various baseline models. We can see that the \textsc{Prescal} with
+with the various baseline models. The \textsc{Prescal} with
 the normal output (\textsc{Pnormal}) or logistic output (\textsc{Plogit}) generally outperform \textsc{Rescal}.
-We compare the compositional model with original \textsc{Rescal}, \textsc{Pnormal}, and \textsc{Plogit}.
+We compare the compositional model with the original \textsc{Rescal}, \textsc{Pnormal}, and \textsc{Plogit}.
 In general, the multiplicative compositional model (\textsc{Pcomp-mul}) outperforms
 the additive compositional model (\textsc{Pcomp-add}), and performs better than the other baseline models
 when the proportion of training set is small. For UMLS and NATION, \textsc{Pcomp-mul} outperforms
@@ -96,7 +95,7 @@ Both compositional models show consistent performance regardless of the path len
 However, the performance of the non-compositional models drops sharply as the length increases.
 The results show the compositional models preserve a graph structure in the embedded space.
 It is worth emphasising that although the compositional length for training is 2,
-the compositional models show consistent results on predicting path of length 3 and 4.
+the compositional models show consistent results on predicting paths of length 3 and 4.
 
 Table \ref{tbl:path_example} shows an example of the path prediction result
 starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces}.
@@ -119,7 +118,6 @@ Model & Top 1 & Top 2 & Top 3 & Top 4 & Top 5 \\ \hline \hline
 \textsc{Plogit} & \textbf{Cell-Function}&\textbf{Disease-or-Syndrome}&\textbf{Cell-or-Molecular-Dysf.}&\textbf{Exp.-Model-of-Disease}&\textbf{Mental-Process} \\ \hline
 \textsc{Pcomp-mul} & \textbf{Archaeon}&\textbf{Fish}&\textbf{Fungus}&\textbf{Invertebrate}&\textbf{Human} \\ \hline
 \textsc{Pcomp-add} & \textbf{Path.-Function}&\textbf{Bird}&\textbf{Cell-or-Molecular-Dysf.}&Drug-Delivery-Device&Congenital-Abnormality
-
 \end{tabular}
 }
 \subfigure[Length-2 path prediction: \texttt{(MB Dysfunction, Affects, Produces, -)}]{
@@ -129,7 +127,6 @@ Model & Top 1 & Top 2 & Top 3 & Top 4 & Top 5 \\ \hline \hline
 \textsc{Plogit} & Amphibian&Gov.-or-Reg.-Activity&Food&Biologic-Func.&Classification\\ \hline
 \textsc{Pcomp-mul} & \textbf{Enzyme}&\textbf{Body-Substance}&\textbf{Biogenic-Amine}&Carbohydrate&\textbf{Immunologic-Factor} \\ \hline
 \textsc{Pcomp-add} & \textbf{Immunologic-Factor}&\textbf{Body-Substance}&Molecular-Biology-Research-Technique&Clinical-Drug&Chemical-Viewed-Structurally
-
 \end{tabular}
 }
 \end{table*}

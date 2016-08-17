@@ -3,7 +3,8 @@
 \section{Experiments on incremental\\ Knowledge Population}
 \label{sec:exp2}
 
-In this section, we show results of incremental Knowledge population task using Thomson sampling on the three datasets. In addition, we verify our Thompson sampling algorithm on two synthetic datasets in Appendix \ref{sec:thompson_synthetic}.
+In this section, we show results of incremental Knowledge population task using Thomson sampling on the three datasets.
+Additional verification on the Thompson sampling with synthetic datasets is also provided in Appendix \ref{sec:thompson_synthetic}.
 %\rev{These experiments compare exploitation and exploration
 % with exploitation only algorithms, and also show how the compositional model
 %improves the entity embedding upon the non-compositional models. }
@@ -46,7 +47,7 @@ All models start from zero observation.
 After every query, a model obtains a label of the queried triple from an oracle,
 then the model updates the parameters.
 
-\textbf{Evaluation metric}: We use two different evaluation metrics, cumulative gain and ROC-AUC score,
+\textbf{Evaluation metric}: We use two different evaluation metrics, the cumulative gain and ROC-AUC score,
 for the performance comparison. The goal of the Thompson sampling is to maximise the knowledge
 population through the balanced querying strategy between exploration and exploitation.
 To measure how many triples are obtained through the querying stage, we compute the cumulative
@@ -55,17 +56,14 @@ the test set to understand how this balanced querying strategy results in making
 
 \textbf{Exploitation and exploration}:
 Figure \ref{fig:vs_greedy} shows
-the cumulative gains and ROC-AUC scores of the Thompson sampling on three real datasets.
+the cumulative gains and ROC-AUC scores of the Thompson sampling on three real datasets. The model names with postfix \textsc{-ts} represent the models adopting the Thompson sampling strategy.
 \textsc{Pnormal-ts} performs better than other baseline models for the cumulative gain, and shows comparable result for the ROC-AUC scores. Both compositional models perform worse than \textsc{Pnormal-ts} across all datasets.
 
 In the original \textsc{Amdc} \cite{kajino2015active}, \textsc{Amdc-pop} model obtains more
 valid triples than \textsc{Amdc-pred}, and \textsc{Amdc-pred} shows high ROC-AUC scores than \textsc{Amdc-pop}.
 In our experiment, however, \textsc{Amdc-pop} shows comparable cumulative gain to \textsc{Amdc-pred}
 and even worse than \textsc{Amdc-pred} for the UMLS. We conjecture the initial observation and query size results in the different performances: in the original experiment, the model starts
-from a small set of training data, and the query size was 1,000 for KINSHIP and UMLS. So this gives the model focusing on exploit and advantage,
-%a certain latent structure given an initially trained model
-whereas in our experiment, we start from zero
-observation and query one triple at each time, which makes the model hard to exploit the structure. This result shows
+from a small set of training data, and the query size was 1,000 for KINSHIP and UMLS. With larger query size, the model focuses on exploit and takes advantages, whereas in our experiment, we start from zero observation and query one triple at each time, which makes the model hard to exploit. This result shows
 the importance of balancing between exploitation and exploration.
 
 \eat{

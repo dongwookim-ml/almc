@@ -27,11 +27,11 @@ relation of the sequence of relations.
 Let $\mathcal{C}^{L}$ be a set of all possible compositions whose length is up to $L$, $c \in \mathcal{C}$
 be a sequence of relations, $c(i)$ be $i$th index of a relation in sequence $c$ and $|c|$ be the length of the
 sequence. With set of compositions $\mathcal{C}^{L}$, we can expand set of observed triples
-$\mathcal{X}^{t}$ to set of compositional triples $\mathcal{X}^{\mathcal{C}^{L}(t)}$ in which
+$\mathcal{X}$ to set of compositional triples $\mathcal{X}^{\mathcal{C}^{L}}$ in which
 compositional triple $x_{icj}$ is an
 indicator variable that show the existence of the path from entity $i$ to entity $j$ through sequence
 of relations
-$c$ in $\mathcal{X}^{t}$. Note that the compositional relation $c$ is an abstract relation, and there might be a
+$c$ in $\mathcal{X}$. Note that the compositional relation $c$ is an abstract relation, and there might be a
 multiple possible paths from entity $i_1$ to $j_n$.
 
 With these extended compositional triples, we again model $x_{icj}$ with a bilinear Gaussian distribution,
@@ -43,7 +43,7 @@ where $R_{{c}(k_1,k_2)} \in \mathbb{R}^{D\times D}$ is a latent matrix of compos
 In the subsequent sections, we provide two different ways of modelling the compositional relation $R_c$.
 
 \subsection{Additive Compositionality}
-With the compositions of relations, the \textsc{Prescal} may place a different relation matrix $R_c$ for each composition $c$. However the number of required matrices increases exponentially with respect to the length of composition. Consequently, the computational cost will also increase exponentially.
+With the compositions of relations, the \textsc{Prescal} may place a new relation matrix $R_c$ for each composition $c$. However the number of required matrices increases exponentially with respect to the length of composition. Consequently, the computational cost will also increase exponentially.
 To limit the required number of parameters, we propose two different ways of modelling the compositional relation $R_c$.
 First, we define an additive compositional relation $R_c$ as a normalised sum over
 the sequence of relation matrices in composition $c$, i.e.,
@@ -108,9 +108,11 @@ $\mathcal{X}^{L(t)}$. The details of the parameters are shown in the appendix.
 The conditional distribution of $e_i$ given the rest is the same as Equation $\ref{eqn:comp_sample_e}$.
 }
 
-As the length of sequence $c$ increases, a small error in the first few multiplications will result a large
-differences in the final compositional relation. One way to mitigate the cascading error is to increase variance
-of compositional triples $\sigma_c^2$ as the length of the sequence increases.
+We can control a contribution of the compositional triples by variance parameter $\sigma_c^2$ for both compositional models.
+
+%As the length of sequence $c$ increases, a small error in the first few multiplications will result a large
+%differences in the final compositional relation. One way to mitigate the cascading error is to increase variance
+%of compositional triples $\sigma_c^2$ as the length of the sequence increases.
 
 %If the determinant of latent relation $R_k$ is greater than 1, the compositional latent relation $R_c$ might
 %be exploded after multiplying a long sequence of relations. To obtain a stable scale of compositional

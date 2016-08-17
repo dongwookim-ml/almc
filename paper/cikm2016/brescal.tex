@@ -112,8 +112,9 @@ S_k^{-1} = \sum_{x_{ikj}} \sigma(e_{i}^{\top} R_k^* e_{j}) (1 - \sigma(e_{i}^{\t
 where $\bar{e}_{ij} = e_i \otimes e_j$.
 }
 
-The probabilistic view of tensor factorisation has many advantages such as
-the quantification of uncertainty by the predictive distribution,
-the ability to utilise priors, and
-the availability of principled model selection.
-We show in the empirical experiments that \textsc{Prescal} outperforms standard \textsc{Rescal}.
+%The probabilistic view of tensor factorisation has many advantages such as
+%the quantification of uncertainty by the predictive distribution,
+%the ability to utilise priors, and
+%the availability of principled model selection.
+%We show in the empirical experiments that \textsc{Prescal} outperforms standard \textsc{Rescal}.
+The probabilistic framework allows us to quantify the uncertainty of predictive distribution, which is then used to formulate an active learning algorithm. Specifically, we adopt a Thompson sampling for the active learning, which finds an optimal trade off between exploitation and exploration during the active learning. We generalise the idea of a particle Thompson sampling originally proposed in \cite{kawale2015efficient} for a matrix factorisation to the tensor factorisation. The detailed algorithm is provided in Appendix \ref{sec:pts}.
