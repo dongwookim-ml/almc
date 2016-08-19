@@ -5,7 +5,6 @@
 \begin{table*}[bt]
 \caption{Parameters for Gibbs updates. The conditional of $e_i$ and $R_k$ follows the normal distribution with mean $\mu$ and precision matrix $\Lambda$. $\otimes$ is the Kronecker product.}
 \label{tab:brescalposterior}
-\vskip 0.05in
 \begin{tabu}{l|l|l|l}
 var&$\mu$&$\Lambda$&$\xi$\\
 \hline
@@ -38,7 +37,7 @@ We model the entity $i$ as vectors $e_i$ and the relation $k$ as matrix $R_k$ wi
 appropriately chosen latent dimension $D$. This follows a popular model
 for statistical relational learning, which is to factorise the tensor into a
 set of latent vector representations, such as the bilinear model \textsc{Rescal}~\cite{nickel2011three}.
-\textsc{Rescal} aims to factorise each relational slice $X_{:k:}$ into a set of rank-$D$ latent
+\textsc{Rescal} aims to factorise each relational slice $\mathcal{X}_{:k:}$ into a set of rank-$D$ latent
 features as follows:
 \[
   \mathcal{X}_{:k:} \approx E R_k E^\top, \qquad \text{for } k = 1, \dots, K
@@ -50,13 +49,13 @@ latent features between entities in relation $k$.
 We propose a probabilistic framework that directly generalises \textsc{Rescal} (\textsc{Prescal})
 by placing priors over the
 latent features. For each entity $i$, the latent feature of an entity $e_i \in
-\mathbb{R}^{D}$ is drawn from an isotropic multivariate-normal distribution.
+\mathbb{R}^{D}$ is drawn from an isotropic multivariate-normal distribution with variance $\sigma_e^2$,
 \begin{align}
 \label{eqn:entity_gen}
-e_i \sim {N}(\mathbf{0}, \sigma_e^2{I}_D)
+e_i \sim {N}(\mathbf{0}, \sigma_e^2{I}_D).
 \end{align}
 For each relation $k$, we draw matrix $R_k$ from
-a zero-mean isotropic matrix normal distribution.
+a zero-mean isotropic matrix normal distribution with variance $\sigma_r^2$,
 \begin{align}
 \label{eqn:relation_gen}
 R_k \sim \mathcal{MN}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
@@ -64,7 +63,7 @@ R_k \sim \mathcal{MN}_{D \times D}(\mathbf{0}, \sigma_r{I}_D, \sigma_r{I}_D) \\
 \end{align}
 where $\text{vec}(R_k)$ denotes the flattening of the matrix.
 
-We consider two observation models for $x_{ikj}$: real or binary variables. By placing a
+\smallhead{PNORMAL} We consider two observation models for $x_{ikj}$: real or binary variables. By placing a
 normal distribution over $x_{ikj}$,
 \begin{align}
   x_{ikj} |e_i, e_j, R_k \sim \mathcal{N}(e_i^{\top} R_k e_j, \sigma_x^2),\label{eqn:triple_gen}
@@ -84,15 +83,15 @@ where the negative subscript $-i$ indicates the every other entity variables exc
 Exact forms of the posterior means and precision matrices are listed in Table~\ref{tab:brescalposterior}, where we have
 used the identity $e_i^{\top} R_k e_j = r_k^{\top} e_i \otimes e_j$.
 
-Alternatively, one may want to model the binary observation more precisely.
-Here, we model $x_{ikj}$ as a binomial random variable whose
+\smallhead{PLOGIT} One may want to model the binary observation more precisely.
+Here, we model $x_{ikj}$ as a Bernoulli random variable whose
 probability is determined by logistic regression:
 \[
 p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
 \]
 where $\sigma$ is a sigmoid function.
 We approximate the conditional posterior of
-$E$ and $R$ by the Laplace approximation~\cite{bishop2006pattern} through an alternative sampling. The detailed derivations are provided in Appendix \ref{sec:posterior_logistic}\footnote{The appendix is available at: http://cm.cecs.anu.edu.au/documents/prescal\_appendix.pdf}.
+$E$ and $R$ by the Laplace approximation~\cite{bishop2006pattern} through an alternative sampling. The detailed derivations are provided in Appendix \ref{sec:posterior_logistic}.
 \eat{
 The maximum a posterior estimate of $e_i$ or $R_k$ given the rest can be computed through
 standard logistic regression solvers with the priors over $e_i$ and $R_k$ as regularisation parameters. Given the
@@ -117,4 +116,15 @@ where $\bar{e}_{ij} = e_i \otimes e_j$.
 %the ability to utilise priors, and
 %the availability of principled model selection.
 %We show in the empirical experiments that \textsc{Prescal} outperforms standard \textsc{Rescal}.
-The probabilistic framework allows us to quantify the uncertainty of predictive distribution, which is then used to formulate an active learning algorithm. Specifically, we adopt a Thompson sampling for the active learning, which finds an optimal trade off between exploitation and exploration during the active learning. We generalise the idea of a particle Thompson sampling originally proposed in \cite{kawale2015efficient} for a matrix factorisation to the tensor factorisation. The detailed algorithm is provided in Appendix \ref{sec:pts}.
+\smallhead{Thompson Sampling} The probabilistic framework allows us to quantify the uncertainty of predictive distribution, which is then used to formulate an active learning algorithm. Specifically, we adopt Thompson sampling for the active learning, which finds an optimal trade off between exploitation and exploration during the active learning.
+Thompson sampling provides a model based query selection process~\cite{li11thompson,scott10bandit}. Let $x_{1:t}$ be a sequence of observed triples up to time $t$, and $\theta$ is an underlying parameter governing the rewards $r$.
+Thompson sampling chooses the next action $a$ (triple to label),
+according to its probability of having high reward:
+\begin{align}
+\arg\max_a \int \mathbb{I}\bigg[ \mathbb{E}(r|a, \theta)
+= \max_{a'}\mathbb{E}(r|a',\theta) \bigg] p(\theta|x_{1:t-1}) d\theta, \notag
+\end{align}
+where $\mathbb{I}$ is an indicator function. Note that it is sufficient
+to draw a random sample from the posterior instead of computing the integral.
+
+We generalise the idea of a particle Thompson sampling originally proposed in \cite{kawale2015efficient} for a matrix factorisation to the tensor factorisation. The detailed algorithm is provided in Appendix \ref{sec:pts}.

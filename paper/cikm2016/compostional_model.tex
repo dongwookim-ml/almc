@@ -36,16 +36,15 @@ multiple possible paths from entity $i$ to $j$.
 
 With these extended compositional triples, we again model $x_{icj}$ with a bilinear Gaussian distribution,
 \begin{align}
-x_{(i, {{c}(k_1, k_2)}, j)} \sim \mathcal{N}(e_i^\top R_{{c}(k_1,k_2)} e_j, \sigma_{c}^2),
+x_{(i, {{c}(k_1, k_2, \dots, k_n)}, j)} \sim \mathcal{N}(e_i^\top R_{{c}(k_1,k_2, \dots, k_n)} e_j, \sigma_{c}^2),
 \end{align}
 where $R_{{c}(k_1,k_2)} \in \mathbb{R}^{D\times D}$ is a latent matrix of compositional relation $c$, and $
 \sigma_{c}^2$ is a covariance of the compositional triples. Again the entity vectors are shared across the compositional and non-compositional triples.
-In the subsequent sections, we provide two different ways of modelling the compositional relation $R_c$.
-
-\subsection{Additive Compositionality}
 With the compositions of relations, the \textsc{Prescal} may place a new relation matrix $R_c$ for each composition $c$. However the number of required matrices increases exponentially with respect to the length of composition. Consequently, the computational cost will also increase exponentially.
 To limit the required number of parameters, we propose two different ways of modelling the compositional relation $R_c$.
-First, we define an additive compositional relation $R_c$ as a normalised sum over
+
+\subsection{Additive Compositionality}
+We define an additive compositional relation $R_c$ as a normalised sum over
 the sequence of relation matrices in composition $c$, i.e.,
 $R_{{c}} = \frac{1}{|c|}(R_{c(1)} + R_{c(2)} + \dots + R_{c(|c|)})$, then compositional triple $x_{icj}$
 is modelled as
@@ -53,7 +52,8 @@ is modelled as
 x_{(i, c, j)} &\sim \mathcal{N}(e_i^\top R_c e_j, \sigma_{c}^2) \\
 &= \mathcal{N}(e_i^\top \frac{1}{|c|}(R_{c(1)} + R_{c(2)} + \dots + R_{c(|c|)}) e_j, \sigma_{c}^2). \notag
 \end{align}
-The conditional distribution of $e_i$ and $R_k$ given the rest can be obtained in the same way used for the posterior distribution of \textsc{Prescal}. The details of the parameter estimators are shown in Appendix \ref{sec:add_comp_posterior}.
+This treats the relations as vectors, finding the average of a sequence of composed relations.
+The conditional distribution of $e_i$ and $R_k$ given the rest can be obtained in the same way used for the posterior distribution of \textsc{Prescal}. Parameter estimation is shown in Appendix \ref{sec:add_comp_posterior}.
 
 \eat{
 given $E_{-i}, \mathcal{R}, \mathcal{X}^{t}, \mathcal{X}^{L(t)}$ is
@@ -91,7 +91,7 @@ The multiplicative compositionality can be understood as a sequence of linear tr
 entity $i$ with the compositional relations, and the inner product between the transformed entity and target
 entity forms a value of the compositional triple. Again, the details of the parameter estimators are shown in Appendix \ref{sec:mult_comp_posterior}.
 
-To compare with the additive model, the multiplicative model preserves the ordering in a compositional relation, and hence the different orderings of relations result different relations in the compositional model. 
+In contrast with the additive model, the multiplicative model preserves the ordering in a compositional relation, and hence the different orderings of relations result different relations in the compositional model.
 %We can control a contribution of the compositional triples by variance parameter $\sigma_c^2$ for both compositional models.
 
 \eat{

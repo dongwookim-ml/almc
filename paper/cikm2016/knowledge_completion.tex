@@ -1,12 +1,11 @@
 %!TEX root = ./cikm2016.tex
-\section{Experiments on \\ Knowledge Completion}
+\section{Knowledge Completion}
 \label{sec:exp1}
 
-\begin{table}[t]
+\begin{table}[b]
 \centering
 \caption{\label{tbl:dataset}Description of datasets.
 Sparsity denotes the ratio of valid triples to invalid triples.}
-\vskip 0.15in
 \begin{tabular}{l | r | r | r | r}
 Dataset &  \# rel & \# entities & \# triples & sparsity \\ \hline
 Kinship & 26 & 104  & 10,790 & 0.038 \\
@@ -55,12 +54,12 @@ We first evaluate our model for the knowledge completion task
 %we follow the standard train/validation/test approach
 to measure the predictive performance of \textsc{Prescal} with all non compositional and compositional variants.
 %The results between active acquisition and training and testing are not always coincident, but if the Thompson sampling samples latent features from true posterior of the compositional model, the samples corresponds to the true posterior samples from the training set.
-We evaluate the models on three benchmark datasets: KINSHIP, UMLS, and NATION, and compare  performances with the original \textsc{RESCAL}. 
+We evaluate the models on three benchmark datasets: KINSHIP, UMLS, and NATION, and compare  performances with the original \textsc{RESCAL}.
 Detailed description of each
 dataset is shown in Table \ref{tbl:dataset}.
 %\footnote{https://alchemy.cs.washington.edu/papers/kok07/}
 
-For all experiments, we set the compositional length $L$ to two, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
+We set the compositional length $L$ to two, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
 from 1\% to 13\% of datasets. For \textsc{Rescal}, we use the original implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For \textsc{Prescal} and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
 The performances of models are measured by the ROC-AUC score on the test set:
 \begin{align}
@@ -74,7 +73,7 @@ the normal output (\textsc{Pnormal}) or logistic output (\textsc{Plogit}) genera
 We compare the compositional model with the original \textsc{Rescal}, \textsc{Pnormal}, and \textsc{Plogit}.
 In general, the multiplicative compositional model (\textsc{Pcomp-mul}) outperforms
 the additive compositional model (\textsc{Pcomp-add}), and performs better than the other baseline models
-when the proportion of training set is small. For UMLS and NATION, \textsc{Pcomp-mul} outperforms
+when the training set is small. For UMLS and NATION, \textsc{Pcomp-mul} outperforms
 across the all training proportions.
 For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
 
@@ -87,13 +86,13 @@ then the trained model can predict not only triples but the graph structure as w
 To validate the model assumption, we evaluate a path prediction task.
 For this task, we use 10\% of UMLS dataset for training.
 We compute an expected value of an unobserved path given a trained model.
-The non-compositional models are not capable to compute the expected value.
-In such a case, we approximate paths with multiplicative model assumption in Equation \ref{eqn:multi}.
+The non-compositional models may not be able to compute the expected value.
+In such a case, we approximate paths with the multiplicative model assumption in Equation \ref{eqn:multi}.
 We vary the path length from 1 (triple) to 4, and measure ROC-AUC scores on the reconstructed compositional triples.
 Figure \ref{fig:path_pred} shows the result of the path prediction task.
 Both compositional models show consistent performance regardless of the path length.
 However, the performance of the non-compositional models drops sharply as the length increases.
-The results show the compositional models preserve a graph structure in the embedded space.
+The results show the compositional models preserve graph structure in the embedded space.
 It is worth emphasising that although the compositional length for training is 2,
 the compositional models show consistent results on predicting paths of length 3 and 4.
 
@@ -130,4 +129,3 @@ Model & Top 1 & Top 2 & Top 3 & Top 4 & Top 5 \\ \hline \hline
 \end{tabular}
 }
 \end{table*}
-
