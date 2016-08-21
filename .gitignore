@@ -71,3 +71,5 @@ notes/*.pdf
 paper/*.pdf
 result*/
 sparse_tensor.pdf
+arXiv-compiled-version.pdf
+cikm2016.pdf

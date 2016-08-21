@@ -23,7 +23,7 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 	\includegraphics[width=\linewidth]{images/comp_training_error_umls_small.pdf}
 	\includegraphics[width=\linewidth]{images/comp_training_error_nation_small.pdf}
 	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models.
-	The x-axis denotes the proportion and total number of triples used for training. %We use other 20\% of triples as a validation set and another 30\% of triples as a test set.
+	The x-axis denotes the proportion and total number of triples used for training. Error bars denote \verify{standard deviation? 95\% confidence interval?}. %We use other 20\% of triples as a validation set and another 30\% of triples as a test set.
 }
 \end{figure}
 
@@ -73,9 +73,9 @@ the normal output (\textsc{Pnormal}) or logistic output (\textsc{Plogit}) genera
 We compare the compositional model with the original \textsc{Rescal}, \textsc{Pnormal}, and \textsc{Plogit}.
 In general, the multiplicative compositional model (\textsc{Pcomp-mul}) outperforms
 the additive compositional model (\textsc{Pcomp-add}), and performs better than the other baseline models
-when the training set is small. For UMLS and NATION, \textsc{Pcomp-mul} outperforms
+when the training set is small. For UMLS and NATION, \textsc{Pcomp-mul} has the best performance
 across the all training proportions.
-For KINSHIP, however, the model performs better when the training proportion is less than 7\%.
+For KINSHIP, however, \textsc{Pcomp-mul} performs better when the training proportion is less than 7\%.
 
 The goal of the compositional models is to factorise triples along with the graph structure as a whole.
 The triple prediction task tells us a trained model is capable of triple prediction,
@@ -97,11 +97,11 @@ It is worth emphasising that although the compositional length for training is 2
 the compositional models show consistent results on predicting paths of length 3 and 4.
 
 Table \ref{tbl:path_example} shows an example of the path prediction result
-starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces}.
+starting from entity \texttt{Mental-or-Behavioral (MB) Dysfunction} followed by two relations \texttt{Affects} and \texttt{Produces} in the UMLS dataset.
 Both compositional and non-compositional models predict triples well.
 For length-2 path prediction, only the compositional models can capture correct entities on top 5.
 We also visualise the multi-dimensional entities inferred by \textsc{Pnormal} and \textsc{Pcomp-mul}
-into a two-dimensional space through the spectral clustering \cite{von2007tutorial}
+into a two-dimensional space using spectral clustering \cite{von2007tutorial}
 in Appendix \ref{sec:vis}.
 
 

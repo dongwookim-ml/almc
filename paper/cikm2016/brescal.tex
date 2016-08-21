@@ -116,7 +116,7 @@ where $\bar{e}_{ij} = e_i \otimes e_j$.
 %the ability to utilise priors, and
 %the availability of principled model selection.
 %We show in the empirical experiments that \textsc{Prescal} outperforms standard \textsc{Rescal}.
-\smallhead{Thompson Sampling} The probabilistic framework allows us to quantify the uncertainty of predictive distribution, which is then used to formulate an active learning algorithm. Specifically, we adopt Thompson sampling for the active learning, which finds an optimal trade off between exploitation and exploration during the active learning.
+\smallhead{Thompson Sampling} The probabilistic framework allows us to quantify the uncertainty of predictive distribution, which is then used to formulate an active learning algorithm. Specifically, we adopt Thompson sampling for active learning, which finds an optimal trade off between exploitation and exploration during active learning.
 Thompson sampling provides a model based query selection process~\cite{li11thompson,scott10bandit}. Let $x_{1:t}$ be a sequence of observed triples up to time $t$, and $\theta$ is an underlying parameter governing the rewards $r$.
 Thompson sampling chooses the next action $a$ (triple to label),
 according to its probability of having high reward:
