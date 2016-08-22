@@ -48,7 +48,7 @@ To keep the posterior samples
 on regions of high probability mass, we resample the particles whenever
 an effective sample size (ESS) is less than a predefined threshold.
 The ESS can be computed as $(\sum_h w_h^2)^{-1}$, and we set the threshold
-to $N/2$~\cite{Doucet2011}. Resampling removes low weight particles with high probability,
+to $N/2$. Resampling removes low weight particles with high probability,
 while keeping samples from the posterior.
 We summarise the particle Thompson sampling for \textsc{Prescal} with the
 Gaussian output variable in Algorithm \ref{alg:smc}.

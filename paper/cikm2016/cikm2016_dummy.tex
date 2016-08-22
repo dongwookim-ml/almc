@@ -63,10 +63,7 @@
 
 \usepackage{multirow}
 %\usepackage{amsthm}
-
-% reference from another file
-\usepackage{xr}
-\externaldocument{cikm2016_dummy}
+\usepackage{comment}
 
 \usepackage[svgnames]{xcolor}
 \usepackage{tabu}
@@ -208,8 +205,7 @@
 %authors would like to thank Gerald Murray of ACM for
 %his help in codifying this \textit{Author's Guide}
 %and the \textbf{.cls} and \textbf{.tex} files that it describes.
-\vspace{2mm}\smallhead{Acknowledgments} 
-This work is supported in part by the Australian Research Council via the Discovery Project program DP140102185.
+\vspace{2mm}\smallhead{Acknowledgments} This work is supported in part by the Australian Research Council via the Discovery Project program DP140102185.
 The work has been supported by the Data to Decisions Cooperative Research Centre whose activities are funded by the Australian Commonwealth Government's Cooperative Research Centres Programme.
 %This work is supported by the Data to Decisions Cooperative Research Centre, www.d2dcrc.com.au.
 %
@@ -220,7 +216,7 @@ The work has been supported by the Data to Decisions Cooperative Research Centre
 \bibliographystyle{abbrv}
 % \bibliography{cikm2016}  % sigproc.bib is the name of the Bibliography in this case
 \bibliography{cikm2016_abbr}
-} 
+}
 % You must have a proper ".bib" file
 %  and remember to run:
 % latex bibtex latex latex
@@ -229,12 +225,12 @@ The work has been supported by the Data to Decisions Cooperative Research Centre
 % ACM needs 'a single self-contained file'!
 %
 %APPENDICES are optional
-%\balancecolumns
-%\appendix
-%\input{appendix_logit_posterior}
-%\input{appendix_thompson_sampling}
-%\input{appendix_composition}
-%\input{appendix_visualisation}
-%\input{appendix_experiments}
+\balancecolumns
+\appendix
+\input{appendix_logit_posterior}
+\input{appendix_thompson_sampling}
+\input{appendix_composition}
+\input{appendix_visualisation}
+\input{appendix_experiments}
 
 \end{document}
