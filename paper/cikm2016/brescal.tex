@@ -86,9 +86,9 @@ used the identity $e_i^{\top} R_k e_j = r_k^{\top} e_i \otimes e_j$.
 \smallhead{PLOGIT} One may want to model the binary observation more precisely.
 Here, we model $x_{ikj}$ as a Bernoulli random variable whose
 probability is determined by logistic regression:
-\[
-p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j),
-\]
+\begin{align}
+p(x_{ikj}=1) = \sigma(e_i^{\top} R_k e_j), \label{eqn:logit_triple_gen}
+\end{align}
 where $\sigma$ is a sigmoid function.
 We approximate the conditional posterior of
 $E$ and $R$ by the Laplace approximation~\cite{bishop2006pattern} through an alternative sampling. The detailed derivations are provided in Appendix \ref{sec:posterior_logistic}.

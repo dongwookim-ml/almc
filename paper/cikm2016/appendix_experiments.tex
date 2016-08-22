@@ -32,14 +32,14 @@ In this section, we verify the sequential Thompson sampling through a compositio
 \subsection{Thompson sampling on non-compositional synthetic data}
 
 We first synthesise two datasets
-following the model assumptions in Equation \ref{eqn:entity_gen} to
-\verify{\ref{eqn:triple_gen}}.
+following the model assumptions in Section \ref{sec:brescal}.
 \eat{We randomly generate triples based on randomly sampled entities and relations. Every }
 \rev{First, }entities and relations are generated from zero-mean isotropic multivariate normal distribution, \eat{where we set }\rev{with }
-variance parameters $\sigma_e=1$, $\sigma_r=1$, respectively.
+variance parameters $\sigma_e=1$, $\sigma_r=1$ (Eqn. \ref{eqn:entity_gen} to
+\ref{eqn:relation_gen}), respectively.
 \rev{We generate two sets of \eat{the final}output triples,}
 \eat{we generate two sets of datasets with }
-\rev{with} the logistic output \eat{output variable }and the Gaussian \rev{with $\sigma_x$ set to 0.1}\eat{ variable}, respectively (Sec~\ref{sec:brescal}).
+\rev{with} the logistic output (Eqn. \ref{eqn:logit_triple_gen}) \eat{output variable }and the Gaussian \rev{with $\sigma_x$ set to 0.1}\eat{ variable} (Eqn. \ref{eqn:triple_gen}), respectively .
 \eat{The variance of gaussian $\sigma_x$ set to 0.1.}
 
 To measure performance\eat{ on synthetic dataset}, we compute cumulative regret

@@ -23,7 +23,7 @@ Nation & 56 & 14  & 2,024 & 0.184 \\
 	\includegraphics[width=\linewidth]{images/comp_training_error_umls_small.pdf}
 	\includegraphics[width=\linewidth]{images/comp_training_error_nation_small.pdf}
 	\caption{\label{fig:r_vs_br} ROC-AUC scores of compositional models.
-	The x-axis denotes the proportion and total number of triples used for training. Error bars denote \verify{standard deviation? 95\% confidence interval?}. %We use other 20\% of triples as a validation set and another 30\% of triples as a test set.
+	The x-axis denotes the proportion and total number of triples used for training. Error bars denote one standard deviation. %We use other 20\% of triples as a validation set and another 30\% of triples as a test set.
 }
 \end{figure}
 
@@ -61,15 +61,17 @@ dataset is shown in Table \ref{tbl:dataset}.
 
 We set the compositional length $L$ to two, split the dataset into 20\% for validation and 30\% for testing. We vary the proportion of training triples
 from 1\% to 13\% of datasets. For \textsc{Rescal}, we use the original implementation\footnote{https://github.com/mnick/rescal.py}, and measure performance over 10 runs with random initialisations. For \textsc{Prescal} and all the variants, we sample triples $x_{ikj}$ from its posterior, and measure performance over 10 different samples.
-The performances of models are measured by the ROC-AUC score on the test set:
-\begin{align}
-\frac{1}{|\mathcal{X}_p|  |\mathcal{X}_n|} \sum_{\{i,k,j\} \in \mathcal{X}_p, \{i',k',j'\} \in \mathcal{X}_n} \mathbb{I}[\bar{x}_{ikj} > \bar{x}_{ikj}],
-\end{align}
+%The performances of models are measured by the ROC-AUC score on the test set:
+The performances of models are measured by the ROC-AUC score on the test set ranked according to a posterior mean:
+%\begin{align}
+$\frac{1}{|\mathcal{X}_p|  |\mathcal{X}_n|} \sum_{\{i,k,j\} \in \mathcal{X}_p, \{i',k',j'\} \in \mathcal{X}_n} \mathbb{I}[\bar{x}_{ikj} > \bar{x}_{ikj}]$,
+%\end{align}
 where $\mathcal{X}_p$ and $\mathcal{X}_n$ are the set of positive and negative triples in the test set, respectively, and $\bar{x}$ is a reconstructed triple.
 
 Figure \ref{fig:r_vs_br} shows the ROC-AUC scores of the compositional models
 with the various baseline models. The \textsc{Prescal} with
-the normal output (\textsc{Pnormal}) or logistic output (\textsc{Plogit}) generally outperform \textsc{Rescal}.
+the normal output (\textsc{Pnormal}) or logistic output (\textsc{Plogit}) generally outperform \textsc{Rescal}, and \textsc{Pnormal} outperforms \textsc{Plogit}.
+We conjecture that an additional flexibility of controlling the variance of triples \eat{through the variance parameter of \textsc{Pnormal} }makes \textsc{Pnormal} to perform better than \textsc{Plogit}.
 We compare the compositional model with the original \textsc{Rescal}, \textsc{Pnormal}, and \textsc{Plogit}.
 In general, the multiplicative compositional model (\textsc{Pcomp-mul}) outperforms
 the additive compositional model (\textsc{Pcomp-add}), and performs better than the other baseline models
