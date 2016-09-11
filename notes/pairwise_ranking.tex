@@ -1,0 +1,65 @@
+% !TEX TS-program = pdflatexmk
+\documentclass{article}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage[a4paper, total={6.5in, 8.5in}, voffset=0.2in, footskip=15pt]{geometry}
+\usepackage{amsthm}
+
+
+\newtheorem{theorem}{Theorem} %This is the example presented in the introduction but it has the additional parameter [section] that restarts the theorem counter at every new section.
+\newtheorem{corollary}{Corollary}[theorem] %A environment called corollary is created, the counter of this new environment will be reset every time a new theorem environment is used.
+\newtheorem{lemma}[theorem]{Lemma} %In this case, the even though a new environment called lemma is created, it will use the same counter as the theorem environment.
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{example}{Example}[definition]
+\newtheorem{remark}{Remark}
+
+\begin{document}
+
+\section{Learning Knowledge Graph with Pairwise Ranking Objective}
+Let $\mathcal{E}$ be a set of entities and $\mathcal{R}$ a set of relations. A knowledge graph $\mathcal{G}$ is a set of positive triples (known facts) which consist of relations between source entity and target entity. Let $s(t)$ be the score function of triple $t = (i, k, j)$ where $i, j \in \mathcal{E}$ and $k \in \mathcal{R}$. The goal of statistical relational learning is to model and infer the score function to correctly classify positive triples among all possible combination of triples.
+
+This is a highly imbalanced and positive-unlabelled classification problem where a number of positive triples is much less than the total number of triples, and the unlabelled triples does not means that those are wrong.
+In such a case, we often measure performance using AUC, which measure the probability that a classifier will rank a randomly chosen positive instance higher than a randomly chosen unlabelled one \cite{menon2011link}. Intuitively, it makes sense to directly optimise for AUC on the training set to obtain good test set AUC.
+To maximise AUC on a training set, we can alternatively minimise the following objective:
+\begin{align}
+\min_s\sum_{t \in \Delta_p}\sum_{t' \in \Delta_u} \mathbf{1}[s(t') - s(t)],
+\end{align}
+where $\Delta_p$ is a set of known facts (triples), and $\Delta_u$ is a set of unlabelled triples. 
+
+Directly optimising AUC objective is cumbersome. With a proper surrogate loss $\ell$, we can cast the above objective as
+\begin{align}
+\min_s\sum_{t \in \Delta_p}\sum_{t' \in \Delta_u} \ell(s(t'), s(t)).
+\end{align}
+For example, the hinge loss was used with an additional margin parameter in \cite{bordes2013translating,Kajino:2015tf}. It can be optimised efficiently using stochastic gradient descent, where we randomly sample a pair of positive and unlabelled triples and compute the gradient at each iteration.
+
+Unlike classification problem where the training set consists of positive and negative instances, uniform sampling of unlabelled triples may not be appropriate since some of them are unknown positive triples. One way to mitigate the weight of `unlabelled positive triple' is to incorporate a weight function $w(t)$ which measure how triple $t$ is likely to be a true negative triple:
+\begin{align}
+\min_s\sum_{t \in \Delta_p}\sum_{t' \in \Delta_u} w(t') \ell(s(t'), s(t)).
+\end{align}
+In the context of stochastic gradient descent, instead having the weight function, we may sample a pair of triples from some distribution over the pair of all possible triples. Below, I listed four possible sampling methods.
+\subsection{Sampling unlabelled triple}
+\begin{description}
+\item[Uniform sampling] Sample $t'$ from $\Delta_u$ uniformly. When the positive triple $t = (i,k,j)$ is given, the most typical choice of sampling distribution is a uniform distribution over the set of unlabelled triples with fixed source (or target) entity $i$ ($j$) and relation $k$, i.e. $\{t':t'=(i,k,j') \in \Delta_u\}$. This approach does not impose global consistency between different relations, in other words, the ranks among the triples within a single relation is important. For example, triples $(i,k,j)$ and $(i,k',j)$, where $k \neq k'$, will not be directly compared during optimisation.
+\item[Maximum unlabelled triple] Given positive triple $(i,k,j)$, one can choose a negative triple whose score is the maximum among all unlabelled triples.
+\item[Bandit based sampling] Instead choosing maximum unlabelled triple, we can alternatively use Bandit approach to sample. For example, if we can compute the posterior distribution of $s(t')$, we can employ the Thompson sampling, or if we can compute the variance of $s(t')$, we can employ the UCB algorithm.
+\item[Learning distribution] Let $d(t;\theta)$ be a distribution over $\Delta_u$ parameterised by triple $t$. For example, in \cite{}, the distribution over items given user is modelled as a topical interests of that user.
+\end{description}
+
+\subsubsection{Computational Complexity}
+Some of the sampling methods, such as maximum unlabelled triple and bandit based sampling, require to compute some estimates of the score of unlabelled triples.
+
+\subsubsection{Connections to weighted matrix (tensor) factorisation}
+If the sum of all positive weights and the sum of all unlabelled weights are the same, does the matrix factorisation reduce to the above objective?
+
+\subsection{Examples}
+The popular RESCAL model defines $s(t_{ikj}) = e_i^\top R_k e_j$, where $e_i, e_j \in \mathbb{R}^{D}$ and $R_k \in \mathbb{R}^{D\times D}$. The TransE model defines $s(t_{ikj}) = d(e_i - r_k, e_j)$, where $e_i, e_j, r_k \in \mathbb{R}^{D}$ and $d$ is some dissimilarity measure. 
+
+
+\bibliographystyle{plain}
+\bibliography{ref}
+
+\end{document}
