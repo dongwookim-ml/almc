@@ -41,23 +41,28 @@ Unlike classification problem where the training set consists of positive and ne
 \min_s\sum_{t \in \Delta_p}\sum_{t' \in \Delta_u} w(t') \ell(s(t'), s(t)).
 \end{align}
 In the context of stochastic gradient descent, instead having the weight function, we may sample a pair of triples from some distribution over the pair of all possible triples. Below, I listed four possible sampling methods.
+
+\begin{example}
+The popular RESCAL model defines $s(t_{ikj}) = e_i^\top R_k e_j$, where $e_i, e_j \in \mathbb{R}^{D}$ and $R_k \in \mathbb{R}^{D\times D}$. The TransE model defines $s(t_{ikj}) = d(e_i - r_k, e_j)$, where $e_i, e_j, r_k \in \mathbb{R}^{D}$ and $d$ is some dissimilarity measure. 
+\end{example}
+
 \subsection{Sampling unlabelled triple}
 \begin{description}
-\item[Uniform sampling] Sample $t'$ from $\Delta_u$ uniformly. When the positive triple $t = (i,k,j)$ is given, the most typical choice of sampling distribution is a uniform distribution over the set of unlabelled triples with fixed source (or target) entity $i$ ($j$) and relation $k$, i.e. $\{t':t'=(i,k,j') \in \Delta_u\}$. This approach does not impose global consistency between different relations, in other words, the ranks among the triples within a single relation is important. For example, triples $(i,k,j)$ and $(i,k',j)$, where $k \neq k'$, will not be directly compared during optimisation.
-\item[Maximum unlabelled triple] Given positive triple $(i,k,j)$, one can choose a negative triple whose score is the maximum among all unlabelled triples.
+\item[Uniform sampling] Sample $t'$ from $\Delta_u$ uniformly. When the positive triple $t = (i,k,j)$ is given, the most typical choice of sampling distribution is a uniform distribution over the set of unlabelled triples with fixed source (or target) entity $i$ ($j$) and relation $k$, i.e. $\{t':t'=(i,k,j') \text{ or } (i',k,j) \in \Delta_u\}$. This approach does not impose global consistency between different relations, in other words, the ranks among the triples within a single relation is important. For example, triples $(i,k,j)$ and $(i,k',j)$, where $k \neq k'$, will not be directly compared during optimisation.
+\item[Maximum unlabelled triple] Given positive triple $(i,k,j)$, one can choose a unlabelled triple whose score is the maximum among all unlabelled triples. The assumption is that all of the unlabelled triples can be distinguished from all of the positive triples. 
 \item[Bandit based sampling] Instead choosing maximum unlabelled triple, we can alternatively use Bandit approach to sample. For example, if we can compute the posterior distribution of $s(t')$, we can employ the Thompson sampling, or if we can compute the variance of $s(t')$, we can employ the UCB algorithm.
-\item[Learning distribution] Let $d(t;\theta)$ be a distribution over $\Delta_u$ parameterised by triple $t$. For example, in \cite{}, the distribution over items given user is modelled as a topical interests of that user.
+\item[Modeling distribution] Let $d(t;\theta)$ be a distribution over $\Delta_u$ parameterised by triple $t$. In \cite{Wang2014}, the optimiser choose negative triples based on a type of relation one-to-many/many-to-one/many-to-many. In \cite{Liang2015}, the distribution over items given user is modelled according to topical interests of that user. 
 \end{description}
 
 \subsubsection{Computational Complexity}
-Some of the sampling methods, such as maximum unlabelled triple and bandit based sampling, require to compute some estimates of the score of unlabelled triples.
+Some of the sampling methods, such as maximum unlabelled triple and bandit based sampling, require to compute some estimates of the score of unlabelled triples where $\arg\max$ or $\arg\min$ operators are applied, i.e. ${\arg\max}_{t}s(t)$. The number of triples to be estimated is $|\mathcal{E}|^2\times|\mathcal{R}|$, which usually cannot be evaluated in a single machine. For example, the subset of freebase used in \cite{gu2015traversing} (FB13) has almost 73 billion possible triples and FB5M has 3e16 possible triples.
+
+\textbf{Approximate argmax}: The number of relations is relatively smaller than the number of entities in general. If it is possible to approximate an entity pair that maximise the score given relation (or entity), we may solve this problem efficiently. In other words, is there a way to approximate ${\arg\max}_{i,j}s((i,k,j))$? (The number of possible entity pairs is still almost 6 billion in the freebase subset.)
+
+Keywords: cutting plane method, Gaussian process approximation, LSH-hashing(?) ...
 
 \subsubsection{Connections to weighted matrix (tensor) factorisation}
-If the sum of all positive weights and the sum of all unlabelled weights are the same, does the matrix factorisation reduce to the above objective?
-
-\subsection{Examples}
-The popular RESCAL model defines $s(t_{ikj}) = e_i^\top R_k e_j$, where $e_i, e_j \in \mathbb{R}^{D}$ and $R_k \in \mathbb{R}^{D\times D}$. The TransE model defines $s(t_{ikj}) = d(e_i - r_k, e_j)$, where $e_i, e_j, r_k \in \mathbb{R}^{D}$ and $d$ is some dissimilarity measure. 
-
+If the sum of all positive weights and the sum of all unlabelled weights are the same, i.e. balancing positive and unlabelled triples, does the matrix factorisation reduce to the above objective?
 
 \bibliographystyle{plain}
 \bibliography{ref}
