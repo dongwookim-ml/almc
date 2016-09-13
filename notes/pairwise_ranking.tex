@@ -14,7 +14,7 @@
 
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
-\newtheorem{example}{Example}[definition]
+\newtheorem{example}{Example}%[definition]
 \newtheorem{remark}{Remark}
 
 \begin{document}
@@ -52,10 +52,15 @@ The popular RESCAL model defines $s(t_{ikj}) = e_i^\top R_k e_j$, where $e_i, e_
 \item[Maximum unlabelled triple] Given positive triple $(i,k,j)$, one can choose a unlabelled triple whose score is the maximum among all unlabelled triples. The assumption is that all of the unlabelled triples can be distinguished from all of the positive triples. 
 \item[Bandit based sampling] Instead choosing maximum unlabelled triple, we can alternatively use Bandit approach to sample. For example, if we can compute the posterior distribution of $s(t')$, we can employ the Thompson sampling, or if we can compute the variance of $s(t')$, we can employ the UCB algorithm.
 \item[Modeling distribution] Let $d(t;\theta)$ be a distribution over $\Delta_u$ parameterised by triple $t$. In \cite{Wang2014}, the optimiser choose negative triples based on a type of relation one-to-many/many-to-one/many-to-many. In \cite{Liang2015}, the distribution over items given user is modelled according to topical interests of that user. 
+\begin{example}[\cite{Wang2014}]
+Given positive triple $(i,k,j)$, let $\mu_t$ be the average number of target entities per source entity in relation $k$, $\mu_s$ be the average number of source entities per target entity in relation $k$. In \cite{Wang2014}, the authors use Bernoulli distribution with parameter $\mu_t/(\mu_s + \mu_t)$ to randomly corrupt source entity $i$, and corrupt source entity $j$ otherwise. They use these quantities to identify the property of relation in terms of one-to-many, many-to-one, and many-to-many, and give more chance to corrupt target entity $j$ if the relation is likely to be many-to-one and to corrupt source entity $i$ otherwise.
+\end{example}
 \end{description}
 
 \subsubsection{Computational Complexity}
 Some of the sampling methods, such as maximum unlabelled triple and bandit based sampling, require to compute some estimates of the score of unlabelled triples where $\arg\max$ or $\arg\min$ operators are applied, i.e. ${\arg\max}_{t}s(t)$. The number of triples to be estimated is $|\mathcal{E}|^2\times|\mathcal{R}|$, which usually cannot be evaluated in a single machine. For example, the subset of freebase used in \cite{gu2015traversing} (FB13) has almost 73 billion possible triples and FB5M has 3e16 possible triples.
+
+\textbf{Type constraints}: Relations are defined with respect to types of source and target entities. If we have types of each entity, we can vastly reduce the number of candidate triples.
 
 \textbf{Approximate argmax}: The number of relations is relatively smaller than the number of entities in general. If it is possible to approximate an entity pair that maximise the score given relation (or entity), we may solve this problem efficiently. In other words, is there a way to approximate ${\arg\max}_{i,j}s((i,k,j))$? (The number of possible entity pairs is still almost 6 billion in the freebase subset.)
 
