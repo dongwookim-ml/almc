@@ -146,9 +146,9 @@
 \color{white}
 \begin{itemize}
 \itemup
-\item How to measure \textbf{uncertainty} of unknown facts from observations.
-\item How to incorporate \textbf{graph structure} into a knowledge graph factorisation to improve  unknown facts prediction.
-\item How to maximise total number of facts while keeping high prediction performance in \textbf{incremental knowledge population} (active learning).
+\item How to measure \textbf{uncertainty} of unknown triples given knowledge graph.
+\item How to incorporate a \textbf{graph structure} of knowledge graph into low-rank factorisation to improve unknown triple prediction.
+\item How to maximise total number of triples while keeping high prediction performance in \textbf{incremental knowledge population}.
 \itemup
 \end{itemize}
 \end{tabular}
@@ -164,8 +164,8 @@
 \color{white}
 \begin{itemize}
 \itemup
-\item Propose a \textbf{probabilistic formulation} of bilinear tensor factorisation that allows us to predict the uncertainty of unknown facts.
-\item Incorporate the graph \textbf{path structure} of knowledge graph into factorisation by modelling a composition of relations.
+\item Propose a \textbf{probabilistic formulation} of bilinear tensor factorisation that allows us to predict the uncertainty of unknown triples.
+\item Incorporate a path structure of knowledge graph into factorisation by modelling a \textbf{composition of relations}.
 \item Develop an incremental population method that searches the factorised space, trading of exploration and exploitation using \textbf{Thompson sampling}.
 \itemup
 \end{itemize}
@@ -181,7 +181,7 @@
 
 
 \section{Compositional Relational Model}
-A triple, e.g. \{Obama, president of, US\}, is a basic unit of a knowledge graph. A collection of knowledge triples can be represented as a 3d tensor where each dimension represent entity, relation, and entity, respectively. The goal of statistical relational models is to factorise this tensor to obtain low dimensional representations of entities and relations.
+\textbf{A triple}, e.g. \{\textit{Obama, president of, US}\}, is a basic unit of a knowledge graph. A collection of knowledge triples can be represented as a 3d tensor where each dimension represent entity, relation, and entity, respectively. The goal of statistical relational models is to factorise this tensor to obtain low dimensional representations of entities and relations.
 
 \vspace{.5cm}
 \noindent\textbf{Probabilistic bilinear factorisation model}
@@ -209,7 +209,7 @@ We reformulate popular \textsc{rescal} model in a probabilistic way by placing i
 
 \begin{center}
 \includegraphics[width=.9\linewidth]{./figures/composition.pdf}
-\captionof{figure}{Composition of multiple triples can be interpreted as a compositional triple. We augment the original tensor with these additional triples to incorporate explicit path structure into factorisation.}
+\captionof{figure}{Composition of multiple triples can be interpreted as a \textbf{compositional triple}. We augment the original tensor with these additional triples to incorporate explicit path structure into factorisation.}
 \end{center}
 
 Adding compositional slices will increase the number of relation parameters exponentially. Therefore, we propose two different structures to model the compositionality in the latent embedding spaces.
@@ -246,6 +246,10 @@ Sparsity denotes the ratio of valid triples to invalid triples.}
 \end{center}
 
 
+\vspace{1cm}
+
+\noindent\textbf{Unknown triple prediction}
+
 \vspace{.5cm}
 
 \begin{tabular}{l l}
@@ -261,7 +265,7 @@ Sparsity denotes the ratio of valid triples to invalid triples.}
 \end{minipage}
 \end{tabular}
 
-\vspace{.5cm}
+\vspace{1cm}
 
 \noindent\textbf{Compositional path reconstruction}
 
@@ -277,7 +281,7 @@ Sparsity denotes the ratio of valid triples to invalid triples.}
 \end{minipage}\hspace{1cm}
 & 
 \begin{minipage}{.39\linewidth}
-\captionof{figure}{Path prediction result of UMLS. The performances of both compositional models remain consistent whereas those of the non-compositional models drop sharply as the length increases.}
+\captionof{figure}{Path reconstruction result of UMLS. The performances of both compositional models remain consistent whereas those of the non-compositional models drop sharply as the length increases.}
 \end{minipage}
 \end{tabular}
 
@@ -306,14 +310,18 @@ A recent attempt at incremental knowledge population (Jiang et al., 2015), has h
 \includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_kinship_mcmc_vertical_line.pdf}&
 \includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_nation_mcmc_vertical_line.pdf}&
 \includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_umls_mcmc_vertical_line.pdf}\\
-Kinship & UMLS & Nation \\
+Kinship & Nation & UMLS \\
 \end{tabular}
 \captionof{figure}{The cumulative gain (upper) and ROC-AUC score (lower) of the Thompson sampling with passive learning and \textsc{amdc} models. X-axis denotes the number of queries issued. Thompson sampling with \textsc{pnormal} model achieves the highest cumulative gain to compare with \textsc{amdc} and passive learning algorithms and shows comparable performance on ROC-AUC scores. The compositional model performs worse than the non-compositional models.}
 \end{center}
 
 \secmoveup
 \section{Discussion}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam non lectus vel diam congue tincidunt malesuada sit amet augue. Proin non venenatis odio. Quisque porttitor dolor ut cursus gravida. Integer a iaculis massa. Donec semper leo sed metus tempor varius. Donec mollis risus pharetra ligula lacinia, vitae suscipit arcu vulputate. Pellentesque vel odio tristique, luctus nisl in, elementum tortor. Praesent vitae neque id sapien porta interdum.
+Thompson sampling has been studied in the context of multi-armed bandit problems where the goal is to maximise cumulative gains or minimise cumulative regrets over time, whereas its performance on making a predictive model has not been widely discussed so far. Throughout this work, we have empirically shown that maximising cumulative gain entails good predictive models as well.
+
+%We have empirically shown that maximising cumulative gain entails good predictive models as well with Thompson sampling. However, path structure does not seem to help in incremental population. 
+%We conjecture that the augmented structure leads underestimation of uncertainty, which is a crucial factor in incremental population.
+%Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam non lectus vel diam congue tincidunt malesuada sit amet augue. Proin non venenatis odio. Quisque porttitor dolor ut cursus gravida. Integer a iaculis massa. Donec semper leo sed metus tempor varius. Donec mollis risus pharetra ligula lacinia, vitae suscipit arcu vulputate. Pellentesque vel odio tristique, luctus nisl in, elementum tortor. Praesent vitae neque id sapien porta interdum.
 
 %Aliquam dignissim nisl neque, vel interdum leo blandit et. Vivamus sed tincidunt arcu. Vivamus sed tristique ipsum, eu blandit magna. Praesent nec imperdiet nibh. Nullam dignissim dui ac arcu sollicitudin congue. Suspendisse facilisis nulla convallis pellentesque tempus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Curabitur iaculis gravida enim, id accumsan augue lacinia a. Donec at augue sagittis, imperdiet purus ut, eleifend tortor. Phasellus efficitur ipsum magna, ac ultrices erat pellentesque a. Maecenas sed dui pretium, euismod enim vitae, aliquam dui. Vestibulum vel bibendum arcu. Praesent ac enim bibendum, pharetra ante nec, iaculis lorem. Nunc tempus risus eget enim volutpat, et pulvinar eros porttitor. Morbi dui nisi, vestibulum sed nisl vel, rhoncus tincidunt quam.
 
