@@ -147,8 +147,8 @@
 \begin{itemize}
 \itemup
 \item How to measure \textbf{uncertainty} of unknown facts from observations.
-\item How to incorporate \textbf{path structure} into a knowledge graph factorisation to improve  unknown facts prediction.
-\item How to balance exploration and exploitation in \textbf{incremental knowledge population}.
+\item How to incorporate \textbf{graph structure} into a knowledge graph factorisation to improve  unknown facts prediction.
+\item How to maximise total number of facts while keeping high prediction performance in \textbf{incremental knowledge population} (active learning).
 \itemup
 \end{itemize}
 \end{tabular}
@@ -302,9 +302,12 @@ The goal of \textbf{incremental population} is to maximise the number of positiv
 A recent attempt at incremental knowledge population (Jiang et al., 2015), has had difficulties simultaneously achieving high recall and faithful reconstruction. We employ \textbf{Thompson sampling}, an approach for solving the multi-armed bandit problem, to find an optimal trade-off between exploration and exploitation during incremental population.
 
 \begin{center}
-\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_kinship_mcmc_vertical_line.pdf}
-\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_nation_mcmc_vertical_line.pdf}
-\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_umls_mcmc_vertical_line.pdf}
+\begin{tabular}{c c c}
+\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_kinship_mcmc_vertical_line.pdf}&
+\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_nation_mcmc_vertical_line.pdf}&
+\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_umls_mcmc_vertical_line.pdf}\\
+Kinship & UMLS & Nation \\
+\end{tabular}
 \captionof{figure}{The cumulative gain (upper) and ROC-AUC score (lower) of the Thompson sampling with passive learning and \textsc{amdc} models. X-axis denotes the number of queries issued. Thompson sampling with \textsc{pnormal} model achieves the highest cumulative gain to compare with \textsc{amdc} and passive learning algorithms and shows comparable performance on ROC-AUC scores. The compositional model performs worse than the non-compositional models.}
 \end{center}
 
