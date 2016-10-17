@@ -42,7 +42,7 @@
 \usepackage{graphicx} % Required for including images
 \graphicspath{{figures/}} % Location of the graphics files
 \usepackage{booktabs} % Top and bottom rules for table
-\usepackage[font=small,labelfont=bf]{caption} % Required for specifying captions to tables and figures
+\usepackage[font=normal,labelfont=bf]{caption} % Required for specifying captions to tables and figures
 \usepackage{amsfonts, amsmath, amsthm, amssymb} % For math fonts, symbols and environments
 \usepackage{wrapfig} % Allows wrapping text around tables and figures
 \usepackage{tikz}
@@ -133,11 +133,11 @@
 % \item \jump : a sudden increase in viewcount
 % \end{itemize}
 
-\small
+%\small
 
 \color{DarkSlateGray}
 
-\noindent\textbf{\Large Motivation}
+\noindent\textbf{\Large Motivating Questions}
 
 \vspace{.2cm}
 
@@ -146,16 +146,16 @@
 \color{white}
 \begin{itemize}
 \itemup
-\item How to measure \textbf{uncertainty} of unknown triples given knowledge graph.
-\item How to incorporate a \textbf{graph structure} of knowledge graph into low-rank factorisation to improve unknown triple prediction.
-\item How to maximise total number of triples while keeping high prediction performance in \textbf{incremental knowledge population}.
+\item How to measure \textbf{uncertainty} of unknown triples given knowledge graph?
+\item How to incorporate a \textbf{graph structure} of knowledge graph into low-rank factorisation to improve unknown triple prediction?
+\item How to maximise total number of triples while keeping high prediction performance in \textbf{incremental knowledge population}?
 \itemup
 \end{itemize}
 \end{tabular}
 
 \vspace{.5cm}
 
-\noindent\textbf{\Large Contributions}
+\noindent\textbf{\Large Contribution}
 
 \vspace{.2cm}
 
@@ -179,12 +179,18 @@
 %\color{DarkSlateGray} % DarkSlateGray color for the rest of the content
 \color{Black}
 
-
 \section{Compositional Relational Model}
-\textbf{A triple}, e.g. \{\textit{Obama, president of, US}\}, is a basic unit of a knowledge graph. A collection of knowledge triples can be represented as a 3d tensor where each dimension represent entity, relation, and entity, respectively. The goal of statistical relational models is to factorise this tensor to obtain low dimensional representations of entities and relations.
+
+\begin{itemize}
+\item \textbf{A triple}, e.g. \{\textit{Obama, president of, US}\}, is a basic unit of a knowledge graph
+\item Collection of knowledge triples can be represented as a 3d tensor
+% where each dimension represent entity, relation, and entity, respectively. 
+\item Statistical relational models factorise the tensor into low dimensional entities and relations
+\end{itemize}
 
 \vspace{.5cm}
 \noindent\textbf{Probabilistic bilinear factorisation model}
+\vspace{.5cm}
 
 \begin{tabular}{l l}
 \begin{minipage}{.60\linewidth}
@@ -192,7 +198,7 @@
 \end{minipage}\hspace{1cm}
 & 
 \begin{minipage}{.34\linewidth}
-\captionof{figure}{Illustration of widely used bilinear factorisation model, \textsc{rescal}, where entities are embedded into $D$-dimensional latent space.}
+\captionof{figure}{Bilinear factorisation model, \textsc{rescal}, where entities are embedded into $D$-dimensional latent space.}
 \vspace{-1.5cm}
 \begin{equation}
 e_i, e_j\in\mathbb{R}^{D}, \quad R_k \in \mathbb{R}^{D\times D} \notag
@@ -202,38 +208,51 @@ e_i, e_j\in\mathbb{R}^{D}, \quad R_k \in \mathbb{R}^{D\times D} \notag
 
 \vspace{.5cm}
 
-We reformulate popular \textsc{rescal} model in a probabilistic way by placing isotropic normal prior over entity vectors and relation matrices. For observations, we use the normal distribution as in figure 1 \textsc{(pnormal)} and logistic function \textsc{(plogit)}.
-
-\vspace{.5cm}
-\noindent\textbf{Compositional triples}
+We reformulate popular \textsc{rescal} model in a probabilistic way by placing isotropic normal prior over entity vectors and relation matrices. For the observation, we design two different models:
+%the normal distribution as in figure 1 \textsc{(pnormal)} and logistic function \textsc{(plogit)}.
 
 \begin{center}
-\includegraphics[width=.9\linewidth]{./figures/composition.pdf}
-\captionof{figure}{Composition of multiple triples can be interpreted as a \textbf{compositional triple}. We augment the original tensor with these additional triples to incorporate explicit path structure into factorisation.}
+\begin{tabular}{p{.5\linewidth}p{.45\linewidth}}
+ 1. Normal output (\textsc{pnormal}):&
+ 2. Logistic output (\textsc{plogit}):\\
+ $\quad\quad x_{ikj} \sim \mathcal{N}(e_i^\top R_k e_j, \sigma_x^2)$
+&
+ $\quad\quad x_{ikj} \sim \sigma(e_i^\top R_k e_j)$
+\end{tabular}
 \end{center}
 
-Adding compositional slices will increase the number of relation parameters exponentially. Therefore, we propose two different structures to model the compositionality in the latent embedding spaces.
 
-1. Multiplicative compositionality (\textsc{pcomp-mul}):
-\begin{align}
-x_{icj} \sim \mathcal{N}(e_i^T R_{c_1} R_{c_1} \dots R_{c_n} e_j,\sigma^2)
-\end{align}
+\begin{center}
+\noindent\textbf{Compositional triples}
+\vspace{.5cm}
 
-2. Additive compositionality (\textsc{pcomp-add}):
-\begin{align}
-x_{icj} \sim \mathcal{N}(e_i^T \frac{1}{c_n} (R_{c_1} + R_{c_1} + \dots + R_{c_n}) e_j,\sigma^2),
-\end{align}
+\includegraphics[width=.9\linewidth]{./figures/composition.pdf}
+\captionof{figure}{Multiple consecutive triples form a \textbf{compositional triple}. We augment the original tensor with these additional triples to explicitly incorporate path structure into factorisation.}
+\end{center}
+
+%Adding compositional slices will increase the number of relation parameters exponentially. Therefore, we propose two different structures to model the compositionality in the latent embedding spaces.
+\noindent Two observation schemes for the compositional model:
+
+\begin{center}
+\begin{tabular}{l l}
+1. Multiplicative {\small(\textsc{pcomp-mul})}:
+&
+$\quad$2. Additive {\small(\textsc{pcomp-add})}:\\
+$\quad x_{icj} \sim \mathcal{N}(e_i^\top R_{c_1} R_{c_2} \dots R_{c_n} e_j)$
+&
+$\quad\quad x_{icj} \sim \mathcal{N}(e_i^\top \frac{1}{c_n} (R_{c_1} + \dots + R_{c_n}) e_j)$
+\end{tabular}
+\end{center}
 where $c$ is a compositional relation with composition of relations $\{c_1, c_2, ..., c_n\}$.
 
-
 \section{Knowledge Completion}
+\noindent\textbf{Goal}: predict the unobserved part of knowledge graph through the reconstruction.
 
-We first evaluate our model to \textbf{predict unknown triples} given observations to measure the performance of proposed models with all non compositional and compositional variants. For this experiments, we divide datasets into training and testing, and then measure ROC-AUC scores on the test set.
+
+%We first evaluate our model to \textbf{predict unknown triples} given observations to measure the performance of proposed models with all non compositional and compositional variants. For this experiments, we divide datasets into training and testing, and then measure ROC-AUC scores on the test set.
 
 \vspace{.5cm}
 
-\noindent\textbf{Datasets}
-We use three benchmark datasets for experiments.
 \begin{center}
 \begin{tabular}{l | r | r | r | r}
 Dataset &  \# rel & \# entities & \# triples & sparsity \\ \hline
@@ -241,14 +260,13 @@ Kinship & 26 & 104  & 10,790 & 0.038 \\
 UMLS & 49 &135  & 6,752 & 0.008 \\
 Nation & 56 & 14  & 2,024 & 0.184 \\
 \end{tabular}
-\captionof{table}{Description of datasets.
-Sparsity denotes the ratio of valid triples to invalid triples.}
+\captionof{table}{Description of datasets.}
+%Sparsity denotes the ratio of valid triples to invalid triples.}
 \end{center}
-
 
 \vspace{1cm}
 
-\noindent\textbf{Unknown triple prediction}
+%\noindent\textbf{Unknown triple prediction}:
 
 \vspace{.5cm}
 
@@ -260,78 +278,96 @@ Sparsity denotes the ratio of valid triples to invalid triples.}
 \end{minipage}\hspace{0.5cm}
 &
 \begin{minipage}{.39\linewidth}
-\captionof{figure}{ROC-AUC scores of compositional and non-compositional models. The x-axis denotes the proportion and total number of triples used for training.
-\textsc{pnormal} or \textsc{plogit} generally outperform \textsc{rescal}. In general, the multiplicative compositional model \textsc{(pcomp-mul)} outperforms the additive compositional model \textsc{(pcom-add)}, and performs better the other baseline models.}
+\captionof{figure}{ROC-AUC scores of compositional and non-compositional models.
+%The x-axis denotes the proportion and total number of triples used for training.
+The multiplicative compositional model \textsc{(pcomp-mul)} outperforms the other baseline models.} %additive compositional model \textsc{(pcom-add)}, and performs better the other baseline models.}
 \end{minipage}
 \end{tabular}
 
 \vspace{1cm}
 
-\noindent\textbf{Compositional path reconstruction}
+%\noindent\textbf{Compositional path reconstruction}:
 
-\vspace{.5cm}
+%\noindent The goal of the compositional models is to factorise triples along with the graph structure as a whole. To show that the model embeds the graph structure into latent space, we evaluate a path reconstruction task where the model predicts a final entity given source entity and sequence of relations.
 
-\noindent The goal of the compositional models is to factorise triples along with the graph structure as a whole. To show that the model embeds the graph structure into latent space, we evaluate a path reconstruction task where the model predicts a final entity given source entity and sequence of relations.
+%\vspace{.5cm}
+%
+%\begin{tabular}{l l}
+%\begin{minipage}{.55\linewidth}
+%\includegraphics[width=\linewidth]{../cikm2016/images/path_prediction2.pdf}
+%\end{minipage}\hspace{1cm}
+%& 
+%\begin{minipage}{.39\linewidth}
+%\captionof{figure}{Path reconstruction result of UMLS. The performances of both compositional models remain consistent whereas those of the non-compositional models drop sharply as the length increases.}
+%\end{minipage}
+%\end{tabular}
+%
+%\vspace{.5cm}
 
-\vspace{.5cm}
-
-\begin{tabular}{l l}
-\begin{minipage}{.55\linewidth}
-\includegraphics[width=\linewidth]{../cikm2016/images/path_prediction2.pdf}
-\end{minipage}\hspace{1cm}
-& 
-\begin{minipage}{.39\linewidth}
-\captionof{figure}{Path reconstruction result of UMLS. The performances of both compositional models remain consistent whereas those of the non-compositional models drop sharply as the length increases.}
-\end{minipage}
-\end{tabular}
-
-\vspace{.5cm}
-
-\noindent\textbf{Visualisation of learned entities}
-
-\vspace{.5cm}
 
 \begin{center}
+\noindent\textbf{Visualisation of learned entities}
+\vspace{.5cm}
+
 \includegraphics[width=0.9\linewidth]{../cikm2016/images/embedding_umls.pdf}
-\captionof{figure}{Embedding learned entities of the UMLS dataset into a two-dimensional space through the spectral clustering. Entities with the same type are represented by the same color.
-The entities with the same type are located closer to each other with the multiplicative compositional model (\textsc{pcomp-mul}) than the non-compositional model.
+\captionof{figure}{Embedding learned entities of the UMLS dataset into a two-dimensional space through the spectral clustering. %Entities with the same type are represented by the same color.
+The entities of the same type are located closer to each other with the multiplicative compositional model (\textsc{pcomp-mul}) than the non-compositional model.
 }
 \end{center}
 
 
 \section{Incremental Knowledge Population}
+\textbf{Goal}: maximise the number of positive triples based on the interaction with human experts given a limited amount of budget
 
-The goal of \textbf{incremental population} is to maximise the number of positive triples based on the interaction with human experts given a limited amount of budget.
+\noindent \textbf{Method}: adopt Thompson sampling from $K$-armed Bandits
 
-A recent attempt at incremental knowledge population (Jiang et al., 2015), has had difficulties simultaneously achieving high recall and faithful reconstruction. We employ \textbf{Thompson sampling}, an approach for solving the multi-armed bandit problem, to find an optimal trade-off between exploration and exploitation during incremental population.
+\begin{itemize}
+\item Thompson sampling (TS) for population:
+\begin{enumerate}
+\item Sample unobserved triples $x_{ikj}$ from posterior
+\item Query the maximum triple \& Obtain label from oracle
+\item Update posterior using sequential Monte Carlo
+\end{enumerate}
+\end{itemize}
 
-\begin{center}
-\begin{tabular}{c c c}
-\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_kinship_mcmc_vertical_line.pdf}&
-\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_nation_mcmc_vertical_line.pdf}&
-\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_umls_mcmc_vertical_line.pdf}\\
-Kinship & Nation & UMLS \\
+%The goal of \textbf{incremental population} is to maximise the number of positive triples based on the interaction with human experts given a limited amount of budget.
+
+%A recent attempt at incremental knowledge population (Jiang et al., 2015), has had difficulties simultaneously achieving high recall and faithful reconstruction. We employ \textbf{Thompson sampling}, an approach for solving the multi-armed bandit problem, to find an optimal trade-off between exploration and exploitation during incremental population.
+
+%\begin{center}
+%\begin{tabular}{c c c}
+%\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_kinship_mcmc_vertical_line.pdf}&
+%\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_nation_mcmc_vertical_line.pdf}&
+%\includegraphics[width=0.32\linewidth]{../cikm2016/images/thompson_umls_mcmc_vertical_line.pdf}\\
+%Kinship & Nation & UMLS \\
+%\end{tabular}
+%\captionof{figure}{The cumulative gain (upper) and ROC-AUC score (lower) of the Thompson sampling with passive learning and \textsc{amdc} models. X-axis denotes the number of queries issued. Thompson sampling with \textsc{pnormal} model achieves the highest cumulative gain to compare with \textsc{amdc} and passive learning algorithms and shows comparable performance on ROC-AUC scores. The compositional model performs worse than the non-compositional models.}
+%\end{center}
+
+\begin{tabular}{l l}
+\begin{minipage}{.4\linewidth}
+\includegraphics[width=\linewidth]{../cikm2016/images/thompson_kinship_mcmc_vertical_line.pdf}
+\end{minipage}\hspace{1cm}
+& 
+\begin{minipage}{.54\linewidth}
+\captionof{figure}{The cumulative gain (upper) and ROC-AUC score (lower) of the Thompson sampling with baseline models. %X-axis denotes the number of queries issued. 
+Thompson sampling with \textsc{pnormal} model achieves the highest cumulative gain.
+%to compare with \textsc{amdc} and passive learning algorithms and shows comparable performance on ROC-AUC scores. 
+The compositional model performs worse than the non-compositional models.}
+\end{minipage}
 \end{tabular}
-\captionof{figure}{The cumulative gain (upper) and ROC-AUC score (lower) of the Thompson sampling with passive learning and \textsc{amdc} models. X-axis denotes the number of queries issued. Thompson sampling with \textsc{pnormal} model achieves the highest cumulative gain to compare with \textsc{amdc} and passive learning algorithms and shows comparable performance on ROC-AUC scores. The compositional model performs worse than the non-compositional models.}
-\end{center}
 
-\secmoveup
-\section{Discussion}
-Thompson sampling has been studied in the context of multi-armed bandit problems where the goal is to maximise cumulative gains or minimise cumulative regrets over time, whereas its performance on making a predictive model has not been widely discussed so far. Throughout this work, we have empirically shown that maximising cumulative gain entails good predictive models as well.
+\begin{itemize}
+\item TS has been used to maximise cumulative gains in bandits.
+\item Maximising cumulative gain entails good predictive models.
+\end{itemize}
+
+%\secmoveup
+%\section{Discussion}
+%Thompson sampling has been studied in the context of multi-armed bandit problems where the goal is to maximise cumulative gains or minimise cumulative regrets over time, whereas its performance on making a predictive model has not been widely discussed so far. Throughout this work, we have empirically shown that maximising cumulative gain entails good predictive models as well.
 
 %We have empirically shown that maximising cumulative gain entails good predictive models as well with Thompson sampling. However, path structure does not seem to help in incremental population. 
 %We conjecture that the augmented structure leads underestimation of uncertainty, which is a crucial factor in incremental population.
-%Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam non lectus vel diam congue tincidunt malesuada sit amet augue. Proin non venenatis odio. Quisque porttitor dolor ut cursus gravida. Integer a iaculis massa. Donec semper leo sed metus tempor varius. Donec mollis risus pharetra ligula lacinia, vitae suscipit arcu vulputate. Pellentesque vel odio tristique, luctus nisl in, elementum tortor. Praesent vitae neque id sapien porta interdum.
-
-%Aliquam dignissim nisl neque, vel interdum leo blandit et. Vivamus sed tincidunt arcu. Vivamus sed tristique ipsum, eu blandit magna. Praesent nec imperdiet nibh. Nullam dignissim dui ac arcu sollicitudin congue. Suspendisse facilisis nulla convallis pellentesque tempus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Curabitur iaculis gravida enim, id accumsan augue lacinia a. Donec at augue sagittis, imperdiet purus ut, eleifend tortor. Phasellus efficitur ipsum magna, ac ultrices erat pellentesque a. Maecenas sed dui pretium, euismod enim vitae, aliquam dui. Vestibulum vel bibendum arcu. Praesent ac enim bibendum, pharetra ante nec, iaculis lorem. Nunc tempus risus eget enim volutpat, et pulvinar eros porttitor. Morbi dui nisi, vestibulum sed nisl vel, rhoncus tincidunt quam.
-
-%Sed tristique lacus iaculis faucibus lobortis. Aenean mollis sem cursus, blandit lectus at, imperdiet diam. Mauris iaculis, felis id laoreet eleifend, dolor nibh porta nisi, sagittis venenatis ipsum massa eu tellus. Nulla ullamcorper, mi in viverra malesuada, magna urna vulputate elit, ac aliquam massa justo ut urna. Fusce eget mauris commodo, volutpat erat ac, dignissim sapien. Sed lacus felis, pellentesque mollis mattis in, luctus id orci. Morbi in est vehicula, auctor nunc eu, aliquet augue.
-
-%Quisque eu tortor in ligula bibendum rhoncus. Pellentesque dui augue, vulputate at vulputate nec, tempus non diam. Sed et cursus erat. Aliquam erat volutpat. Aliquam quis auctor ipsum. Sed sed nunc sit amet justo laoreet accumsan. Praesent eu ultrices enim, ac tempus sem. Vivamus finibus enim nec nunc fermentum, vel interdum dui maximus. Maecenas faucibus vulputate nisi, vel pharetra turpis auctor non. Etiam ut augue eu augue gravida eleifend.
-%
-%Cras efficitur lectus neque, dapibus vehicula augue pulvinar non. Aenean hendrerit tellus a nisl accumsan pulvinar. Pellentesque nisl dolor, eleifend et urna a, suscipit tempor orci. Praesent metus velit, tincidunt ac odio ut, elementum convallis nunc. Suspendisse potenti. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse ac arcu nunc.
-
-
 
 % \begin{thebibliography}{5}
 % %\bibitem{everyoneisinfluencer}
