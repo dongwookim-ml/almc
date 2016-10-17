@@ -179,7 +179,7 @@
 %\color{DarkSlateGray} % DarkSlateGray color for the rest of the content
 \color{Black}
 
-\section{Compositional Relational Model}
+\section{Probabilistic Relational Model}
 
 \begin{itemize}
 \item \textbf{A triple}, e.g. \{\textit{Obama, president of, US}\}, is a basic unit of a knowledge graph
@@ -201,7 +201,7 @@
 \captionof{figure}{Bilinear factorisation model, \textsc{rescal}, where entities are embedded into $D$-dimensional latent space.}
 \vspace{-1.5cm}
 \begin{equation}
-e_i, e_j\in\mathbb{R}^{D}, \quad R_k \in \mathbb{R}^{D\times D} \notag
+e_i, e_j\in\mathbb{R}^{D}, R_k \in \mathbb{R}^{D\times D} \notag
 \end{equation}
 \end{minipage}
 \end{tabular}
@@ -221,17 +221,14 @@ We reformulate popular \textsc{rescal} model in a probabilistic way by placing i
 \end{tabular}
 \end{center}
 
-
+\section{Compositional Relational Model}
 \begin{center}
-\noindent\textbf{Compositional triples}
-\vspace{.5cm}
-
 \includegraphics[width=.9\linewidth]{./figures/composition.pdf}
-\captionof{figure}{Multiple consecutive triples form a \textbf{compositional triple}. We augment the original tensor with these additional triples to explicitly incorporate path structure into factorisation.}
+\captionof{figure}{Multiple consecutive triples form a \textbf{compositional triple}. We augment the original tensor with compositional additional triples to explicitly incorporate path structure into factorisation.}
 \end{center}
 
 %Adding compositional slices will increase the number of relation parameters exponentially. Therefore, we propose two different structures to model the compositionality in the latent embedding spaces.
-\noindent Two observation schemes for the compositional model:
+\noindent We design two observation schemes for the compositional model:
 
 \begin{center}
 \begin{tabular}{l l}
@@ -246,8 +243,9 @@ $\quad\quad x_{icj} \sim \mathcal{N}(e_i^\top \frac{1}{c_n} (R_{c_1} + \dots + R
 where $c$ is a compositional relation with composition of relations $\{c_1, c_2, ..., c_n\}$.
 
 \section{Knowledge Completion}
-\noindent\textbf{Goal}: predict the unobserved part of knowledge graph through the reconstruction.
+\noindent\textbf{Goal}: predict the unobserved part of knowledge graph through the reconstruction of tensor
 
+\noindent\textbf{Method}: reconstruct tensor via posterior samples inferred by Gibbs sampling
 
 %We first evaluate our model to \textbf{predict unknown triples} given observations to measure the performance of proposed models with all non compositional and compositional variants. For this experiments, we divide datasets into training and testing, and then measure ROC-AUC scores on the test set.
 
@@ -319,13 +317,13 @@ The entities of the same type are located closer to each other with the multipli
 \section{Incremental Knowledge Population}
 \textbf{Goal}: maximise the number of positive triples based on the interaction with human experts given a limited amount of budget
 
-\noindent \textbf{Method}: adopt Thompson sampling from $K$-armed Bandits
+\noindent \textbf{Method}: adopt Thompson sampling (TS) from $K$-armed bandits
 
 \begin{itemize}
-\item Thompson sampling (TS) for population:
+\item Particle Thompson sampling for population:
 \begin{enumerate}
-\item Sample unobserved triples $x_{ikj}$ from posterior
-\item Query the maximum triple \& Obtain label from oracle
+\item Sample unobserved triples $x_{ikj}$ from posterior distribution
+\item Query the maximum triple \& Obtain label from human experts
 \item Update posterior using sequential Monte Carlo
 \end{enumerate}
 \end{itemize}
