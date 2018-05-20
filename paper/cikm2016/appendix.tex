@@ -1,0 +1,111 @@
+
+
+\title{Appendix for \\Probabilistic Knowledge Graph Construction: \\Compositional and Incremental Approaches}
+
+\author{
+Dongwoo Kim\\
+ANU\\
+Australia\\
+dongwoo.kim@anu.edu.au
+\and
+Lexing Xie\\
+ANU \& Data61\\
+Australia\\
+lexing.xie@anu.edu.au
+% 3rd. author
+\and
+  Cheng Soon Ong\\
+Data61 \& ANU\\
+Australia\\
+chengsoon.ong@anu.edu.au
+}
+
+\date{\today}
+
+\documentclass[12pt]{article}
+
+%\documentclass{sig-alternate-05-2015}
+%\documentclass{article}
+
+\usepackage{epsfig}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+
+%for cross reference
+\usepackage{xr}
+\externaldocument{cikm2016}
+
+% For figures
+\usepackage{graphicx} % more modern
+%\usepackage{epsfig} % less modern
+\usepackage{subfigure}
+
+% for citation
+\usepackage{natbib}
+
+% For algorithms
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage{multirow}
+
+
+\usepackage[svgnames]{xcolor}
+\usepackage{tabu}
+\definecolor{navy}{rgb}{0.1, 0.1, 0.8}
+\definecolor{gray}{rgb}{0.6, 0.6, 0.6}
+\taburulecolor{gray}
+
+\newcommand{\eat}[1]{}
+\newcommand{\rev}[1]{{\color{black}{#1}}}
+\newcommand{\verify}[1]{{\color{black}{#1}}}
+\newcommand{\TODO}[2]{ {\bf [{#1}:~{#2}]}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This is the appendix for the paper `Probabilistic Knowledge Graph Construction: Compositional and Incremental Approaches'. The original version of this paper has been published in the proceedings of the 25th ACM International Conference on Information and Knowledge Management (CIKM 2016).
+\end{abstract}
+
+\appendix
+\input{appendix_logit_posterior}
+\input{appendix_thompson_sampling}
+\input{appendix_composition}
+\input{appendix_visualisation}
+\input{appendix_experiments}
+
+%\input{abstract}
+
+%\keywords{Knowledge graph, active learning, Thompson sampling}
+%
+%\input{introduction}
+%\input{related_work}
+%\input{table1}
+%\input{brescal}
+%\input{compostional_model}
+%\input{knowledge_completion}
+%\input{active_population}
+%\input{discussion}
+%This work is supported by the Data to Decisions Cooperative Research Centre, www.d2dcrc.com.au.
+%
+% The following two commands are all you need in the
+% initial runs of your .tex file to
+% produce the bibliography for the citations in your paper.
+{\small
+\bibliographystyle{abbrv}
+% \bibliography{cikm2016}  % sigproc.bib is the name of the Bibliography in this case
+\bibliography{cikm2016_abbr}
+}
+% You must have a proper ".bib" file
+%  and remember to run:
+% latex bibtex latex latex
+% to resolve all references
+%
+% ACM needs 'a single self-contained file'!
+%
+%APPENDICES are optional
+
+\end{document}
